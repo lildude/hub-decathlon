@@ -28,6 +28,8 @@ def account_setconfig(req):
     data = json.loads(req.body.decode("utf-8"))
     if data["sync_skip_before"] and len(data["sync_skip_before"]):
         data["sync_skip_before"] = dateutil.parser.parse(data["sync_skip_before"])
+    if data["settings_set"] and len(data["settings_set"]):
+        data["settings_set"] = True if (data["settings_set"] == "true") else False
     User.SetConfiguration(req.user, data)
     Sync.SetNextSyncIsExhaustive(req.user, True)
     return HttpResponse()

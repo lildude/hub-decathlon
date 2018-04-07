@@ -93,6 +93,8 @@ tapiriik.Init = function(){
 	});
 
 	setInterval(tapiriik.CycleLogo, 60 * 1000);
+
+	tapiriik.CheckSyncSkipBefore();
 };
 
 tapiriik.AddressChanged=function(){
@@ -1066,6 +1068,49 @@ tapiriik.ApplyDatepicker = function() {
 
 	tapiriik.LoadStyle("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/css/pikaday.min.css");
 	tapiriik.LoadScript("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/pikaday.min.js", doneFunc, errorFunc);
+};
+
+tapiriik.CheckSyncSkipBefore = function() {
+	var dateElement = $("[ng-model='sync_skip_before_entry']");
+	var dateValue = dateElement.val();
+	var settingsBlock = $(".syncSettingsBlock");
+	var settingsAlreadySet = settingsBlock.attr("data-settings-set") === "true";
+	if (!dateElement.length || !settingsBlock.length || dateValue || settingsAlreadySet) {
+		return;
+	}
+
+	var infoMessageBlock = $(".syncSettingsWarning");
+	var saveButton = $(".syncSettingsSaveButton");
+	var disabledClass = "g-disabled";
+
+	$.address.value("settings");
+	infoMessageBlock.show();
+	$("body, html").animate({
+		scrollTop: infoMessageBlock.offset().top - 50
+	});
+
+	// Delay before datepicker library loaded.
+	// If really necessary, it's possible to trigger "load" event for this library,
+	// to be sure it loaded. But for now, probably, simplier to assume
+	// that 1s is enough.
+	setTimeout(function() {
+		dateElement.focus();
+	}, 1000);
+
+	var controller = function() {
+		var val = dateElement.val();
+		var dateValid = Date.parse(val);
+		dateValid = !isNaN(dateValid) && dateValid > 0;
+
+		if (val && dateValid) {
+			saveButton.removeClass(disabledClass);
+		} else {
+			saveButton.addClass(disabledClass);
+		}
+	};
+
+	dateElement.on("input change", controller);
+	controller();
 };
 
 $(window).load(tapiriik.Init);

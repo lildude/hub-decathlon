@@ -100,6 +100,7 @@ function SyncSettingsController($scope, $http, $window){
     } else {
       $scope.tapiriik.User.Config.sync_skip_before = null;
     }
+    $scope.tapiriik.User.Config.settings_set = "true";
     $http.post("/account/configure", $scope.tapiriik.User.Config).success(function(){
       $.address.value(""); // Back to jquery land
     }).error(function(data, status){

@@ -1420,3 +1420,14 @@ body.staging .sub::before {
 	border-width: 4px;
 	border-color: #749ac4;
 }
+
+.syncSettingsWarning {
+	color: #000;
+	margin-bottom: 1em;
+	display: none;
+}
+
+.g-disabled {
+	opacity: 0.25;
+	pointer-events: none;
+}
