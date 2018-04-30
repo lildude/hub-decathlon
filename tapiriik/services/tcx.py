@@ -157,11 +157,18 @@ class TCXIO:
                     stepsEl = lxEl.find("tpx:Steps", namespaces=ns)
                     if stepsEl is not None:
                         lap.Stats.Strides.update(ActivityStatistic(ActivityStatisticUnit.Strides, value=float(stepsEl.text)))
-            # Lap may contain multiple tracks for some reason
+            # Lap may contain multiple tracks. It means activity was paused
             # Some TCX files have laps with no track - not sure if it's valid or not.
             for xtrkseg in xlap.findall("tcx:Track", namespaces=ns):
+                resumed = len(lap.Waypoints) > 0
                 for xtrkpt in xtrkseg.findall("tcx:Trackpoint", namespaces=ns):
                     wp = Waypoint()
+                    # Resume don't need for the first segment in lap
+                    if resumed:
+                        lap.Waypoints[-1].Type = WaypointType.Pause
+                        wp.Type = WaypointType.Resume
+                        resumed = False
+
                     tsEl = xtrkpt.find("tcx:Time", namespaces=ns)
                     if tsEl is None:
                         raise ValueError("Trackpoint without timestamp")
@@ -331,8 +338,10 @@ class TCXIO:
                     inPause = True
                 if inPause and wp.Type != WaypointType.Pause:
                     inPause = False
+                    # Resume should create new tracks
+                    track = etree.SubElement(xlap, "Track")
                 if track is None:  # Defer creating the track until there are points
-                    track = etree.SubElement(xlap, "Track") # TODO - pauses should create new tracks instead of new laps?
+                    track = etree.SubElement(xlap, "Track")
                 trkpt = etree.SubElement(track, "Trackpoint")
                 if wp.Timestamp.tzinfo is None:
                     raise ValueError("TCX export requires TZ info")
