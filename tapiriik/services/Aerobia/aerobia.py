@@ -29,6 +29,9 @@ class AerobiaService(ServiceBase):
     UserProfileURL = "http://www.aerobia.ru/users/{0}"
     UserActivityURL = "http://www.aerobia.ru/users/{0}/workouts/{1}"
     
+    Configurable = True
+    ConfigurationDefaults = {}
+
     # common -> aerobia (garmin tcx sport names)
     # todo may better to include this into tcxio logic instead
     _activityMappings = {
