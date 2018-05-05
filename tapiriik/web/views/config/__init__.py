@@ -70,4 +70,15 @@ def aerobia(req):
     else:
         conf = conn.GetConfiguration()
         form = AerobiaConfigForm({"path": conf["SyncRoot"], "syncUntagged": conf["UploadUntagged"]})
-    return render(req, "config/aerobia.html", {"form": form})
+    
+    title = 'Aerobia configuration'
+    template = "config/aerobia.html"
+    component = 'aerobiaConfig.js'
+
+    context = {
+            'title': title,
+            'component': component,
+            'props': {},
+        }
+
+    return render(req, template, context)

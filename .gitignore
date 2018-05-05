@@ -4,5 +4,7 @@
 local_settings.py
 *.sublime-*
 private/
+node_modules/
+tapiriik/web/static/js/bundles/
+webpack-stats.json
 .vscode/
-C:/

@@ -1,10 +1,10 @@
-{% extends "site.html" %}
-{% block title %}configure Aerobia{% endblock %}
-{% block content %}
-<h1>Aerobia configuration</h1>
-<form method="POST">
-	{% csrf_token %}
-	{{ form.as_p }}
-	<button type="submit">Save</button>
-</form>
-{% endblock %}
+{% load render_bundle from webpack_loader %}
+
+<div id='react'/>
+
+<script>
+    //window.props = {{props|json}};
+    window.react_mount = document.getElementById('react');
+</script>
+
+{% render_bundle 'aerobiaConfig' %}

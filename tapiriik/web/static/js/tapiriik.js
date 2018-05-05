@@ -389,22 +389,7 @@ tapiriik.OpenServiceConfigPanel = function(svcId){
 };
 
 tapiriik.OpenAerobiaConfigDialog = function(){
-	var configPanel = $("<form class=\"dropboxConfig\"><h1>Set Up Dropbox Sync</h1>\
-		<label>Select sync folder</label><div id=\"folderList\"></div>\
-		<div id=\"folderStackOuter\"><span id=\"syncLocationPreamble\">Will sync to</span> <span id=\"folderStack\"></span></div>\
-		<div id=\"reauth_up\">Want to sync to a different location? You'll need to <a href=\"/auth/redirect/dropbox/full\">authorize tapiriik to access your entire Dropbpx folder</a>.</div>\
-		<div id=\"reauth_down\">Don't want tapiriik to have full access to your Dropbox? <a href=\"/auth/redirect/dropbox\">Restrict tapiriik to <tt>/Apps/tapiriik/</tt></a>.</div>\
-		<label>Upload new activites as:</label>\
-			<input type=\"text\" id=\"filename\" style=\"width:300px\"/>\
-			<input type=\"hidden\" id=\"py_filename\" style=\"width:300px\"/>\
-			<select id=\"format\">\
-				<option value=\"tcx\">.tcx</option>\
-				<option value=\"gpx\">.gpx</option>\
-			</select>\
-			<tt><span id=\"exampleName\">test/asd.tcx</span></tt><br/>\
-			(you can include folders, try <tt>/&lt;YYYY&gt;/&lt;MMM&gt;/&lt;NAME&gt;</tt>)<br/>\
-		<input type=\"checkbox\" id=\"syncAll\"><label for=\"syncAll\" style=\"display:inline-block\">Sync untagged activities</label></input><br/>\
-		<button id=\"OK\">Save</button><button id=\"cancel\" class=\"cancel\">Cancel</button></form>").addClass("dropboxConfig");
+	var configPanel = $("<div id=\"react\"/>").addClass("dropboxConfig");
 
 	$("#OK", configPanel).click(tapiriik.SaveDropboxConfig);
 	$("#cancel", configPanel).click(tapiriik.DismissServiceDialog);

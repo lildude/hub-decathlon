@@ -1,6 +1,9 @@
 import os
+import sys
 from datetime import datetime
 # Django settings for tapiriik project.
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -62,6 +65,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    #os.path.join(BASE_DIR, 'assets'), 
 )
 
 # List of finder classes that know how to find static files in
@@ -141,7 +145,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    "I:/wamp/www/tapiriik/tapiriik/web/templates",
+    "C:/wamp/www/tapiriik/tapiriik/web/templates",
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -159,7 +163,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tapiriik.web',
-    'pipeline'
+    'pipeline',
+    'webpack_loader'
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -197,6 +202,13 @@ LOGGING = {
             'propagate': True,
         },
     }
+}
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+            'BUNDLE_DIR_NAME': 'js/bundles/',
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+        }
 }
 
 TEST_RUNNER = 'tapiriik.testing.MongoDBTestRunner'
