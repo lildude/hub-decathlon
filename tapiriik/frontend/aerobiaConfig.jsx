@@ -1,12 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import RuleList from './components/ruleList'
+
 class AerobiaConfig extends React.Component {
     render() {
         return (
-            <div>
-                <p>Config asd!</p>
-                df
+            <div className="content">
+            <p>Настройка инвентаря по умолчанию</p>
+            <RuleList data={[{key: "1"},{key: "2"},{key: "3"}]}/>
             </div>
         );
     }

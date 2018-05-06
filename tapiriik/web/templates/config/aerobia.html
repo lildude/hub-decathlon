@@ -1,10 +1,24 @@
+{% extends "site.html" %}
+{% load services %}
+{% load users %}
+{% load displayutils %}
 {% load render_bundle from webpack_loader %}
 
-<div id='react'/>
-
-<script>
-    //window.props = {{props|json}};
-    window.react_mount = document.getElementById('react');
-</script>
-
-{% render_bundle 'aerobiaConfig' %}
+{% block title %}Configure Aerobia{% endblock %}
+{% block content %}
+    <div style="text-align:left">
+        <h1>Aerobia advanced settings</h1>
+        <form method="POST" action="{% url 'aerobia_config' %}">
+            {% csrf_token %}
+            <div id='react'></div>
+            <div style="text-align:right">
+                <button type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        window.props = {};
+        window.react_mount = document.getElementById('react');
+    </script>
+    {% render_bundle 'aerobiaConfig' %}
+{% endblock %}

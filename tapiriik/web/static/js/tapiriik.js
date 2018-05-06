@@ -140,7 +140,9 @@ tapiriik.AddressChanged=function(){
 			return;
 		}
 		if (components[1]=="aerobia" && components[2]=="setup"){
-			tapiriik.OpenAerobiaConfigDialog();
+			//TODO dirty hack
+			//going to separate view to make react work
+			document.location = "../../aerobiaConfig"
 			return;
 		}
 		tapiriik.DoDismissServiceDialog();
@@ -386,14 +388,6 @@ tapiriik.OpenServiceConfigPanel = function(svcId){
 
 
 	tapiriik.CreateConfigPanel(svcId, configPanel);
-};
-
-tapiriik.OpenAerobiaConfigDialog = function(){
-	var configPanel = $("<div id=\"react\"/>").addClass("dropboxConfig");
-
-	$("#OK", configPanel).click(tapiriik.SaveDropboxConfig);
-	$("#cancel", configPanel).click(tapiriik.DismissServiceDialog);
-	tapiriik.CreateServiceDialog("aerobia", configPanel);
 };
 
 tapiriik.OpenDropboxConfigDialog = function(){

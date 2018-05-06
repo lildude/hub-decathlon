@@ -62,23 +62,8 @@ def aerobia(req):
     if not req.user:
         return HttpResponse(status=403)
     conn = User.GetConnectionRecord(req.user, "aerobia")
+
     if req.method == "POST":
-        form = AerobiaConfigForm(req.POST)
-        if form.is_valid():
-            conn.SetConfiguration({"SyncRoot": form.cleaned_data['path'], "UploadUntagged": form.cleaned_data['syncUntagged']})
-            return redirect("dashboard")
-    else:
-        conf = conn.GetConfiguration()
-        form = AerobiaConfigForm({"path": conf["SyncRoot"], "syncUntagged": conf["UploadUntagged"]})
-    
-    title = 'Aerobia configuration'
-    template = "config/aerobia.html"
-    component = 'aerobiaConfig.js'
+        return redirect("dashboard")
 
-    context = {
-            'title': title,
-            'component': component,
-            'props': {},
-        }
-
-    return render(req, template, context)
+    return render(req, "config/aerobia.html", {})
