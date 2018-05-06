@@ -1420,3 +1420,13 @@ body.staging .sub::before {
 	border-width: 4px;
 	border-color: #749ac4;
 }
+
+.ruleRow {
+	margin-bottom: 4px;
+}
+
+.ruleSelector {
+	display: inline-block;
+	margin-left: 8px;
+	width: 40%;
+}

@@ -6,7 +6,7 @@ import RuleList from './components/ruleList'
 class AerobiaConfig extends React.Component {
     render() {
         return (
-            <div className="content">
+            <div className="fancyTable activitiesTable">
             <p>Настройка инвентаря по умолчанию</p>
             <RuleList data={[{key: "1"},{key: "2"},{key: "3"}]}/>
             </div>
