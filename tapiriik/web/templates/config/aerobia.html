@@ -17,7 +17,7 @@
         </form>
     </div>
     <script>
-        window.props = {};
+        window.props = {{ props|safe }};
         window.react_mount = document.getElementById('react');
     </script>
     {% render_bundle 'aerobiaConfig' %}

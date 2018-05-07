@@ -17,6 +17,13 @@ export default class RuleLine extends React.Component {
     }
     render() {
         const { selectedSport, selectedGear } = this.state;
+        const { sportTypes } = this.props
+        const sports = sportTypes.map(function (e) {
+            var obj = {};
+            obj['value'] = e;
+            obj['label'] = e;
+            return obj;
+        });
         return (
             <div className="ruleRow">
                 <span className="ruleSelector">
@@ -25,10 +32,7 @@ export default class RuleLine extends React.Component {
                         placeholder="Select sport"
                         value={selectedSport}
                         onChange={this.handleSportChange}
-                        options={[
-                            { value: 'one', label: 'One' },
-                            { value: 'two', label: 'Two' },
-                        ]}
+                        options={sports}
                     />
                 </span>
                 <span className="ruleSelector">

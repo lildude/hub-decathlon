@@ -63,7 +63,12 @@ def aerobia(req):
         return HttpResponse(status=403)
     conn = User.GetConnectionRecord(req.user, "aerobia")
 
+    props = {
+        'aerobiaId': conn.ExternalID,
+        'sportTypes': conn.Service.SupportedActivities,
+    }
+
     if req.method == "POST":
         return redirect("dashboard")
 
-    return render(req, "config/aerobia.html", {})
+    return render(req, "config/aerobia.html", {'props': props})

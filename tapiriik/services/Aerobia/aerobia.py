@@ -144,7 +144,8 @@ class AerobiaService(ServiceBase):
     _apiRoot = "http://aerobia.ru/api/"
     _loginUrlRoot = _apiRoot + "sign_in"
     _workoutsUrl = _apiRoot + "workouts"
-    _workoutUrl = _apiRoot + "workouts/{id}.json"
+    _workoutUrlJson = _apiRoot + "workouts/{id}.json"
+    _workoutUrl = _apiRoot + "workouts/{id}"
     _uploadsUrl = _apiRoot + "uploads.json"
 
     def _patch_user_agent(self):
@@ -287,7 +288,7 @@ class AerobiaService(ServiceBase):
         tcx_data = requests.get("{}export/workouts/{}/tcx".format(self._urlRoot, activity_id), data=self._with_auth(serviceRecord))
         activity_ex = TCXIO.Parse(tcx_data.text.encode('utf-8'), activity)
         # Obtain more information about activity
-        res = requests.get(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord))
+        res = requests.get(self._workoutUrlJson.format(id=activity_id), data=self._with_auth(serviceRecord))
         activity_data = res.json()
         activity_ex.Name = activity_data["name"]
         # Notes comes as html. Hardly any other service will support this so needs to extract text data
@@ -316,12 +317,24 @@ class AerobiaService(ServiceBase):
         files = {"file": ("tap-sync-{}-{}.tcx".format(os.getpid(), activity.UID), tcx_data)}
         res = requests.post(self._uploadsUrl, data=self._with_auth(serviceRecord, data), files=files)
         res_obj = res.json()
+        uploaded_id = res_obj["workouts"][0]["id"]
 
         if "error" in res_obj:
             raise APIException(res_obj["error"], user_exception=UserException(UserExceptionType.UploadError))
         
+        extra_data = {}
+        if activity.Name is not None:
+            extra_data.update({"workout[name]": activity.Name})
+        
+        # "workout[inventory_ids][]"
+
+        # Post extra data to newly uploaded activity
+        if extra_data is not None:
+            update_activity = lambda: requests.post(self._workoutUrl.format(id=uploaded_id), data=self._with_auth(serviceRecord, extra_data))
+            self._call(serviceRecord, update_activity)
+
         # return just uploaded activity id
-        return res_obj["workouts"][0]["id"]
+        return uploaded_id
 
     def UserUploadedActivityURL(self, uploadId):
         raise NotImplementedError
