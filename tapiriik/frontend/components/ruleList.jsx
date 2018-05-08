@@ -3,10 +3,10 @@ import RuleLine from './ruleLine'
 
 export default class RuleList extends React.Component {
     render() {
-        const { sportTypes } = this.props
+        const { sportTypes, gears } = this.props
         var ruleLines = this.props.data.map(function (rule) {
             return (
-                <RuleLine key={rule.key} data={rule} sportTypes={sportTypes}>
+                <RuleLine key={rule.key} data={rule} sportTypes={sportTypes} gears={gears}>
                     {rule.text}
                 </RuleLine>
             );

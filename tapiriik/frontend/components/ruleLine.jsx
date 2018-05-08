@@ -17,11 +17,17 @@ export default class RuleLine extends React.Component {
     }
     render() {
         const { selectedSport, selectedGear } = this.state;
-        const { sportTypes } = this.props
+        const { sportTypes, gears } = this.props
         const sports = sportTypes.map(function (e) {
             var obj = {};
             obj['value'] = e;
             obj['label'] = e;
+            return obj;
+        });
+        const gearData = gears.map(function (e) {
+            var obj = {};
+            obj['value'] = e.id;
+            obj['label'] = e.name;
             return obj;
         });
         return (
@@ -42,10 +48,7 @@ export default class RuleLine extends React.Component {
                         multi
                         value={selectedGear}
                         onChange={this.handleGearChange}
-                        options={[
-                            { value: 'one', label: 'One' },
-                            { value: 'two', label: 'Two' },
-                        ]}
+                        options={gearData}
                     />
                 </span>
             </div>
