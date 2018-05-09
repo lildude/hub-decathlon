@@ -1421,6 +1421,8 @@ body.staging .sub::before {
 	border-color: #749ac4;
 }
 
+/* Configuration styles */
+
 .ruleRow {
 	margin-bottom: 4px;
 }
@@ -1429,4 +1431,12 @@ body.staging .sub::before {
 	display: inline-block;
 	margin-left: 8px;
 	width: 40%;
+}
+
+.addRule {
+	background-image:url('../img/rule-add.svg');
+}
+
+.deleteRule {
+	background-image:url('../img/rule-delete.svg');
 }

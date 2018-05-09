@@ -7,14 +7,22 @@ export default class RuleLine extends React.Component {
         selectedSport: '',
         selectedGear: [],
     }
+    
     handleSportChange = (selectedOption) => {
         this.setState({ selectedSport: selectedOption });
         console.log(`Selected: ${selectedOption.label}`);
     }
+
     handleGearChange = (selectedOption) => {
         this.setState({ selectedGear: selectedOption });
         console.log(`Selected: ${selectedOption.label}`);
     }
+
+    handleDelete = (event) => {
+        event.preventDefault();
+        this.props.handleDelete();
+    }
+
     render() {
         const { selectedSport, selectedGear } = this.state;
         const { sportTypes, gears } = this.props
@@ -51,6 +59,7 @@ export default class RuleLine extends React.Component {
                         options={gearData}
                     />
                 </span>
+                <button className="deleteRule" onClick={this.handleDelete} />
             </div>
         );
     }

@@ -3,20 +3,21 @@ import ReactDOM from 'react-dom'
 
 import RuleList from './components/ruleList'
 
-const urlGears = userid =>
-    `http://aerobia.ru/users/${userid}/equipments`
+const urlGears = (userid, token) =>
+    `http://aerobia.ru/users/${userid}/equipments?authentication_token=${token}`
 
 class AerobiaConfig extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             gears: [],
-            requestFailed: false
+            requestFailed: false,
+            gearRules: props.config.gearRules
         }
     }
 
     componentDidMount() {
-        fetch("https://cors-anywhere.herokuapp.com/" + urlGears(this.props.aerobiaId))
+        fetch("https://cors-anywhere.herokuapp.com/" + urlGears(this.props.aerobiaId, this.props.userToken))
             .then(response => {
                 if (!response.ok) {
                     throw Error("Network request failed");
@@ -62,7 +63,7 @@ class AerobiaConfig extends React.Component {
             <div className="fancyTable activitiesTable">
                 <p>Default gear rules:</p>
                 <RuleList 
-                    data={[{ key: "1" }, { key: "2" }, { key: "3" }]} 
+                    data={this.state.gearRules} 
                     sportTypes={sportTypes}
                     gears={this.state.gears}
                 />

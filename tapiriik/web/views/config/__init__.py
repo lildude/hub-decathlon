@@ -55,20 +55,27 @@ def dropbox(req):
 
 
 class AerobiaConfigForm(forms.Form):
-    path = forms.CharField(label="Aerobia sync path")
-    syncUntagged = forms.BooleanField(label="Sync untagged activities", required=False)
+    pass
 
 def aerobia(req):
     if not req.user:
         return HttpResponse(status=403)
     conn = User.GetConnectionRecord(req.user, "aerobia")
 
+    config = conn.GetConfiguration()
     props = {
         'aerobiaId': conn.ExternalID,
+        'userToken': conn.Authorization["OAuthToken"],
         'sportTypes': conn.Service.SupportedActivities,
+        'config': {
+                'gearRules': []
+            }
     }
 
     if req.method == "POST":
-        return redirect("dashboard")
+        form = AerobiaConfigForm(req.POST)
+        if form.is_valid():
+            conn.SetConfiguration({})
+            return redirect("dashboard")
 
     return render(req, "config/aerobia.html", {'props': props})
