@@ -7,8 +7,8 @@ export default class RuleLine extends React.Component {
         super(props)
         this.state = {
             id: props.data.id,
-            selectedSport: props.data.selectedSport,
-            selectedGear: props.data.selectedGear,
+            selectedSport: props.data.sport,
+            selectedGear: props.data.gear,
         }
     }
     

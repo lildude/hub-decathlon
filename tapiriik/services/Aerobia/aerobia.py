@@ -145,7 +145,7 @@ class AerobiaService(ServiceBase):
     _loginUrlRoot = _apiRoot + "sign_in"
     _workoutsUrl = _apiRoot + "workouts"
     _workoutUrlJson = _apiRoot + "workouts/{id}.json"
-    _workoutUrl = _apiRoot + "workouts/{id}"
+    _workoutUrl = _urlRoot + "workouts/{id}"
     _uploadsUrl = _apiRoot + "uploads.json"
 
     def _patch_user_agent(self):
@@ -326,15 +326,24 @@ class AerobiaService(ServiceBase):
         if activity.Name is not None:
             extra_data.update({"workout[name]": activity.Name})
         
-        # "workout[inventory_ids][]"
+        self._put_default_inventory(activity, serviceRecord, extra_data)
 
         # Post extra data to newly uploaded activity
         if extra_data is not None:
-            update_activity = lambda: requests.post(self._workoutUrl.format(id=uploaded_id), data=self._with_auth(serviceRecord, extra_data))
+            extra_data.update({"_method": "put"})
+            update_activity = lambda x: requests.post(self._workoutUrl.format(id=uploaded_id), data=self._with_auth(serviceRecord, extra_data))
             self._call(serviceRecord, update_activity)
 
         # return just uploaded activity id
         return uploaded_id
+
+    def _put_default_inventory(self, activity, serviceRecord, data):
+        rules = serviceRecord.Config["gearRules"] if "gearRules" in serviceRecord.Config else None
+        if rules is None:
+            pass
+        for rule in rules:
+            if activity.Type == rule["sport"]:
+                data.update({"workout[inventory_ids][]": rule["gear"]})
 
     def UserUploadedActivityURL(self, uploadId):
         raise NotImplementedError

@@ -31,8 +31,8 @@ export default class RuleList extends React.Component {
     updateRule(newState) {
         let rules = [...this.state.rules];
         let index = rules.findIndex(el => el.id === newState.id);
-        rules[index] = {...rules[index], selectedGear: newState.selectedGear};
-        rules[index] = {...rules[index], selectedSport: newState.selectedSport};
+        rules[index] = {...rules[index], gear: newState.selectedGear};
+        rules[index] = {...rules[index], sport: newState.selectedSport};
         this.setState({ rules }, () => {
             this.props.handleChange(this.state);
         });
