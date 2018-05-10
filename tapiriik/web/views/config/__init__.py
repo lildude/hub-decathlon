@@ -63,19 +63,22 @@ def aerobia(req):
     conn = User.GetConnectionRecord(req.user, "aerobia")
 
     config = conn.GetConfiguration()
+    gearRules = config["gearRules"] if "gearRules" in config else []
     props = {
         'aerobiaId': conn.ExternalID,
         'userToken': conn.Authorization["OAuthToken"],
         'sportTypes': conn.Service.SupportedActivities,
         'config': {
-                'gearRules': []
+                'gearRules': gearRules
             }
     }
 
     if req.method == "POST":
         form = AerobiaConfigForm(req.POST)
         if form.is_valid():
-            conn.SetConfiguration({})
+            configRaw = req.POST.get('config')
+            config = json.loads(configRaw)
+            conn.SetConfiguration(config)
             return redirect("dashboard")
 
     return render(req, "config/aerobia.html", {'props': props})

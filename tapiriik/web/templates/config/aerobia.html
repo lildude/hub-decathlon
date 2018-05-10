@@ -6,16 +6,7 @@
 
 {% block title %}Configure Aerobia{% endblock %}
 {% block content %}
-    <div style="text-align:left">
-        <h1>Aerobia advanced settings</h1>
-        <form method="POST" action="{% url 'aerobia_config' %}">
-            {% csrf_token %}
-            <div id='react'></div>
-            <div style="text-align:right">
-                <button type="submit">Save</button>
-            </div>
-        </form>
-    </div>
+    <div id='react'></div>
     <script>
         window.props = {{ props|safe }};
         window.react_mount = document.getElementById('react');

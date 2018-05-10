@@ -22,8 +22,20 @@ export default class RuleList extends React.Component {
     deleteRule(id) {
         this.setState(prevState => ({
             rules: prevState.rules.filter(e => e.id != id)
-        }));
+        }), () => {
+            this.props.handleChange(this.state);
+        });
         console.log('Rule deleted');
+    }
+
+    updateRule(newState) {
+        let rules = [...this.state.rules];
+        let index = rules.findIndex(el => el.id === newState.id);
+        rules[index] = {...rules[index], selectedGear: newState.selectedGear};
+        rules[index] = {...rules[index], selectedSport: newState.selectedSport};
+        this.setState({ rules }, () => {
+            this.props.handleChange(this.state);
+        });
     }
 
     render() {
@@ -35,13 +47,12 @@ export default class RuleList extends React.Component {
                     data={rule}
                     sportTypes={sportTypes}
                     gears={gears}
-                    handleDelete={() => this.deleteRule(rule.id)}>
-                    {rule.text}
-                </RuleLine>
+                    handleDelete={() => this.deleteRule(rule.id)}
+                    handleChange={(newState) => this.updateRule(newState)} />
             );
         }.bind(this));
         return (
-            <div className="RuleList">
+            <div className="ruleList">
                 {ruleLines}
                 <button className="addRule" onClick={this.handleNewRule} />
             </div>

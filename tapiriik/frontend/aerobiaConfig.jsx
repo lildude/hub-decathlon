@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import CSRFToken from './components/csrftoken'
 import RuleList from './components/ruleList'
 
 const urlGears = (userid, token) =>
@@ -55,18 +56,43 @@ class AerobiaConfig extends React.Component {
             })
     }
 
+    updateGearRules(newState) {
+        this.setState({gearRules: newState.rules});
+    }
+
+    submitForm() {
+        $.post('/aerobiaConfig', JSON.stringify({ gearRules: this.state.gearRules }));
+    }
+
     render() {
         const { sportTypes } = this.props;
-        if (this.state.gears.length == 0) return <p>Loading gear...</p>
+        if (this.state.gears.length == 0)
+            return (
+                <div>
+                    <h1>Aerobia advanced settings</h1>
+                    <p>Loading gear...</p>
+                </div>
+            );
 
         return (
-            <div className="fancyTable activitiesTable">
-                <p>Default gear rules:</p>
-                <RuleList 
-                    data={this.state.gearRules} 
-                    sportTypes={sportTypes}
-                    gears={this.state.gears}
-                />
+            <div>
+                <h1>Aerobia advanced settings</h1>
+                <div className="fancyTable activitiesTable configBlock">
+                    <p>Default gear rules:</p>
+                    <RuleList 
+                        data={this.state.gearRules} 
+                        sportTypes={sportTypes}
+                        gears={this.state.gears}
+                        handleChange={(newState) => this.updateGearRules(newState)}
+                    />
+                </div>
+                <form method="POST" action="">
+                    <CSRFToken />
+                    <input type="hidden" name="config" value={JSON.stringify({ gearRules: this.state.gearRules })} />
+                    <div className="configSubmit">
+                        <button type="submit">Save</button>
+                    </div>
+                </form>
             </div>
         );
     }
