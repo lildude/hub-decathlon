@@ -325,8 +325,11 @@ class GarminConnectService(ServiceBase):
                 activity.StartTime = pytz.utc.localize(datetime.strptime(act["startTimeGMT"], "%Y-%m-%d %H:%M:%S"))
                 if act["elapsedDuration"] is not None:
                     activity.EndTime = activity.StartTime + timedelta(0, float(act["elapsedDuration"])/1000)
-                else:
+                elif act["duration"] is not None:
                     activity.EndTime = activity.StartTime + timedelta(0, float(act["duration"]))
+                else:
+                    # somehow duration is not defined. Set 1 second then.
+                    activity.EndTime = activity.StartTime + timedelta(0, 1)
 
                 logger.debug("Activity s/t " + str(activity.StartTime) + " on page " + str(page))
 
