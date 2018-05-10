@@ -340,7 +340,7 @@ class AerobiaService(ServiceBase):
     def _put_default_inventory(self, activity, serviceRecord, data):
         rules = serviceRecord.Config["gearRules"] if "gearRules" in serviceRecord.Config else None
         if rules is None:
-            pass
+            return
         for rule in rules:
             if activity.Type == rule["sport"]:
                 data.update({"workout[inventory_ids][]": rule["gear"]})
