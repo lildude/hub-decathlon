@@ -300,6 +300,13 @@ class AerobiaService(ServiceBase):
                 style.decompose()
             activity_ex.Notes = soup.getText()
 
+        # Dirty hack to patch users inventory even if they use aerobia mobile app to record activities
+        # Still need to sync with some service though.
+        extra_data = {}
+        self._put_default_inventory(activity, serviceRecord, extra_data)
+        if extra_data is not None:
+            self._patch_activity(serviceRecord, extra_data, activity_id)
+
         return activity_ex
 
     def UploadActivity(self, serviceRecord, activity):
@@ -330,9 +337,7 @@ class AerobiaService(ServiceBase):
 
         # Post extra data to newly uploaded activity
         if extra_data is not None:
-            extra_data.update({"_method": "put"})
-            update_activity = lambda x: requests.post(self._workoutUrl.format(id=uploaded_id), data=self._with_auth(serviceRecord, extra_data))
-            self._call(serviceRecord, update_activity)
+            self._patch_activity(serviceRecord, extra_data, uploaded_id)
 
         # return just uploaded activity id
         return uploaded_id
@@ -341,9 +346,17 @@ class AerobiaService(ServiceBase):
         rules = serviceRecord.Config["gearRules"] if "gearRules" in serviceRecord.Config else None
         if rules is None:
             return
+        inventory = []
         for rule in rules:
             if activity.Type == rule["sport"]:
-                data.update({"workout[inventory_ids][]": rule["gear"]})
+                inventory += rule["gear"]
+        if len(inventory):
+            data.update({"workout[inventory_ids][]": inventory})
+
+    def _patch_activity(self, serviceRecord, data, activity_id):
+        data.update({"_method": "put"})
+        update_activity = lambda x: requests.post(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord, data))
+        self._call(serviceRecord, update_activity)
 
     def UserUploadedActivityURL(self, uploadId):
         raise NotImplementedError
