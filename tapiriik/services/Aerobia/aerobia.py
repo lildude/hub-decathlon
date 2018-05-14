@@ -304,7 +304,7 @@ class AerobiaService(ServiceBase):
         # Still need to sync with some service though.
         extra_data = {}
         self._put_default_inventory(activity, serviceRecord, extra_data)
-        if extra_data is not None:
+        if extra_data:
             self._patch_activity(serviceRecord, extra_data, activity_id)
 
         return activity_ex
@@ -336,7 +336,7 @@ class AerobiaService(ServiceBase):
         self._put_default_inventory(activity, serviceRecord, extra_data)
 
         # Post extra data to newly uploaded activity
-        if extra_data is not None:
+        if extra_data:
             self._patch_activity(serviceRecord, extra_data, uploaded_id)
 
         # return just uploaded activity id
