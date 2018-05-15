@@ -356,7 +356,11 @@ class AerobiaService(ServiceBase):
     def _patch_activity(self, serviceRecord, data, activity_id):
         data.update({"_method": "put"})
         update_activity = lambda x: requests.post(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord, data))
-        self._call(serviceRecord, update_activity)
+        try:
+            self._call(serviceRecord, update_activity)
+        except Exception as e:
+            # do nothing but logging - anything critical happened to interrupt process
+            logger.debug("Unable to patch activity: " + e)
 
     def UserUploadedActivityURL(self, uploadId):
         raise NotImplementedError
