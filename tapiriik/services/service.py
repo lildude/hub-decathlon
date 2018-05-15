@@ -31,6 +31,7 @@ class Service:
             Strava,
             GarminConnect,
             PolarFlow,
+            Movescount,
             Endomondo,
             SportTracks,
             Dropbox,
@@ -56,6 +57,7 @@ class Service:
             TrainerRoad, # Special case, since TR has a lot more data in some very specific areas
             GarminConnect, # The reference
             PolarFlow,
+            Movescount,
             Smashrun,  # TODO: not sure if this is the right place, but it seems to have a lot of data
             SportTracks, # Pretty much equivalent to GC, no temperature (not that GC temperature works all thar well now, but I digress)
             TrainingPeaks, # No seperate run cadence, but has temperature

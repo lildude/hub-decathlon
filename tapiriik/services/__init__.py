@@ -40,6 +40,8 @@ from tapiriik.services.Aerobia import AerobiaService
 Aerobia = AerobiaService()
 from tapiriik.services.PolarFlow import PolarFlowService
 PolarFlow = PolarFlowService()
+from tapiriik.services.Movescount import MovescountService
+Movescount = MovescountService()
 
 PRIVATE_SERVICES = []
 try:

@@ -63,7 +63,7 @@
 	{% endfor %}
 
 {% else %}
-<p class="splashPreamble">exercisync synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>
+<p class="splashPreamble">exercisync synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, Movescount, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>
 (your heart rate, cadence, power, and temperature data syncs too)</p>
 	{% for provider in service_providers %}
 		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
