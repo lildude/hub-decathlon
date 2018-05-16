@@ -367,8 +367,9 @@ class AerobiaService(ServiceBase):
             return
         inventory = []
         for rule in rules:
-            if activity.Type == rule["sport"]:
-                inventory += rule["gear"]
+            if "sport" in rule and "gear" in rule:
+                if activity.Type == rule["sport"]:
+                    inventory += rule["gear"]
         if len(inventory):
             data.update({"workout[inventory_ids][]": inventory})
 
