@@ -374,8 +374,10 @@ class AerobiaService(ServiceBase):
             data.update({"workout[inventory_ids][]": inventory})
 
     def _patch_activity(self, serviceRecord, data, activity_id):
+        session = self._get_session(serviceRecord)
+
         data.update({"_method": "put"})
-        update_activity = lambda x: requests.post(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord, data))
+        update_activity = lambda x: session.post(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord, data))
         try:
             self._call(serviceRecord, update_activity)
         except Exception as e:
