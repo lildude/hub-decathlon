@@ -306,7 +306,7 @@ class AerobiaService(ServiceBase):
         tcx_data = session.get("{}export/workouts/{}/tcx".format(self._urlRoot, activity_id), data=self._with_auth(serviceRecord))
         activity_ex = TCXIO.Parse(tcx_data.text.encode('utf-8'), activity)
         # Obtain more information about activity
-        res = session.get(self._workoutUrl.format(id=activity_id), data=self._with_auth(serviceRecord))
+        res = session.get(self._workoutUrlJson.format(id=activity_id), data=self._with_auth(serviceRecord))
         activity_data = res.json()
         activity_ex.Name = activity_data["name"]
         # Notes comes as html. Hardly any other service will support this so needs to extract text data
