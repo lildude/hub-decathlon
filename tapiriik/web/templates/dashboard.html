@@ -70,6 +70,7 @@
 			{% include "service-button.html" with provider=provider %}
 		{% endif %}
 	{% endfor %}
+	{% infotip ServiceNotListed %}Не нашли свой сервис? - Попробуйте здесь: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a>{% endinfotip %}
 <p class="splashPreamble">Your email, password, and fitness data are kept safe - full details on the <a href="{% url "privacy" %}">privacy page</a>.</p>
 {% endif %}
 {% endblock %}
