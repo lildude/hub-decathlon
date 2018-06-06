@@ -36,12 +36,12 @@
 		{% if user.NonblockingSyncErrorCount > 0 %}
 			<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">Some activities could not be synchronized.</a><br/>
 		{% endif %}
-
+ 
 		{% if user|has_active_payment %}
 		{% else %}
 			{% include "payment.html" %}
 		{% endif %}
-
+		
 		{% for connection in user.ConnectedServices|svc_populate_conns %}
 			{% with svc=connection.Service %}
 				{% for error in connection.SyncErrors %}
@@ -73,4 +73,7 @@
 	{% infotip ServiceNotListed %}Не нашли свой сервис? - Попробуйте здесь: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a>{% endinfotip %}
 <p class="splashPreamble">Your email, password, and fitness data are kept safe - full details on the <a href="{% url "privacy" %}">privacy page</a>.</p>
 {% endif %}
+
+{% include "donation.html" %}
+
 {% endblock %}

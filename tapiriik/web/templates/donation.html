@@ -1,0 +1,19 @@
+{% load displayutils %}
+<button style="margin:auto;display:block;overflow:hidden;" class="donateButton">Поддержать проект</button>
+<form method="POST" action="https://money.yandex.ru/quickpay/confirm.xml" class="donateForm" style="text-align:center;display:none;">    
+    <hr/>
+    <h4>Вам нравится сервис и вы хотите чтобы он становился еще лучше?</h4>
+    <p>Exercisync бесплатный и открытый сервис, но разработка, поддержка пользователей, обслуживание сервера - все это требует моих усилий. Спасибо за вклад в развитие сервиса!</p>
+    <input type="hidden" name="receiver" value="410011406172912">    
+    <input type="hidden" name="formcomment" value="exercisync.com - синхронизация тренировок">    
+    <input type="hidden" name="short-dest" value="exercisync.com - синхронизация тренировок">   
+    <input type="hidden" name="quickpay-form" value="donate">
+    <input type="hidden" name="sum" value="100" data-type="number">
+    <input type="hidden" name="targets" value="На развитие проекта.">
+
+    <label><input type="radio" name="paymentType" value="PC">Яндекс.Деньгами</label>
+    <label><input type="radio" name="paymentType" value="AC">Банковской картой</label>
+    <label><input type="radio" name="paymentType" value="MC">С баланса мобильного</label>
+    <button type="submit">Поддержать проект</button>
+</form>
+<noscript><style type="text/css">.donateForm {display:block !important;}</style></noscript>
