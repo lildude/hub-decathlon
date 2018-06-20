@@ -32,9 +32,10 @@ class PolarPersonalTrainerService(ServiceBase):
     AuthenticationType = ServiceAuthenticationType.UsernamePassword
     RequiresExtendedAuthorizationDetails = True
 
-    ReceivesActivities = False # Will be retired by the end of 2019. Only need to transfer data to another services.
+    # Will be retired by the end of 2019. Only need to transfer data to another services.
+    ReceivesActivities = False 
 
-    _sessionCache = SessionCache("polarpersonaltrainer", lifetime=timedelta(minutes=30), freshen_on_get=True)
+    _sessionCache = SessionCache("polarpersonaltrainer", lifetime=timedelta(minutes=30), freshen_on_get=False)
 
     # PPT - common
     # due to we can actually put any sport name in PPT detect some wery common as well as types I personally have

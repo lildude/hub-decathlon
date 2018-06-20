@@ -6,9 +6,13 @@
 # exercisync.com integration: Anton Ashmarin, 2018
 
 import sys
-import datetime
 import itertools
 from xml.dom import minidom
+from datetime import datetime, timedelta
+
+def has_element(node, name):
+    elements = [e for e in node.childNodes if e.nodeType == e.ELEMENT_NODE and e.nodeName == name]
+    return len(elements) > 0
 
 def get_element(node, name):
     elements = [e for e in node.childNodes if e.nodeType == e.ELEMENT_NODE and e.nodeName == name]
@@ -40,7 +44,7 @@ def seconds_from_duration(duration):
     assert 3 == len(time)
     secms = time[2].split('.')
     sec = int(secms[0])
-    return datetime.timedelta(hours = int(time[0]), minutes = int(time[1]), seconds = sec).total_seconds()
+    return timedelta(hours = int(time[0]), minutes = int(time[1]), seconds = sec).total_seconds()
 
 def convert(xml, gpx=None):
 #def main(exercise_name):
@@ -57,6 +61,9 @@ def convert(xml, gpx=None):
     assert '1' == calendar_item.getAttribute("count")
 
     exercise = get_element(calendar_item, "exercise")
+    created = get_text(exercise, "created")
+    sport_results = get_element(exercise, "sport-results")
+    sport_result = get_element(sport_results, "sport-result")
     exercise_result = get_element(exercise, "result")
     exercise_hr = get_element(exercise_result, "heart-rate")
 
@@ -66,12 +73,25 @@ def convert(xml, gpx=None):
     exercise_average_hr = int(get_text(exercise_hr, "average"))
     exercise_maximum_hr = int(get_text(exercise_hr, "maximum"))
     exercise_rr = int(get_text(exercise_result, "recording-rate"))
-    exercise_laps = sorted(get_element(exercise_result, "laps").getElementsByTagName("lap"), key = lambda x: int(x.getAttribute("index")))
+
+    exercise_laps = []
+    if has_element(exercise_result, "laps"):
+        exercise_laps = sorted(get_element(exercise_result, "laps").getElementsByTagName("lap"), key = lambda x: int(x.getAttribute("index")))
+    else:
+        # In case no laps create dummy lap with summary stats
+        lap = xml_doc.createElement("lap")
+        lap.appendChild(exercise_hr)
+        lap.appendChild(get_element(exercise_result, "duration"))
+        lap.appendChild(get_element(exercise_result, "distance"))
+        exercise_laps.append(lap)
+
+
     exercise_sample_hr = []
     exercise_sample_speed = []
     exercise_sample_altitude = []
 
-    for exercise_sample in get_element(exercise_result, "samples").getElementsByTagName("sample"):
+    #TODO multiple results in one xml (multisport)
+    for exercise_sample in get_element(sport_result, "samples").getElementsByTagName("sample"):
         if get_text(exercise_sample, "type") == "HEARTRATE":
             exercise_sample_hr = list(map(int, filter(None, get_text(exercise_sample, "values").split(','))))
         if get_text(exercise_sample, "type") == "SPEED":
@@ -87,6 +107,7 @@ def convert(xml, gpx=None):
         gpx = gpx_doc.documentElement
 
         gpx_metadata = get_element(gpx, "metadata")
+        id = get_text(gpx_metadata, "time")
         gpx_trk = get_element(gpx, "trk")
         gpx_trkseg = get_element(gpx_trk, "trkseg")
         gpx_trkpts = gpx_trkseg.getElementsByTagName("trkpt")
@@ -94,8 +115,11 @@ def convert(xml, gpx=None):
         assert len(gpx_trkpts) == len(exercise_sample_hr)
         assert len(gpx_trkpts) == len(exercise_sample_speed)
         assert len(gpx_trkpts) == len(exercise_sample_altitude)
+    else:
+        # in case there is no gps track use created time as id
+        id = created
 
-    assert 0 == len(exercise_sample_hr)
+    assert 0 != len(exercise_sample_hr)
 
     # tcx
     tcx_doc = minidom.getDOMImplementation().createDocument(None, "TrainingCenterDatabase", None)
@@ -112,7 +136,7 @@ def convert(xml, gpx=None):
     activities = create_element(tcx_doc, training_center_database, "Activities")
     activity = create_element(tcx_doc, activities, "Activity")
     activity.setAttribute("Sport", get_text(exercise, "sport"))
-    create_text_element(tcx_doc, activity, "Id", get_text(gpx_metadata, "time"))
+    create_text_element(tcx_doc, activity, "Id", id)
 
     bundle = itertools.zip_longest(gpx_trkpts, exercise_sample_hr, exercise_sample_speed, exercise_sample_altitude, fillvalue = None)
     prev_date_time = None
@@ -142,9 +166,9 @@ def convert(xml, gpx=None):
 
             if trkpt:
                 date_time_str = get_text(trkpt, "time")
-                date_time = datetime.datetime.strptime(date_time_str, dateFormat)
+                date_time = datetime.strptime(date_time_str, dateFormat)
             else:
-                date_time = prev_date_time + datetime.timedelta(0,exercise_rr)
+                date_time = prev_date_time + timedelta(0, exercise_rr)
                 date_time_str = date_time.strftime(dateFormat)
 
             if lap_first_track_point:
