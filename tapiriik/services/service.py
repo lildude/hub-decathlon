@@ -45,7 +45,8 @@ class Service:
             Smashrun,
             BeginnerTriathlete,
             Setio,
-            Singletracker
+            Singletracker,
+            DecathlonCoach
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -72,7 +73,8 @@ class Service:
             Pulsstory,
             Setio,
             Singletracker,
-            Aerobia
+            Aerobia,
+            DecathlonCoach
         ] + PRIVATE_SERVICES
 
     def WebInit():
