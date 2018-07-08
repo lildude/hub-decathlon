@@ -28,8 +28,8 @@ class AerobiaService(ServiceBase):
     DisplayAbbreviation = "ARB"
     AuthenticationType = ServiceAuthenticationType.UsernamePassword
     RequiresExtendedAuthorizationDetails = True
-    UserProfileURL = "http://www.aerobia.ru/users/{0}"
-    UserActivityURL = "http://www.aerobia.ru/users/{0}/workouts/{1}"
+    UserProfileURL = "https://www.aerobia.ru/users/{0}"
+    UserActivityURL = "https://www.aerobia.ru/users/{0}/workouts/{1}"
     
     Configurable = True
     ConfigurationDefaults = {}
@@ -148,8 +148,8 @@ class AerobiaService(ServiceBase):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"
     }
 
-    _urlRoot = "http://aerobia.ru/"
-    _apiRoot = "http://aerobia.ru/api/"
+    _urlRoot = "https://aerobia.ru/"
+    _apiRoot = "https://aerobia.ru/api/"
     _loginUrlRoot = _apiRoot + "sign_in"
     _workoutsUrl = _apiRoot + "workouts"
     _workoutUrlJson = _apiRoot + "workouts/{id}.json"
