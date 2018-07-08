@@ -1,6 +1,5 @@
 # Synchronization module for polarpersonaltrainer.com
 # (c) 2018 Anton Ashmarin, aashmarin@gmail.com
-from tapiriik.settings import WEB_ROOT, POLAR_CLIENT_SECRET, POLAR_CLIENT_ID, POLAR_RATE_LIMITS
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, SourceFile, ActivityFileType

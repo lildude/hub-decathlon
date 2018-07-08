@@ -75,11 +75,8 @@ class Service:
             Setio,
             Singletracker,
             Aerobia,
-<<<<<<< HEAD
-            DecathlonCoach
-=======
+            DecathlonCoach,
             PolarPersonalTrainer
->>>>>>> polarpersonaltrainer
         ] + PRIVATE_SERVICES
 
     def WebInit():
