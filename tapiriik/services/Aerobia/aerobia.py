@@ -334,7 +334,7 @@ class AerobiaService(ServiceBase):
         if activity.SourceFile:
             tcx_data = activity.SourceFile.getContent(ActivityFileType.TCX)
             # Set aerobia-understandable sport name
-            tcx_data = re.sub(r'(<Sport=\")\w+(\">)', r'\1{}\2'.format(self._activityMappings[activity.Type]), tcx_data) if tcx_data else None
+            tcx_data = re.sub(r'(Sport=\")[\w\s]+(\">)', r'\1{}\2'.format(self._activityMappings[activity.Type]), tcx_data) if tcx_data else None
         if not tcx_data:
             tcx_data =  TCXIO.Dump(activity, self._activityMappings[activity.Type])
         
