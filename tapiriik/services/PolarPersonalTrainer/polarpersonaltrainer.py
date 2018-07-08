@@ -113,7 +113,7 @@ class PolarPersonalTrainerService(ServiceBase):
 
         date_format = "{d.day}.{d.month}.{d.year}"
         end_date = datetime.now() + timedelta(days=1.5)
-        start_date = date(2015, 1, 1) if exhaustive else end_date - timedelta(days=60)
+        start_date = date(1961, 4, 12) if exhaustive else end_date - timedelta(days=60)
         params = {
             "startDate": date_format.format(d=start_date),
             "endDate": date_format.format(d=end_date)
