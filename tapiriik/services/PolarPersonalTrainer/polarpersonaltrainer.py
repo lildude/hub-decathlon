@@ -10,18 +10,11 @@ from tapiriik.services.PolarPersonalTrainer.pptToTcx import convert
 
 from datetime import date, datetime, timedelta
 from django.core.urlresolvers import reverse
-from urllib.parse import urlencode
-from requests.auth import HTTPBasicAuth
-from io import StringIO
 from bs4 import BeautifulSoup
 
-import uuid
-import gzip
 import logging
-import lxml
 import pytz
 import requests
-import isodate
 
 logger = logging.getLogger(__name__)
 
@@ -187,12 +180,16 @@ class PolarPersonalTrainerService(ServiceBase):
         xmlResp = session.post(url + xmlUrl, data=xml_data)
         xmlText = xmlResp.text
         gpxResp = session.post(url + gpxUrl, data=gpx_data)
+        if gpxResp.status_code == 401:
+            logger.debug("Problem completing request. Unauthorized. Activity extId = {}".format(activity.ExternalID))
+            raise APIException("Unknown authorization problem during request", user_exception=UserException(UserExceptionType.DownloadError))
+        
         gpxText = gpxResp.text
         activity.GPS = not ("The items you are exporting contain no GPS data" in gpxText)
 
-        tcxData = convert(xmlText, gpxText if activity.GPS else None)
-        activity = TCXIO.Parse(tcxData.encode('utf-8'), activity)
-        activity.SourceFile = SourceFile(tcxData, ActivityFileType.TCX)
+        tcxData = convert(xmlText, activity.StartTime, gpxText if activity.GPS else None)
+        activity = TCXIO.Parse(tcxData, activity)
+        activity.SourceFile = SourceFile(tcxData.decode("utf-8"), ActivityFileType.TCX)
 
         return activity
 

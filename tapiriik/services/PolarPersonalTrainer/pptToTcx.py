@@ -46,7 +46,7 @@ def seconds_from_duration(duration):
     sec = int(secms[0])
     return timedelta(hours = int(time[0]), minutes = int(time[1]), seconds = sec).total_seconds()
 
-def convert(xml, gpx=None):
+def convert(xml, startTime, gpx=None):
 #def main(exercise_name):
     #print("Converting %s..." % exercise_name)
 
@@ -67,11 +67,11 @@ def convert(xml, gpx=None):
     exercise_result = get_element(exercise, "result")
     exercise_hr = get_element(exercise_result, "heart-rate")
 
-    exercise_distance = float(get_text(exercise_result, "distance"))
-    exercise_duration = seconds_from_duration(get_text(exercise_result, "duration"))
+    #exercise_distance = float(get_text(exercise_result, "distance"))
+    #exercise_duration = seconds_from_duration(get_text(exercise_result, "duration"))
     exercise_calories = int(get_text(exercise_result, "calories"))
-    exercise_average_hr = int(get_text(exercise_hr, "average"))
-    exercise_maximum_hr = int(get_text(exercise_hr, "maximum"))
+    #exercise_average_hr = int(get_text(exercise_hr, "average"))
+    #exercise_maximum_hr = int(get_text(exercise_hr, "maximum"))
     exercise_rr = int(get_text(exercise_result, "recording-rate"))
 
     exercise_laps = []
@@ -119,7 +119,7 @@ def convert(xml, gpx=None):
         # in case there is no gps track use created time as id
         id = created
 
-    assert 0 != len(exercise_sample_hr)
+    #assert 0 != len(exercise_sample_hr)
 
     # tcx
     tcx_doc = minidom.getDOMImplementation().createDocument(None, "TrainingCenterDatabase", None)
@@ -148,16 +148,19 @@ def convert(xml, gpx=None):
         lap_first_track_point = True
         lap_total_duration = seconds_from_duration(get_text(exercise_lap, "duration"))
 
-        exercise_lap_hr = get_element(exercise_lap, "heart-rate")
+        if len(exercise_sample_hr) != 0:
+            exercise_lap_hr = get_element(exercise_lap, "heart-rate")
         lap_element = create_element(tcx_doc, activity, "Lap")
         create_text_element(tcx_doc, lap_element, "TotalTimeSeconds", lap_total_duration)
-        create_text_element(tcx_doc, lap_element, "DistanceMeters", get_text(exercise_lap, "distance"))
-        lap_max_speed_element = create_element(tcx_doc, lap_element, "MaximumSpeed")
+        distance = get_text(exercise_lap, "distance")
+        if distance:
+            create_text_element(tcx_doc, lap_element, "DistanceMeters", distance)
         create_text_element(tcx_doc, lap_element, "Calories", int(exercise_calories / len(exercise_laps)))
-        average_hr = create_element(tcx_doc, lap_element, "AverageHeartRateBpm")
-        maximum_hr = create_element(tcx_doc, lap_element, "MaximumHeartRateBpm")
-        create_text_element(tcx_doc, average_hr, "Value", get_text(exercise_lap_hr, "average"))
-        create_text_element(tcx_doc, maximum_hr, "Value", get_text(exercise_lap_hr, "maximum"))
+        if len(exercise_sample_hr) != 0:
+            average_hr = create_element(tcx_doc, lap_element, "AverageHeartRateBpm")
+            maximum_hr = create_element(tcx_doc, lap_element, "MaximumHeartRateBpm")
+            create_text_element(tcx_doc, average_hr, "Value", get_text(exercise_lap_hr, "average"))
+            create_text_element(tcx_doc, maximum_hr, "Value", get_text(exercise_lap_hr, "maximum"))
         create_text_element(tcx_doc, lap_element, "Intensity", "Active")
         create_text_element(tcx_doc, lap_element, "TriggerMethod", "Manual")
         track = create_element(tcx_doc, lap_element, "Track")
@@ -168,7 +171,7 @@ def convert(xml, gpx=None):
                 date_time_str = get_text(trkpt, "time")
                 date_time = datetime.strptime(date_time_str, dateFormat)
             else:
-                date_time = prev_date_time + timedelta(0, exercise_rr)
+                date_time = startTime if prev_date_time is None else prev_date_time + timedelta(0, exercise_rr)
                 date_time_str = date_time.strftime(dateFormat)
 
             if lap_first_track_point:
@@ -176,15 +179,18 @@ def convert(xml, gpx=None):
                 lap_element.setAttribute("StartTime", date_time_str)
 
             time = exercise_rr if prev_date_time is None else (date_time - prev_date_time).total_seconds()
-            total_distance += speed * time
-            lap_max_speed = max(lap_max_speed, speed)
+            if speed:
+                total_distance += speed * time
+                lap_max_speed = max(lap_max_speed, speed)
             lap_duration += time
             prev_date_time = date_time
 
             trackpoint = create_element(tcx_doc, track, "Trackpoint")
             create_text_element(tcx_doc, trackpoint, "Time", date_time_str)
-            create_text_element(tcx_doc, trackpoint, "DistanceMeters", total_distance)
-            create_text_element(tcx_doc, trackpoint, "AltitudeMeters", altitude)
+            if total_distance:
+                create_text_element(tcx_doc, trackpoint, "DistanceMeters", total_distance)
+            if altitude:
+                create_text_element(tcx_doc, trackpoint, "AltitudeMeters", altitude)
 
             if trkpt:
                 position = create_element(tcx_doc, trackpoint, "Position")
@@ -198,19 +204,21 @@ def convert(xml, gpx=None):
             extensions = create_element(tcx_doc, trackpoint, "Extensions")
             tpx = create_element(tcx_doc, extensions, "TPX")
             tpx.setAttribute("xmlns", "http://www.garmin.com/xmlschemas/ActivityExtension/v2")
-            create_text_element(tcx_doc, tpx, "Speed", speed)
+            if speed:
+                create_text_element(tcx_doc, tpx, "Speed", speed)
 
             if exercise_lap != exercise_laps[-1] and lap_duration >= lap_total_duration:
                 break
 
-        set_text(tcx_doc, lap_max_speed_element, lap_max_speed)
+        if lap_max_speed:
+            lap_max_speed_element = create_element(tcx_doc, lap_element, "MaximumSpeed")
+            set_text(tcx_doc, lap_max_speed_element, lap_max_speed)
 
     for _ in iter(bundle):
         assert False
 
-    creator = create_element(tcx_doc, activity, "Creator")
-    creator.setAttribute("xsi:type", "Device_t")
-    create_text_element(tcx_doc, creator, "Name", "Polar device")
+    #creator = create_element(tcx_doc, activity, "Creator")
+    #creator.setAttribute("xsi:type", "Device_t")
     #create_text_element(tcx_doc, creator, "Name", "Polar RS800CX")
 
     author = create_element(tcx_doc, training_center_database, "Author")
@@ -220,7 +228,7 @@ def convert(xml, gpx=None):
     #with open(exercise_name + ".tcx", "wb") as tcx_file:
     #    tcx_file.write(tcx_doc.toprettyxml(indent = "    ", encoding = "utf-8"))
 
-    return tcx_doc.toxml(encoding = "utf-8")
+    return tcx_doc.toprettyxml(indent = "  ", encoding = "utf-8")
     #print("Done!")
 
 #main(sys.argv[1])
