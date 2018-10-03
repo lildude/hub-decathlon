@@ -123,7 +123,6 @@ class GarminConnectService(ServiceBase):
 
     def __init__(self):
         cachedHierarchy = cachedb.gc_type_hierarchy.find_one()
-        '''
         if not cachedHierarchy:
             rawHierarchy = requests.get("https://connect.garmin.com/proxy/activity-service-1.2/json/activity_types", headers=self._obligatory_headers).text
             self._activityHierarchy = json.loads(rawHierarchy)["dictionary"]
@@ -134,7 +133,6 @@ class GarminConnectService(ServiceBase):
         # Ensure the rate lock file exists (...the easy way)
         open(rate_lock_path, "a").close()
         self._rate_lock = open(rate_lock_path, "r+")
-        '''
 
     def _rate_limit(self):
         import fcntl, struct, time
