@@ -1,4 +1,5 @@
 {% extends "site.html" %}
+{% load i18n %}
 {% load services %}
 {% load users %}
 {% load displayutils %}
@@ -7,7 +8,7 @@
 {% block content %}
 {% if user != none %}
 		{% if user.Substitute %}
-		<h1>Substituting user</h1>
+		<h1>{% trans "Substituting user" %}</h1>
 		<a href="{% url 'diagnostics_unsu' %}">Return</a>
 		<hr/>
 		{% endif %}
@@ -29,12 +30,12 @@
 		</div>
 	{% if user.ConnectedServices|length > 1 %}
 		<div class="syncButtonBlock">
-			<div class="syncButtonAttachment left">Queueing to Synchronize</div><div class="syncButtonWrap"><a class="syncButton">Synchronize Now<div class="syncButtonIcon"></div></a><a href="#/settings" class="syncSettingsNubbin"><span class="sr">Synchronization Settings</span><div class="syncSettingsNubbinIcon"></div></a></div><div class="syncButtonAttachment right">Attached info 10%</div>
+			<div class="syncButtonAttachment left">{% trans "Queueing to Synchronize" %}</div><div class="syncButtonWrap"><a class="syncButton">{% trans "Synchronize Now" %}<div class="syncButtonIcon"></div></a><a href="#/settings" class="syncSettingsNubbin"><span class="sr">{% trans "Synchronization Settings" %}</span><div class="syncSettingsNubbinIcon"></div></a></div><div class="syncButtonAttachment right">{% trans "Attached info 10%" %}</div>
 		</div>
 		{% include "settings-block.html" %}
 
 		{% if user.NonblockingSyncErrorCount > 0 %}
-			<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">Some activities could not be synchronized.</a><br/>
+			<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
 		{% endif %}
  
 		{% if user|has_active_payment %}
@@ -63,15 +64,14 @@
 	{% endfor %}
 
 {% else %}
-<p class="splashPreamble">exercisync synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>
-(your heart rate, cadence, power, and temperature data syncs too)</p>
+<p class="splashPreamble">{% trans "exercisync synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
 	{% for provider in service_providers %}
 		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
 			{% include "service-button.html" with provider=provider %}
 		{% endif %}
 	{% endfor %}
-	{% infotip ServiceNotListed %}Не нашли свой сервис? - Попробуйте здесь: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a>{% endinfotip %}
-<p class="splashPreamble">Your email, password, and fitness data are kept safe - full details on the <a href="{% url "privacy" %}">privacy page</a>.</p>
+	{% infotip ServiceNotListed %}{% trans "Did not find your service?" %} - {% trans "Try here" %}: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a>{% endinfotip %}
+<p class="splashPreamble">{% trans "Your email, password, and fitness data are kept safe - full details on the" %} <a href="{% url "privacy" %}">{% trans "privacy page" %}</a>.</p>
 {% endif %}
 
 {% include "donation.html" %}

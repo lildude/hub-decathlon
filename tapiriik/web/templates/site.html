@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load displayutils %}
 {% load pipeline %}
 <!DOCTYPE html>
@@ -58,7 +59,7 @@
 					{% if celebration_mode.Subtitle %}
 						<div class="sub">{{ celebration_mode.Subtitle }}</div>
 					{% else %}
-						<div class="sub">when kudos on strava is not enough</div>
+						<div class="sub">{% trans "when kudos on strava is not enough" %}</div>
 					{% endif %}
 				</div>
 				<div class="logoPad"></div>
@@ -67,8 +68,8 @@
 		    			{% block content %}{% endblock %}
 		    		</div>
 	    		</div>
-	    		<div class="footers"><a href="{% url 'faq' %}">FAQ</a> | <a href="{% url 'privacy' %}">Privacy</a> | <a href="{% url 'credits' %}">Credits</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">Log out</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">All trademarks displayed are property of their respective owners</br>
-	    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> is an <a href="https://github.com/antash/exercisync" target="_blank">open source project</a> by <a href="{% url 'contact' %}">Anton Ashmarin</a>
+	    		<div class="footers"><a href="{% url 'faq' %}">FAQ</a> | <a href="{% url 'privacy' %}">Privacy</a> | <a href="{% url 'credits' %}">Credits</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
+	    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> is an <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> by <a href="{% url 'contact' %}">Anton Ashmarin</a>
 	    		</div>
 	    	</div>
     	</div>
