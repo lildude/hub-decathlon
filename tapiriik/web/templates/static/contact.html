@@ -11,5 +11,6 @@
 	<p>If you are having issues with your account, <b>please check <a href="{% url 'activities_dashboard' %}">the activity dashboard</a></b> - it'll do its best to tell you what went wrong.</p>
 	<a href="mailto:help@exercisync.com{% if user %}?body=My exercisync user ID is {{ user|dict_get:'_id' }}{% endif %}" target="_blank" class="large">help@exercisync.com</a>
 	<p>If you're dissatisfied with the service and want a refund, make sure to mention that in the subject line so I can respond quickly.</p>
+	<p>If you are making an enquiry regarding the European Union's General Data Protection Regulation, please mention "GDPR" in the subject line.</p>
 </div>
 {% endblock %}
