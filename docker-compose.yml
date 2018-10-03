@@ -1,0 +1,26 @@
+mongo:
+  image: 'mongo:3'
+  expose:
+    - '27017'
+
+RMQ:
+  image: 'rabbitmq:3'
+  environment:
+    - RABBITMQ_NODENAME=tapiriik
+  expose:
+    - '5672'
+
+redis:
+  image: 'redis:3'
+  expose:
+    - '6379'
+
+web:
+  image: 'my-exercisync:latest'
+  links:
+    - mongo
+    - RMQ
+    - redis
+  ports:
+    - '8000:8000'
+  env_file: environment
