@@ -3,19 +3,19 @@
 {% load services %}
 {% load users %}
 {% load displayutils %}
-{% block title %}{% if user != none %}dashboard{% else %}sync your runs, rides & more{% endif %}{% endblock %}
+{% block title %}{% if user != none %}{% trans "dashboard" %}{% else %}{% trans "sync your runs, rides & more" %}{% endif %}{% endblock %}
 
 {% block content %}
 {% if user != none %}
 		{% if user.Substitute %}
 		<h1>{% trans "Substituting user" %}</h1>
-		<a href="{% url 'diagnostics_unsu' %}">Return</a>
+		<a href="{% url 'diagnostics_unsu' %}">{% trans "Return" %}</a>
 		<hr/>
 		{% endif %}
 		{% if user.ConnectedServices|length > 1 %}
-			{% infotip connectedWillSync %}Connected services will be synchronized {% if user|has_active_payment %}automatically{% else %}when you click Synchronize now{% endif %}{% endinfotip %}
+			{% infotip connectedWillSync %}{% trans "Connected services will be synchronized" %} {% if user|has_active_payment %}{% trans "automatically" %}{% else %}{% trans "when you click Synchronize now" %}{% endif %}{% endinfotip %}
 		{% else %}
-			{% infotip connectOneMore %}Connect a second service to synchronize your activities to &amp; from{% endinfotip %}
+			{% infotip connectOneMore %}{% trans "Connect a second service to synchronize your activities to &amp; from" %}{% endinfotip %}
 		{% endif %}
 		<div class="serviceButtonOuter">
 			<div class="serviceButtonWrap">
@@ -58,7 +58,7 @@
 
 	{% for provider in user.ConnectedServices|svc_providers_except %}
 		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
-			{% if forloop.first %}<hr>{% infotip connectMore %}You can synchronize more services by connecting them below{% endinfotip %}{% endif %}
+			{% if forloop.first %}<hr>{% infotip connectMore %}{% trans "You can synchronize more services by connecting them below" %}{% endinfotip %}{% endif %}
 			{% include "service-button.html" with provider=provider inactive=True %}
 		{% endif %}
 	{% endfor %}

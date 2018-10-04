@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-04 15:03+0300\n"
+"POT-Creation-Date: 2018-10-04 18:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,9 +93,43 @@ msgstr "Аккаунт подключен"
 msgid "Remember these details"
 msgstr "Запомнить данные"
 
+#: .\tapiriik\web\templates\dashboard.html:6
+#, fuzzy
+#| msgid "activities dashboard"
+msgid "dashboard"
+msgstr "панель тренировок"
+
+#: .\tapiriik\web\templates\dashboard.html:6
+msgid "sync your runs, rides & more"
+msgstr "синхронизирует бег, вело и не только"
+
 #: .\tapiriik\web\templates\dashboard.html:11
 msgid "Substituting user"
 msgstr "Подстановка пользователя"
+
+#: .\tapiriik\web\templates\dashboard.html:12
+msgid "Return"
+msgstr "Возврат"
+
+#: .\tapiriik\web\templates\dashboard.html:16
+#, fuzzy
+#| msgid "Some activities could not be synchronized."
+msgid "Connected services will be synchronized"
+msgstr "Некоторые тренировки не могут быть синхронизированы."
+
+#: .\tapiriik\web\templates\dashboard.html:16
+msgid "automatically"
+msgstr "автоматически"
+
+#: .\tapiriik\web\templates\dashboard.html:16
+#, fuzzy
+#| msgid "Synchronize Now"
+msgid "when you click Synchronize now"
+msgstr "когда вы кликните &quot;Синхронизация&quot;"
+
+#: .\tapiriik\web\templates\dashboard.html:18
+msgid "Connect a second service to synchronize your activities to &amp; from"
+msgstr "Подключите второй сервис чтобы синхронизировать тренировки на/с него"
 
 #: .\tapiriik\web\templates\dashboard.html:33
 msgid "Queueing to Synchronize"
@@ -117,6 +151,10 @@ msgstr ""
 #: .\tapiriik\web\templates\dashboard.html:38
 msgid "Some activities could not be synchronized."
 msgstr "Некоторые тренировки не могут быть синхронизированы."
+
+#: .\tapiriik\web\templates\dashboard.html:61
+msgid "You can synchronize more services by connecting them below"
+msgstr "Вы можете синхронизироваться с другими сервисами ниже, просто подключите их"
 
 #: .\tapiriik\web\templates\dashboard.html:67
 msgid ""
@@ -407,7 +445,7 @@ msgstr "<b>Метаданные</b> тренировок"
 msgid ""
 "..until you disconnect your account or they are no longer needed, whichever "
 "is sooner"
-msgstr "..до тех пор пока они будут нужны или вы не отключете свой аккаунт"
+msgstr "..до тех пор пока они будут нужны или вы не отключите свой аккаунт"
 
 #: .\tapiriik\web\templates\privacy.html:35
 msgid "<span>What are</span>Access tokens?"
@@ -423,7 +461,7 @@ msgid ""
 msgstr ""
 "Токены доступа позволяют exercisync-у <b>действовать от вашего имени</b>. "
 "Используя токен, exercisync-у не нужно хранить ваши логин и пароль от "
-"сторонных сервисов. Чтобы получить токен, exercisync может запросить ваши "
+"сторонних сервисов. Чтобы получить токен, exercisync может запросить ваши "
 "учетные данные, которые будут удалены сразу же, как только токен будет "
 "получен."
 
@@ -464,7 +502,7 @@ msgid ""
 "access and resources to the exercisync database and servers could access it, "
 "too."
 msgstr ""
-" Ваши пароли достаточно хорошо защащены, однако так как exercisync имеет к "
+" Ваши пароли достаточно хорошо защищены, однако так как exercisync имеет к "
 "ним доступ чтобы синхронизация была возможна, каждый, кому удастся получить "
 "доступ к серверам, сможет получить доступ и к паролям. "
 
@@ -496,6 +534,20 @@ msgstr "На паузе"
 msgid "Connected"
 msgstr "Подключено"
 
+#: .\tapiriik\web\templates\service-button.html:35
+msgid "Reauthorize"
+msgstr ""
+
+#: .\tapiriik\web\templates\service-button.html:39
+msgid "Reconfigure"
+msgstr ""
+
+#: .\tapiriik\web\templates\service-button.html:43
+#, fuzzy
+#| msgid "Connect"
+msgid "Disconnect"
+msgstr "Подключить"
+
 #: .\tapiriik\web\templates\service-button.html:48
 msgid "Connect"
 msgstr "Подключить"
@@ -512,13 +564,14 @@ msgstr "Загружать тренировки"
 msgid "after they finish, but skip them if they happened before"
 msgstr "сразу же после их завершения, но игнорировать тренировки до"
 
-#: .\tapiriik\web\templates\settings.html:10
-msgid "Advanced settings"
-msgstr "Продвинутые настройки"
-
+#: .\tapiriik\web\templates\settings-block.html:25
 #: .\tapiriik\web\templates\settings.html:49
 msgid "Save"
 msgstr "Сохранить"
+
+#: .\tapiriik\web\templates\settings.html:10
+msgid "Advanced settings"
+msgstr "Продвинутые настройки"
 
 #: .\tapiriik\web\templates\site.html:62
 msgid "when kudos on strava is not enough"
@@ -575,7 +628,7 @@ msgstr "Если вам нужна помощь"
 
 #: .\tapiriik\web\templates\static\contact.html:12
 msgid "If you are having issues with your account"
-msgstr "Если у вас пробемы с аккаунтом,"
+msgstr "Если у вас проблемы с аккаунтом,"
 
 #: .\tapiriik\web\templates\static\contact.html:12
 msgid "please check"
@@ -680,7 +733,7 @@ msgid ""
 "have already connected</strong>, and you will be signed back into exercisync "
 "and ready to start another synchronization."
 msgstr ""
-"<strong>Нет!</strong> Просто <strong>поключите какой-либо из своих сервисов "
+"<strong>Нет!</strong> Просто <strong>подключите какой-либо из своих сервисов "
 "</strong>, чтобы полностью загрузить свой профиль на exercisync и можно "
 "запускать новую синхронизацию."
 
@@ -721,7 +774,7 @@ msgid ""
 "trackers tapiriik doesn't support."
 msgstr ""
 "Это почти то же самое, но с бесплатной автоматической синхронизацией и "
-"некоторыми серывисами/функциями, не поддерживаемыми на tapiriik.com."
+"некоторыми сервисами/функциями, не поддерживаемыми на tapiriik.com."
 
 #: .\tapiriik\web\templates\static\faq.html:34
 msgid "Will exercisync create duplicate activities?"
@@ -854,7 +907,7 @@ msgid ""
 msgstr ""
 "Для более эффективной синхронизации, <b>exercisync использует специального "
 "пользователя</b> для подключения к вашему Garmin Connect. <b>Ни в коем "
-"случае не подтвержнайте запрос на подключения</b> от этого пользователя "
+"случае не подтверждайте запрос на подключения</b> от этого пользователя "
 "самостоятельно; процесс автоматический."
 
 #: .\tapiriik\web\templates\static\faq.html:70
@@ -892,7 +945,7 @@ msgid ""
 "service will be synchronized with all the others."
 msgstr ""
 "Просто зайдите сначала в один из сервисов, который у вас уже подключен к "
-"exercisync, затем зайтите в новые сервисы (или наоборот, не важно). Вновь "
+"exercisync, затем зайдите в новые сервисы (или наоборот, не важно). Вновь "
 "подключенные сервисы будут синхронизированы со всеми остальными."
 
 #: .\tapiriik\web\templates\static\faq.html:89
@@ -916,7 +969,7 @@ msgid ""
 "of activities exercisync has already synchronized."
 msgstr ""
 "<b>Я бы не рекомендовал</b> - CopyMySports часто создает дубликаты "
-"тренировок, которые exercisync уже синхронизовал."
+"тренировок, которые exercisync уже синхронизировал."
 
 #: .\tapiriik\web\templates\supported-activities.html:16
 msgid "This list doesn't matter"

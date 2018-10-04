@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-04 15:02+0300\n"
+"POT-Creation-Date: 2018-10-04 18:38+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,9 +93,43 @@ msgstr "Vous êtes connecté à"
 msgid "Remember these details"
 msgstr "Gardez ces détails"
 
+#: .\tapiriik\web\templates\dashboard.html:6
+#, fuzzy
+#| msgid "activities dashboard"
+msgid "dashboard"
+msgstr "tableau de bord des activités"
+
+#: .\tapiriik\web\templates\dashboard.html:6
+msgid "sync your runs, rides & more"
+msgstr ""
+
 #: .\tapiriik\web\templates\dashboard.html:11
 msgid "Substituting user"
 msgstr "Remplacement utilisateur"
+
+#: .\tapiriik\web\templates\dashboard.html:12
+msgid "Return"
+msgstr ""
+
+#: .\tapiriik\web\templates\dashboard.html:16
+#, fuzzy
+#| msgid "Some activities could not be synchronized."
+msgid "Connected services will be synchronized"
+msgstr "Certaines activités pourraient ne pas être synchronisées"
+
+#: .\tapiriik\web\templates\dashboard.html:16
+msgid "automatically"
+msgstr ""
+
+#: .\tapiriik\web\templates\dashboard.html:16
+#, fuzzy
+#| msgid "Synchronize Now"
+msgid "when you click Synchronize now"
+msgstr "Synchronisation maintenant"
+
+#: .\tapiriik\web\templates\dashboard.html:18
+msgid "Connect a second service to synchronize your activities to &amp; from"
+msgstr ""
 
 #: .\tapiriik\web\templates\dashboard.html:33
 msgid "Queueing to Synchronize"
@@ -117,6 +151,10 @@ msgstr "Informations attachées 10%%"
 #: .\tapiriik\web\templates\dashboard.html:38
 msgid "Some activities could not be synchronized."
 msgstr "Certaines activités pourraient ne pas être synchronisées"
+
+#: .\tapiriik\web\templates\dashboard.html:61
+msgid "You can synchronize more services by connecting them below"
+msgstr ""
 
 #: .\tapiriik\web\templates\dashboard.html:67
 msgid ""
@@ -518,6 +556,20 @@ msgstr "Pause"
 msgid "Connected"
 msgstr "Connecté"
 
+#: .\tapiriik\web\templates\service-button.html:35
+msgid "Reauthorize"
+msgstr ""
+
+#: .\tapiriik\web\templates\service-button.html:39
+msgid "Reconfigure"
+msgstr ""
+
+#: .\tapiriik\web\templates\service-button.html:43
+#, fuzzy
+#| msgid "Connect"
+msgid "Disconnect"
+msgstr "Connecter"
+
 #: .\tapiriik\web\templates\service-button.html:48
 msgid "Connect"
 msgstr "Connecter"
@@ -534,13 +586,14 @@ msgstr "Activités envoyées"
 msgid "after they finish, but skip them if they happened before"
 msgstr "Après la fin, mais passez les si ils arrivent avant"
 
-#: .\tapiriik\web\templates\settings.html:10
-msgid "Advanced settings"
-msgstr "Paramètres avancés"
-
+#: .\tapiriik\web\templates\settings-block.html:25
 #: .\tapiriik\web\templates\settings.html:49
 msgid "Save"
 msgstr "Sauvegarder"
+
+#: .\tapiriik\web\templates\settings.html:10
+msgid "Advanced settings"
+msgstr "Paramètres avancés"
 
 #: .\tapiriik\web\templates\site.html:62
 msgid "when kudos on strava is not enough"
