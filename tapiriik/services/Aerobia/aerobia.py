@@ -338,7 +338,10 @@ class AerobiaService(ServiceBase):
         if not tcx_data:
             tcx_data =  TCXIO.Dump(activity, self._activityMappings[activity.Type])
         
-        data = {"name": activity.Name,
+        # Aerobia support activity names not longer than 60 characters
+        activity_name = activity.Name[:60] if activity.Name else None
+
+        data = {"name": activity_name,
                 "description": activity.Notes}
         files = {"file": ("tap-sync-{}-{}.tcx".format(os.getpid(), activity.UID), tcx_data)}
         res = session.post(self._uploadsUrl, data=self._with_auth(serviceRecord, data), files=files)
@@ -349,8 +352,8 @@ class AerobiaService(ServiceBase):
             raise APIException(res_obj["error"], user_exception=UserException(UserExceptionType.UploadError))
         
         extra_data = {}
-        if activity.Name is not None:
-            extra_data.update({"workout[name]": activity.Name})
+        if activity_name:
+            extra_data.update({"workout[name]": activity_name})
         
         self._put_default_inventory(activity, serviceRecord, extra_data)
 
