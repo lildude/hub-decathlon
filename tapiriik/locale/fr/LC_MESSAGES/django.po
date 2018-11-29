@@ -583,7 +583,7 @@ msgid "Upload activities"
 msgstr "Activités envoyées"
 
 #: .\tapiriik\web\templates\settings-block.html:21
-msgid "after they finish, but skip them if they happened before"
+msgid "after they finish, but skip them if they happened"
 msgstr "Après la fin, mais passez les si ils arrivent avant"
 
 #: .\tapiriik\web\templates\settings-block.html:25

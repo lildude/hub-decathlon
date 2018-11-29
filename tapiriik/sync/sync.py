@@ -1010,10 +1010,16 @@ class SynchronizationTask:
                                     raise ActivityShouldNotSynchronizeException()
 
                         if self._user_config["sync_skip_before"]:
-                            if activity.StartTime.replace(tzinfo=None) < self._user_config["sync_skip_before"]:
-                                logger.info("\t\t...predates configured sync window")
-                                activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.PredatesWindow))
-                                raise ActivityShouldNotSynchronizeException()
+                            if self._user_config["historical_sync"]:
+                                if activity.StartTime.replace(tzinfo=None) > self._user_config["sync_skip_before"]:
+                                    logger.info("\t\t...predates configured sync window")
+                                    activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.PredatesWindow))
+                                    raise ActivityShouldNotSynchronizeException()
+                            else:
+                                if activity.StartTime.replace(tzinfo=None) < self._user_config["sync_skip_before"]:
+                                    logger.info("\t\t...predates configured sync window")
+                                    activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.PredatesWindow))
+                                    raise ActivityShouldNotSynchronizeException()
 
                         # We don't always know if the activity is private before it's downloaded, but we can check anyways since it saves a lot of time.
                         if activity.Private:

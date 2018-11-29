@@ -561,8 +561,8 @@ msgid "Upload activities"
 msgstr "Загружать тренировки"
 
 #: .\tapiriik\web\templates\settings-block.html:21
-msgid "after they finish, but skip them if they happened before"
-msgstr "сразу же после их завершения, но игнорировать тренировки до"
+msgid "after they finish, but skip them if they happened"
+msgstr "сразу же после их завершения, но игнорировать тренировки"
 
 #: .\tapiriik\web\templates\settings-block.html:25
 #: .\tapiriik\web\templates\settings.html:49
