@@ -117,6 +117,9 @@ PIPELINE_CSS = {
     },
 }
 
+PIPELINE_CSS_COMPRESSOR  = 'pipeline.compressors.cssmin.CSSMinCompressor'
+PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.jsmin.JSMinCompressor'
+
 PIPELINE_DISABLE_WRAPPER = True
 
 # Make this unique, and don't share it with anybody.
