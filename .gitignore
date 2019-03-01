@@ -8,3 +8,7 @@ private/
 node_modules/
 webpack-stats.json
 .vscode/
+environment
+tapiriik/local_settings.py
+static/
+logs/
