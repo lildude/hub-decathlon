@@ -12,3 +12,5 @@
 # [Conception](040-exceptions.md)
 
 # [Extend service](060-ht-extend-service.md)
+
+# [Development install](070-development.md)
