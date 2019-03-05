@@ -12,3 +12,4 @@ environment
 tapiriik/local_settings.py
 static/
 logs/
+.DS_Store
