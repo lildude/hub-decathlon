@@ -1,6 +1,6 @@
 # Synchronization module for decathloncoach.com
 # (c) 2018 Charles Anssens, charles.anssens@decathlon.com
-from tapiriik.settings import WEB_ROOT, DECATHLONCOACH_CLIENT_SECRET, DECATHLONCOACH_CLIENT_ID, DECATHLONCOACH_API_KEY
+from tapiriik.settings import WEB_ROOT, DECATHLONCOACH_CLIENT_SECRET, DECATHLONCOACH_CLIENT_ID, DECATHLONCOACH_API_KEY, DECATHLONCOACH_API_BASE_URL
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb
@@ -36,7 +36,6 @@ class DecathlonCoachService(ServiceBase):
     PartialSyncRequiresTrigger = False
     LastUpload = None
     
-    ApiEndpoint = "https://api.decathlon.net/linkdata"
     OauthEndpoint = "https://account.geonaute.com"
     
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = False
@@ -215,7 +214,7 @@ class DecathlonCoachService(ServiceBase):
         
         for dateInterval in period:
             headers = self._getAuthHeaders(svcRecord)
-            resp = requests.get(self.ApiEndpoint + "/users/" + str(svcRecord.ExternalID) + "/activities.xml?date=" + dateInterval, headers=headers)
+            resp = requests.get(DECATHLONCOACH_API_BASE_URL + "/users/" + str(svcRecord.ExternalID) + "/activities.xml?date=" + dateInterval, headers=headers)
             if resp.status_code == 400:
                 logger.info(resp.content)
                 raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
@@ -291,7 +290,7 @@ class DecathlonCoachService(ServiceBase):
         logger.info("\t\t DC LOADING  : " + str(activityID))
 
         headers = self._getAuthHeaders(svcRecord)
-        resp = requests.get(self.ApiEndpoint + "/activity/"+activityID+"/fullactivity.xml", headers = headers)
+        resp = requests.get(DECATHLONCOACH_API_BASE_URL + "/activity/"+activityID+"/fullactivity.xml", headers = headers)
         if resp.status_code == 401:
             raise APIException("No authorization to download activity", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
 
@@ -444,7 +443,7 @@ class DecathlonCoachService(ServiceBase):
         activityXML = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8")
 
         headers = self._getAuthHeaders(svcRecord)
-        upload_resp = requests.post(self.ApiEndpoint + "/activity/import.xml", data=activityXML, headers=headers)
+        upload_resp = requests.post(DECATHLONCOACH_API_BASE_URL + "/activity/import.xml", data=activityXML, headers=headers)
         if upload_resp.status_code != 200:
             raise APIException("Could not upload activity %s %s" % (upload_resp.status_code, upload_resp.text))
         
@@ -466,5 +465,5 @@ class DecathlonCoachService(ServiceBase):
     
     def DeleteActivity(self, serviceRecord, uploadId):
         headers = self._getAuthHeaders(serviceRecord)
-        del_res = requests.delete(self.ApiEndpoint + "/activity/+d/summary.xml" % uploadId , headers=headers)
+        del_res = requests.delete(DECATHLONCOACH_API_BASE_URL + "/activity/+d/summary.xml" % uploadId , headers=headers)
         del_res.raise_for_status()
