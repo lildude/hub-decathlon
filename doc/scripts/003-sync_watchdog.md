@@ -4,7 +4,7 @@ Ce script a pour but de détecter si un process de synchronisation est en timeou
 Si le process est kill, les users concernés seront "unlocké" pour être de nouveau synchronisé au prochain run worker.
 Il utilise les modules Tapiriik.
 
-Déroulement du script :
+### Déroulement du script :
 - Récupère la liste de tous les documents sync_workers en base,
 ```
 for worker in db.sync_workers.find({"Host": host}):

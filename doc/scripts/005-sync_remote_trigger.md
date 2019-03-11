@@ -19,7 +19,7 @@ class _celeryConfig:
 @worker_shutdown.connect
 def celery_shutdown(**kwargs):
 ``` 
-Déroulement de la fonction : 
+#### Déroulement de la fonction : 
 - Ferme la connexion Celery
 
 ### trigger_remote
@@ -27,7 +27,7 @@ Déroulement de la fonction :
 @celery_app.task(acks_late=True)
 def trigger_remote(service_id, affected_connection_external_ids):
 ``` 
-Déroulement de la fonction: 
+#### Déroulement de la fonction: 
 - Récupère le service dont l'ID est passé en parammètre
 - Met à jour la liste des connections liées à ce service et dont les ExternalID  sont inclus dans la liste fournit en paramètre, pour déclencher une synchronisation partielle
 - Récupère la liste des IDs concernés par la modification

@@ -2,7 +2,7 @@
 
 Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il utilise les modules Tapiriik et Pymongo.
 
-Déroulement du script : 
+### Déroulement du script : 
 - Déclaration d'un nouveau "sous-process"
 - Récupération d'un document sync_workers par son process ID et son host (1), puis mise à jour de celui-ci (2) : 
 ```

@@ -9,7 +9,7 @@ Il utilise les modules Tapiriik et Celery.
 ```
 def schedule_trigger_poll()
 ```
-Déroulement de la fonction : 
+#### Déroulement de la fonction : 
 - Récupération des trigger_poll_scheduling.
 - Pour tous les services ayant besoin d'être "polling"
 ```
@@ -25,7 +25,7 @@ for svc in Service.List():
 @celery_app.task(acks_late=True)
 def trigger_poll(service_id, index)
 ```
-Déroulement de la fonction : 
+#### Déroulement de la fonction : 
 - Cette fonction récupère une liste de users via l'API du service concerné.
 - Elle met ensuite les connections de ces users à jour.
 - Enfin, les users possédant le service et n'ayant pas terminé leurs abonnement, serontmis à jour de sorte à être identifié comme "à synchroniser" par le worker.

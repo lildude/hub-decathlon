@@ -2,7 +2,7 @@
 
 Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il utilise les modules Tapiriik et Pymongo.
 
-Déroulement du script : 
+### Déroulement du script : 
 - Récupération des documents sync_watchdog en DB
 - Pour chacun d'entre eux, s'ils sont en timeout (5mn), on ré-initialise la synchronisation des users concernés par les process en timeout.
 ```

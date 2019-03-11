@@ -4,7 +4,7 @@ Ce script a pour but de récupérer la liste des users ayant besoin d'être sync
 Ce script est en exécution permanente, c'est à dire qu'il ne s'arrêtera pas de tourner tant qu'il n'y aura pas de plantage, ni d'intervention humaine pour l'arrêter.
 Il utilise les modules tapiriik, pymongo et kombu.
 
-Déroulement du script : 
+### Déroulement du script : 
 - Définition des variables global pour la synchronisation et d'un message en queue
 ```
 Sync.InitializeWorkerBindings()
