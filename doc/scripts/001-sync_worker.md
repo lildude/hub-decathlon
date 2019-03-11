@@ -37,6 +37,5 @@ def sync_heartbeat(state, user=None):
 
 
 # [Back to script summary](000-script-summary.md)
-## [Back to conception summary](010-conception.md)
-```````````````````````````
+
 
