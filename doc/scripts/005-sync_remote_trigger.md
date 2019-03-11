@@ -2,7 +2,7 @@
 
 Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il utilise les modules Tapiriik et Celery (pour RabbitMQ).
 
-##Déclaration de classe :
+## Déclaration de classe :
 ### _celeryConfig:
 ```python
 class _celeryConfig:

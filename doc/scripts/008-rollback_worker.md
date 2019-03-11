@@ -4,7 +4,7 @@ Ce script a pour but de limiter le nombre de CPU utilisé par les différents pr
 Ce script est en exécution permanente, c'est à dire qu'il ne s'arrêtera pas de tourner tant qu'il n'y aura pas de plantage, ni d'intervention humaine pour l'arrêter.
 Il utilise les modules tapiriik, pymongo et kombu.
 
-##Déclaration de classe :
+## Déclaration de classe :
 ### _celeryConfig:
 ```python
 class _celeryConfig:
