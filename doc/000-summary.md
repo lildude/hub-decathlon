@@ -14,3 +14,5 @@
 # [Extend service](060-ht-extend-service.md)
 
 # [Development install](070-development.md)
+
+# [Scripts summary](scripts/000-script-summary.md)
