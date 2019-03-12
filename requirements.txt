@@ -1,5 +1,6 @@
 requests
 pymongo==3.0.1
+boto3
 pytz
 lxml
 dropbox

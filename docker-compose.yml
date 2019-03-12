@@ -1,7 +1,9 @@
 mongo:
   image: 'mongo:3'
+  ports:
+    - '27017:27017'
   expose:
-    - '27017'
+    - "27017"
 
 RMQ:
   image: 'rabbitmq:3'
