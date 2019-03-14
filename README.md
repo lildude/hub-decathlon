@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Antash/exercisync.svg?branch=master)](https://travis-ci.org/Antash/exercisync)
+
 ## Credits
 This project is based on https://github.com/cpfair/tapiriik code by Collin Fair.
 
