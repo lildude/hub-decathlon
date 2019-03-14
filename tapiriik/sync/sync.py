@@ -1,5 +1,4 @@
 from tapiriik.database import db, cachedb, redis
-from tapiriik.messagequeue import mq
 from tapiriik.services import Service, ServiceRecord, APIExcludeActivity, ServiceException, ServiceExceptionScope, ServiceWarning, UserException, UserExceptionType
 from tapiriik.settings import USER_SYNC_LOGS, DISABLED_SERVICES, WITHDRAWN_SERVICES
 from .activity_record import ActivityRecord, ActivityServicePrescence
@@ -16,9 +15,11 @@ import logging
 import logging.handlers
 import pymongo
 import pytz
-import kombu
 import json
 import bisect
+
+from helper.sqs.manager import SqsManager
+
 
 # Set this up separate from the logger used in this scope, so services logging messages are caught and logged into user's files.
 _global_logger = logging.getLogger("tapiriik")
@@ -59,18 +60,22 @@ def _isWarning(exc):
 
 # It's practically an ORM!
 
+
 def _packServiceException(step, e):
     res = {"Step": step, "Message": e.Message + "\n" + _formatExc(), "Block": e.Block, "Scope": e.Scope, "TriggerExhaustive": e.TriggerExhaustive, "Timestamp": datetime.utcnow()}
     if e.UserException:
         res["UserException"] = _packUserException(e.UserException)
     return res
 
+
 def _packException(step):
     return {"Step": step, "Message": _formatExc(), "Timestamp": datetime.utcnow()}
+
 
 def _packUserException(userException):
     if userException:
         return {"Type": userException.Type, "Extra": userException.Extra, "InterventionRequired": userException.InterventionRequired, "ClearGroup": userException.ClearGroup}
+
 
 def _unpackUserException(raw):
     if not raw:
@@ -83,12 +88,18 @@ def _unpackUserException(raw):
         return None
     return UserException(raw["Type"], extra=raw["Extra"], intervention_required=raw["InterventionRequired"], clear_group=raw["ClearGroup"])
 
+
 class Sync:
 
+    _sqs_manager = None
     SyncInterval = timedelta(hours=1)
     SyncIntervalJitter = timedelta(minutes=5)
     MinimumSyncInterval = timedelta(seconds=30)
     MaximumIntervalBeforeExhaustiveSync = timedelta(days=14)  # Based on the general page size of 50 activites, this would be >3/day...
+
+    # TODO : change sync to real class
+    #def __init__(self):
+    #    print("-----[ INIT SYNC ]-----")
 
     def ScheduleImmediateSync(user, exhaustive=None):
         if exhaustive is None:
@@ -100,6 +111,9 @@ class Sync:
         db.users.update({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}})
 
     def InitializeWorkerBindings():
+
+        # TODO: Check if we've to use these var with SQS
+        """
         Sync._channel = mq.channel()
         Sync._exchange = kombu.Exchange("tapiriik-users", type="direct")(Sync._channel)
         Sync._exchange.declare()
@@ -110,40 +124,61 @@ class Sync:
         # Bind to worker-specific and general routing keys
         Sync._global_queue.bind_to(exchange="tapiriik-users", routing_key="")
         Sync._host_queue.bind_to(exchange="tapiriik-users", routing_key=socket.gethostname())
+        """
 
     def PerformGlobalSync(heartbeat_callback=None, version=None, max_users=None):
-        def _callback(body, message):
-            Sync._consumeSyncTask(body, message, heartbeat_callback, version)
 
-        Sync._consumer = kombu.Consumer(
-            channel=Sync._channel,
-            queues=[Sync._host_queue, Sync._global_queue],
-            callbacks=[_callback],
-            auto_declare=False
-        )
+        print("-----[ PERFORM GLOBAL SYNC ]-----")
+        _sqs_manager = SqsManager()
+        _sqs_manager.get_queue()
 
-        Sync._consumer.qos(prefetch_count=1, apply_global=False)
+        # get first message
+        _sqs_manager.get_message(['all'])
 
-        Sync._consumer.consume()
+        # sqsManager._messages is a list but contain only one message
+        print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(_sqs_manager._messages))
+        if _sqs_manager._messages:
 
-        for _ in kombu.eventloop(mq, limit=max_users):
-            pass
+            for message in _sqs_manager._messages:
+                # Print out the body and author (if set)
+                print('[Sync.PerformGlobalSync]--- Message ID : {0}'.format(message.message_id, message.body))
+                print('[Sync.PerformGlobalSync]--- Message Body : {0}'.format(message.body))
 
-    def _consumeSyncTask(body, message, heartbeat_callback_direct, version):
+            if message:
+                body_dict = json.loads(message.body)
+                receipt_handle = message.receipt_handle
+                print('[Sync.PerformGlobalSync]--- Sync user : {0}'.format(body_dict['user_id']))
+                Sync._consumeSyncTask(body_dict, receipt_handle, heartbeat_callback, version)
+        else:
+            print('[Sync.PerformGlobalSync]--- Nothing to sync !')
+
+    # TODO : temp var _sqs_manager, change it to self.VAR when class will be refactored
+    def _consumeSyncTask( body, receipt_handle, heartbeat_callback_direct, version):
         from tapiriik.auth import User
 
         user_id = body["user_id"]
         user = User.Get(user_id)
+
+        _sqs_manager = SqsManager()
+        _sqs_manager.get_queue()
+
+        # if user doesn't exists, stop process and delete message
         if user is None:
             logger.warning("Could not find user %s - bailing" % user_id)
-            message.ack() # Otherwise the entire thing grinds to a halt
+            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
-        if body["generation"] != user.get("QueuedGeneration", None):
+
+        if 'generation' not in body:
+            logger.warning("Queue generation mismatch for %s - bailing" % user_id)
+            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
+            return
+
+        if body["generation"] != user.get("QueuedGeneration", None) or 'generation' not in body:
             # QueuedGeneration being different means they've gone through sync_scheduler since this particular message was queued
             # So, discard this and wait for that message to surface
             # Should only happen when I manually requeue people
             logger.warning("Queue generation mismatch for %s - bailing" % user_id)
-            message.ack()
+            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         def heartbeat_callback(state):
@@ -161,7 +196,7 @@ class Sync:
         #   And, when the block is cleared, NextSyncIsExhaustive is set.
 
         exhaustive = "NextSyncIsExhaustive" in user and user["NextSyncIsExhaustive"] is True
-        if  ("ForcingExhaustiveSyncErrorCount" not in user and "NonblockingSyncErrorCount" in user and user["NonblockingSyncErrorCount"] > 0) or \
+        if ("ForcingExhaustiveSyncErrorCount" not in user and "NonblockingSyncErrorCount" in user and user["NonblockingSyncErrorCount"] > 0) or \
             ("ForcingExhaustiveSyncErrorCount" in user and user["ForcingExhaustiveSyncErrorCount"] > 0):
             exhaustive = True
 
@@ -209,7 +244,7 @@ class Sync:
             syncTime = (datetime.utcnow() - syncStart).total_seconds()
             db.sync_worker_stats.insert({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": syncTime})
 
-        message.ack()
+        _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
 
     def PerformUserSync(user, exhaustive=False, heartbeat_callback=None):
         return SynchronizationTask(user).Run(exhaustive=exhaustive, heartbeat_callback=heartbeat_callback)

@@ -1,6 +1,5 @@
 requests
 pymongo==3.0.1
-boto3
 pytz
 lxml
 dropbox
@@ -18,3 +17,4 @@ isodate
 django-webpack-loader
 cssmin
 jsmin
+boto3
