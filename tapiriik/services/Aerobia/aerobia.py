@@ -195,7 +195,6 @@ class AerobiaService(ServiceBase):
     def _call(self, serviceRecord, request_call, *args):
         retry_count = 3
         resp = None
-        ex = Exception()
         for i in range(0, retry_count):
             try:
                 resp = request_call(args)
@@ -209,7 +208,7 @@ class AerobiaService(ServiceBase):
                 # wait a bit and retry
                 time.sleep(.2)
         if resp is None:
-            raise ex
+            raise APIException("Connectivity issues")
         return resp
 
     def _refresh_token(self, record):
