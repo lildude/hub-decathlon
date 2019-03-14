@@ -1,4 +1,4 @@
-# ratelimite_cron.py
+# runtest.py
 
 Ce script permet de faire appel à des séries de tests, réalisés dans un environnement similaire, mais dont les configurations de base de données / queue / sont différentes.
 
