@@ -3,7 +3,7 @@
 from tapiriik.database import db
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
-from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, Location, Lap, ActivityFileType
+from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, Location, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity
 from tapiriik.services.tcx import TCXIO
 from tapiriik.services.sessioncache import SessionCache
@@ -330,8 +330,8 @@ class AerobiaService(ServiceBase):
         session = self._get_session(serviceRecord)
         tcx_data = None
         # If some service provides ready-to-use tcx data why not to use it?
-        if activity.SourceFile:
-            tcx_data = activity.SourceFile.getContent(ActivityFileType.TCX)
+        if "tcx" in activity.PrerenderedFormats:
+            tcx_data = activity.PrerenderedFormats["tcx"]
             # Set aerobia-understandable sport name
             tcx_data = re.sub(r'(Sport=\")[\w\s]+(\">)', r'\1{}\2'.format(self._activityMappings[activity.Type]), tcx_data) if tcx_data else None
         if not tcx_data:

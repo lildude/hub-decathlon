@@ -1,7 +1,7 @@
 from tapiriik.settings import WEB_ROOT, HTTP_SOURCE_ADDR, GARMIN_CONNECT_USER_WATCH_ACCOUNTS
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
-from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, SourceFile, ActivityFileType, Waypoint, Location, Lap
+from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, Location, Lap
 from tapiriik.services.api import APIException, APIWarning, APIExcludeActivity, UserException, UserExceptionType
 from tapiriik.services.statistic_calculator import ActivityStatisticCalculator
 from tapiriik.services.tcx import TCXIO
@@ -457,7 +457,6 @@ class GarminConnectService(ServiceBase):
         try:
             tcx_data = res.text
             activity = TCXIO.Parse(tcx_data.encode('utf-8'), activity)
-            activity.SourceFile = SourceFile(tcx_data, ActivityFileType.TCX)
         except ValueError:
             raise APIException("Activity data parse error for %s: %s" % (res.status_code, res.text))
 
