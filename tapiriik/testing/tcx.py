@@ -13,6 +13,7 @@ class TCXTests(TapiriikTestCase):
             data = testfile.read()
 
         act = TCXIO.Parse(data.encode('utf-8'))
+        act.PrerenderedFormats.clear()
         new_data = TCXIO.Dump(act)
         act2 = TCXIO.Parse(new_data.encode('utf-8'))
         rel_path = "data/output1.tcx"
@@ -31,6 +32,7 @@ class TCXTests(TapiriikTestCase):
             data = testfile.read()
 
         act = TCXIO.Parse(data.encode('utf-8'))
+        act.PrerenderedFormats.clear()
         new_data = TCXIO.Dump(act)
         act2 = TCXIO.Parse(new_data.encode('utf-8'))
         rel_path = "data/output2.tcx"
