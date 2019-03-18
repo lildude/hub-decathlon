@@ -98,19 +98,19 @@ class Sync:
     MaximumIntervalBeforeExhaustiveSync = timedelta(days=14)  # Based on the general page size of 50 activites, this would be >3/day...
 
     # TODO : change sync to real class
-    #def __init__(self):
-    #    print("-----[ INIT SYNC ]-----")
+    def __init__(self):
+        print("-----[ INIT SYNC ]-----")
 
-    def ScheduleImmediateSync(user, exhaustive=None):
+    def ScheduleImmediateSync(self, user, exhaustive=None):
         if exhaustive is None:
             db.users.update({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow()}})
         else:
             db.users.update({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow(), "NextSyncIsExhaustive": exhaustive}})
 
-    def SetNextSyncIsExhaustive(user, exhaustive=False):
+    def SetNextSyncIsExhaustive(self, user, exhaustive=False):
         db.users.update({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}})
 
-    def InitializeWorkerBindings():
+    def InitializeWorkerBindings(self):
 
         # TODO: Check if we've to use these var with SQS
         """
@@ -126,51 +126,52 @@ class Sync:
         Sync._host_queue.bind_to(exchange="tapiriik-users", routing_key=socket.gethostname())
         """
 
-    def PerformGlobalSync(heartbeat_callback=None, version=None, max_users=None):
+    def PerformGlobalSync(self, heartbeat_callback=None, version=None):
 
         print("-----[ PERFORM GLOBAL SYNC ]-----")
-        _sqs_manager = SqsManager()
-        _sqs_manager.get_queue()
+        self._sqs_manager = SqsManager()
+        self._sqs_manager.get_queue()
 
         # get first message
-        _sqs_manager.get_message(['all'])
+        self._sqs_manager.get_message(['all'])
 
         # sqsManager._messages is a list but contain only one message
-        print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(_sqs_manager._messages))
-        if _sqs_manager._messages:
+        print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(self._sqs_manager._messages))
+        if self._sqs_manager._messages:
 
-            for message in _sqs_manager._messages:
+            for message in self._sqs_manager._messages:
                 # Print out the body and author (if set)
                 print('[Sync.PerformGlobalSync]--- Message ID : {0}'.format(message.message_id, message.body))
                 print('[Sync.PerformGlobalSync]--- Message Body : {0}'.format(message.body))
 
-            if message:
-                body_dict = json.loads(message.body)
-                receipt_handle = message.receipt_handle
-                print('[Sync.PerformGlobalSync]--- Sync user : {0}'.format(body_dict['user_id']))
-                Sync._consumeSyncTask(body_dict, receipt_handle, heartbeat_callback, version)
+                if message:
+                    body_dict = json.loads(message.body)
+                    receipt_handle = message.receipt_handle
+                    print('[Sync.PerformGlobalSync]--- Sync user : {0}'.format(body_dict['user_id']))
+                    self._consumeSyncTask(body_dict, receipt_handle, heartbeat_callback, version)
         else:
             print('[Sync.PerformGlobalSync]--- Nothing to sync !')
 
     # TODO : temp var _sqs_manager, change it to self.VAR when class will be refactored
-    def _consumeSyncTask( body, receipt_handle, heartbeat_callback_direct, version):
+    def _consumeSyncTask(self, body, receipt_handle, heartbeat_callback_direct, version):
         from tapiriik.auth import User
 
         user_id = body["user_id"]
         user = User.Get(user_id)
 
-        _sqs_manager = SqsManager()
-        _sqs_manager.get_queue()
+        # TODO : avec sqs manager dans self, on peut se passer des deux lignes suivantes
+        # _sqs_manager = SqsManager()
+        # _sqs_manager.get_queue()
 
         # if user doesn't exists, stop process and delete message
         if user is None:
             logger.warning("Could not find user %s - bailing" % user_id)
-            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
+            self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         if 'generation' not in body:
             logger.warning("Queue generation mismatch for %s - bailing" % user_id)
-            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
+            self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         if body["generation"] != user.get("QueuedGeneration", None) or 'generation' not in body:
@@ -178,13 +179,13 @@ class Sync:
             # So, discard this and wait for that message to surface
             # Should only happen when I manually requeue people
             logger.warning("Queue generation mismatch for %s - bailing" % user_id)
-            _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
+            self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         def heartbeat_callback(state):
             heartbeat_callback_direct(state, user_id)
 
-        syncStart = datetime.utcnow()
+        sync_start = datetime.utcnow()
 
         # Always to an exhaustive sync if there were errors
         #   Sometimes services report that uploads failed even when they succeeded.
@@ -202,24 +203,24 @@ class Sync:
 
         result = None
         try:
-            result = Sync.PerformUserSync(user, exhaustive, heartbeat_callback=heartbeat_callback)
+            result = self.PerformUserSync(user, exhaustive, heartbeat_callback=heartbeat_callback)
         finally:
-            nextSync = None
+            next_sync = None
             if User.HasActivePayment(user):
                 if User.GetConfiguration(user)["suppress_auto_sync"]:
                     logger.info("Not scheduling auto sync for paid user")
                 else:
-                    nextSync = datetime.utcnow() + Sync.SyncInterval + timedelta(seconds=random.randint(-Sync.SyncIntervalJitter.total_seconds(), Sync.SyncIntervalJitter.total_seconds()))
+                    next_sync = datetime.utcnow() + self.SyncInterval + timedelta(seconds=random.randint(-self.SyncIntervalJitter.total_seconds(), self.SyncIntervalJitter.total_seconds()))
             if result and result.ForceNextSync:
                 logger.info("Forcing next sync at %s" % result.ForceNextSync)
-                nextSync = result.ForceNextSync
+                next_sync = result.ForceNextSync
             reschedule_update = {
                 "$set": {
-                    "NextSynchronization": nextSync,
+                    "NextSynchronization": next_sync,
                     "LastSynchronization": datetime.utcnow(),
                     "LastSynchronizationVersion": version
                 }, "$unset": {
-                    "QueuedAt": None # Set by sync_scheduler when the record enters the MQ
+                    "QueuedAt": None# Set by sync_scheduler when the record enters the MQ
                 }
             }
 
@@ -233,7 +234,7 @@ class Sync:
                 {
                     "_id": user["_id"]
                 }, reschedule_update)
-            reschedule_confirm_message = "User reschedule for %s returned %s" % (nextSync, scheduling_result)
+            reschedule_confirm_message = "User reschedule for %s returned %s" % (next_sync, scheduling_result)
 
             # Tack this on the end of the log file since otherwise it's lost for good (blegh, but nicer than moving logging out of the sync task?)
             user_log = open(USER_SYNC_LOGS + str(user["_id"]) + ".log", "a+")
@@ -241,12 +242,12 @@ class Sync:
             user_log.close()
 
             logger.debug(reschedule_confirm_message)
-            syncTime = (datetime.utcnow() - syncStart).total_seconds()
-            db.sync_worker_stats.insert({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": syncTime})
+            sync_time = (datetime.utcnow() - sync_start).total_seconds()
+            db.sync_worker_stats.insert({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": sync_time})
 
-        _sqs_manager.delete_message_by_receipt_handle(receipt_handle)
+        self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
 
-    def PerformUserSync(user, exhaustive=False, heartbeat_callback=None):
+    def PerformUserSync(self, user, exhaustive=False, heartbeat_callback=None):
         return SynchronizationTask(user).Run(exhaustive=exhaustive, heartbeat_callback=heartbeat_callback)
 
 

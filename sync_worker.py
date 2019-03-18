@@ -82,8 +82,8 @@ sync_heartbeat("ready")
 
 worker_message("ready")
 
-# TODO : verifier le lien entre RecycleInterval et max_users
-Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion, max_users=RecycleInterval)
+Sync = Sync()
+Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion)
 
 worker_message("shutting down cleanly")
 db.sync_workers.remove({"_id": heartbeat_rec_id})

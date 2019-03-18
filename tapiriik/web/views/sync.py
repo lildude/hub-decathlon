@@ -10,6 +10,7 @@ from tapiriik.settings import MONGO_FULL_WRITE_CONCERN
 from datetime import datetime
 import zlib
 
+Sync = Sync()
 
 def sync_status(req):
     if not req.user:
