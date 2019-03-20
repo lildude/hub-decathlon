@@ -1,10 +1,11 @@
 # sync_worker.py
 
-Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il utilise les modules Tapiriik et Pymongo.
+This script is call every times we need to sync something.
+It uses Tapiriif and Pymongo modules.
 
-### Déroulement du script : 
-- Déclaration d'un nouveau "sous-process"
-- Récupération d'un document sync_workers par son process ID et son host (1), puis mise à jour de celui-ci (2) : 
+### Script flow : 
+- Define new "sub-process"
+- Get sync_worker document by ID and Host infos (1), then update it (2) 
 ```
 (1)
 "Process": os.getpid(),
@@ -21,11 +22,11 @@ Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il uti
     "State": "startup"
 }
 ```
-- Définition des variables global pour la synchronisation et déclaration du message en queue
+- Define global vars for synchronization and set reader for queue
 ```
 Sync.InitializeWorkerBindings()
 ```
-- Lancement de la procédure de synchronisation (1) et mise à jour du "heartbeat" du sync_worker en cours d'exécution (2) 
+- Launch sync process (1) and update "heartbeat" of current sync_worker execution (2)
 ```
 (1)
 Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion, max_users=RecycleInterval)

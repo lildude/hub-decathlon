@@ -4,26 +4,26 @@ Ce script a pour but de détecter si un process de synchronisation est en timeou
 Si le process est kill, les users concernés seront "unlocké" pour être de nouveau synchronisé au prochain run worker.
 Il utilise les modules Tapiriik.
 
-### Déroulement du script :
-- Récupère la liste de tous les documents sync_workers en base,
+### Script flow  :
+- Getting all sync_workers documents in DB
 ```
 for worker in db.sync_workers.find({"Host": host}):
 ```
-- Pour chacun d'entre eux on essaye de kill le process associé
+- For each sync_worker, try to kill the associated process
 ```
 os.kill(worker["Process"], 0)
 ```
-- Si le process est toujours en exécution, on vérifie s'il était en timeout ou non
-- Si le process est en timeout, on le kill
+- If process is still running, check if it's in timeout statement
+- If it's in timeout statement, kill it
 ```
 os.kill(worker["Process"], signal.SIGKILL)
 ```
-- On met à jour la DB en supprimant les sync_workers concernés
-- On débloque les users attachés au process qui vient d'être kill
+- Remove timeout process from sync_worker collection in DB
+- Unlock users attached to the kill process
 ```
 db.users.update({"SynchronizationWorker": worker["Process"], "SynchronizationHost": host}, {"$unset":{"SynchronizationWorker": True}}, multi=True)
 ```
-- En fin de script, on ajoute / met à jour un sync_watchdog en DB avec la datetime(), pour un host précis.
+- Insert / update  a sync_watchdog row in DB with datetime() and host info
 ```
 db.sync_watchdogs.update({"Host": host}, {"Host": host, "Timestamp": datetime.utcnow()}, upsert=True)
 ```

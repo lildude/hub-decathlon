@@ -1,10 +1,8 @@
 # rollback_worker.py
 
-Ce script a pour but de limiter le nombre de CPU utilisé par les différents process de synchronisation
-Ce script est en exécution permanente, c'est à dire qu'il ne s'arrêtera pas de tourner tant qu'il n'y aura pas de plantage, ni d'intervention humaine pour l'arrêter.
-Il utilise les modules tapiriik, pymongo et kombu.
+This script define some rollback function using Celery.
 
-## Déclaration de classe :
+## Class statement :
 ### _celeryConfig:
 ```python
 class _celeryConfig:
@@ -14,31 +12,31 @@ class _celeryConfig:
     CELERYD_CONCURRENCY = 1 # Otherwise the GC rate limiting breaks since file locking is per-process.
     CELERYD_PREFETCH_MULTIPLIER = 1 # The message queue could use some exercise.
 ``` 
-## Fonctions disponibles dans le script :
+## Function statement :
 
 ### celery_shutdown
 ```
 @worker_shutdown.connect
 def celery_shutdown(**kwargs):
 ``` 
-#### Déroulement de la fonction : 
-- Ferme la connexion Celery
+#### Function sequence : 
+- Close Celery connection
 
 ### rollback_task
 ```
 @celery_app.task()
 def rollback_task(task_id):
 ``` 
-#### Déroulement de la fonction : 
-- Récupère le détail d'une tâche pour un ID donné
-- Lance l'exécution de la tâche
+#### Function sequence : 
+- Getting task infos for a specific ID
+- Launch task execution
 
 ### schedule_rollback_task
 ```
 def schedule_rollback_task(task_id):
 ``` 
 #### Déroulement de la fonction : 
-- Lance le process de synchronisation d'une tâche donnée en mode "scheduler"
+- Launch sync process of scheduled task
 
 # [Back to script summary](000-script-summary.md)
 

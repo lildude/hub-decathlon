@@ -1,8 +1,9 @@
 # sync_remote_trigger.py
 
-Ce script a pour but d'être appelé à chaque besoin de synchronisation. Il utilise les modules Tapiriik et Celery (pour RabbitMQ).
+This scripts aims to be called for each synchronization need.
+It uses tapiriik and Celery modules.
 
-## Déclaration de classe :
+## Class statement :
 ### _celeryConfig:
 ```python
 class _celeryConfig:
@@ -12,25 +13,25 @@ class _celeryConfig:
     CELERYD_CONCURRENCY = 1 # Otherwise the GC rate limiting breaks since file locking is per-process.
     CELERYD_PREFETCH_MULTIPLIER = 1 # The message queue could use some exercise.
 ``` 
-## Fonctions disponibles dans le script :
+## Function statement :
 
 ### celery_shutdown
 ```
 @worker_shutdown.connect
 def celery_shutdown(**kwargs):
 ``` 
-#### Déroulement de la fonction : 
-- Ferme la connexion Celery
+#### Function sequence : 
+- Close Celery connection
 
 ### trigger_remote
 ```
 @celery_app.task(acks_late=True)
 def trigger_remote(service_id, affected_connection_external_ids):
 ``` 
-#### Déroulement de la fonction: 
-- Récupère le service dont l'ID est passé en parammètre
-- Met à jour la liste des connections liées à ce service et dont les ExternalID  sont inclus dans la liste fournit en paramètre, pour déclencher une synchronisation partielle
-- Récupère la liste des IDs concernés par la modification
-- Mise à jour des users n'ayant pas terminé leurs abonnements et étant toujours en "auto-synchronisation" pour leur définir une nouvelle date de NextSynchronisation
+#### Function sequence : 
+- Getting service from ID (in parameter)
+- Update connection list of this service which ExternalID are included in params list, to launch partial sync
+- Getting IDs list of updated connections
+- Update users who have not completed their subscriptions to flag them as "auto-sync. This flag will allow them to define a new sync date (NextSynchronisation)
 
 # [Back to script summary](000-script-summary.md)

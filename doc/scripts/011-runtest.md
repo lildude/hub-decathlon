@@ -1,14 +1,13 @@
 # runtest.py
 
-Ce script permet de faire appel à des séries de tests, réalisés dans un environnement similaire, mais dont les configurations de base de données / queue / sont différentes.
+This script makes it possible to use sets of tests, performed in a similar environment, but with different database / queue / configurations.
 
-
-### Déroulement du script : 
-- appels des différentes fonctions de réalisation des tests unitaires
+### Script flow : 
+- call any unit tests function
 ```
 unittest.main()
 ```
-- suppression des bases de données de test, et cache test.
+- delete all test database and test cache.
 ```
 tapiriik.database._connection.drop_database("tapiriik_test")
 tapiriik.database._connection.drop_database("tapiriik_cache_test")
