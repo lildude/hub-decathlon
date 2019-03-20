@@ -2,7 +2,7 @@
 # (c) 2018 Anton Ashmarin, aashmarin@gmail.com
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
-from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, SourceFile, ActivityFileType
+from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
 from tapiriik.services.tcx import TCXIO
 from tapiriik.services.sessioncache import SessionCache
 from tapiriik.services.PolarPersonalTrainer.pptToTcx import convert
@@ -188,7 +188,6 @@ class PolarPersonalTrainerService(ServiceBase):
 
         tcxData = convert(xmlText, activity.StartTime, gpxText if activity.GPS else None)
         activity = TCXIO.Parse(tcxData, activity)
-        activity.SourceFile = SourceFile(tcxData.decode("utf-8"), ActivityFileType.TCX)
 
         return activity
 
