@@ -1,14 +1,9 @@
 mongo:
   image: 'mongo:3'
+  ports:
+    - '27017:27017'
   expose:
-    - '27017'
-
-RMQ:
-  image: 'rabbitmq:3'
-  environment:
-    - RABBITMQ_NODENAME=tapiriik
-  expose:
-    - '5672'
+    - "27017"
 
 redis:
   image: 'redis:3'
@@ -19,7 +14,6 @@ web:
   image: 'my-hub-decathlon:latest'
   links:
     - mongo
-    - RMQ
     - redis
   volumes:
     - ./:/tapiriik:rw

@@ -10,6 +10,8 @@ import json
 import urllib.parse
 from datetime import datetime, timedelta
 
+Sync = Sync()
+
 def diag_requireAuth(view):
     def authWrapper(req, *args, **kwargs):
         if not DiagnosticsUser.IsAuthenticated(req):

@@ -9,6 +9,7 @@ node_modules/
 webpack-stats.json
 .vscode/
 environment
+venv/
 tapiriik/local_settings.py
 static/
 logs/
