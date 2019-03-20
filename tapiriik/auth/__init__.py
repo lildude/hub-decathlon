@@ -10,13 +10,17 @@ from bson.objectid import ObjectId
 
 import copy
 
+
 class User:
+
     ConfigurationDefaults = {
         "suppress_auto_sync": False,
         "sync_upload_delay": 0,
         "sync_skip_before": None,
         "historical_sync": False
     }
+    Sync = Sync()
+    
     def Get(id):
         return db.users.find_one({"_id": ObjectId(id)})
 

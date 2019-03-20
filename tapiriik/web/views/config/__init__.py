@@ -6,6 +6,7 @@ from django import forms
 from django.http import HttpResponse
 import json
 
+Sync = Sync()
 
 def config_save(req, service):
     if not req.user:

@@ -1,10 +1,15 @@
 from datetime import datetime
 import os
+
 # I'm trying to track down where some missing seconds are going in the sync process
 # Will grep these out of the log at some later date
-def worker_message(state):
-    print("Sync worker %d %s at %s" % (os.getpid(), state, datetime.now()))
 
+
+def worker_message(state, now=datetime.now()):
+    print("[Sync_worker]--- PID: %d  | status: %s | at %s" % (os.getpid(), state, now.strftime("%Y-%m-%d %H:%M:%S %Z")))
+
+
+print("-----[ INITIALIZE SYNC_WORKER ]-----")
 worker_message("booting")
 
 from tapiriik.requests_lib import patch_requests_with_default_timeout, patch_requests_source_address
@@ -15,12 +20,14 @@ import sys
 import subprocess
 import socket
 
-RecycleInterval = 2 # Time spent rebooting workers < time spent wrangling Python memory management.
+# Time spent rebooting workers < time spent wrangling Python memory management.
+RecycleInterval = 2
 
 oldCwd = os.getcwd()
 WorkerVersion = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, cwd=os.path.dirname(os.path.abspath(__file__))).communicate()[0].strip()
 os.chdir(oldCwd)
 
+# Function use to update heartbeat (status) of sync_worker document
 def sync_heartbeat(state, user=None):
     db.sync_workers.update({"_id": heartbeat_rec_id}, {"$set": {"Heartbeat": datetime.utcnow(), "State": state, "User": user}})
 
@@ -40,7 +47,8 @@ heartbeat_rec = db.sync_workers.find_one_and_update(
 	{
 		"Process": os.getpid(),
 		"Host": socket.gethostname()
-	}, { 
+	},
+	{
 		"$set": {
 			"Process": os.getpid(),
 			"Host": socket.gethostname(),
@@ -50,32 +58,36 @@ heartbeat_rec = db.sync_workers.find_one_and_update(
 			"Index": settings.WORKER_INDEX,
 			"State": "startup"
 		}
-	}, upsert=True,
-	return_document=ReturnDocument.AFTER)
+	},
+	upsert=True,
+	return_document=ReturnDocument.AFTER
+)
 heartbeat_rec_id = heartbeat_rec["_id"]
 
 patch_requests_with_default_timeout(timeout=60)
 
 if isinstance(settings.HTTP_SOURCE_ADDR, list):
-    settings.HTTP_SOURCE_ADDR = settings.HTTP_SOURCE_ADDR[settings.WORKER_INDEX % len(settings.HTTP_SOURCE_ADDR)]
-    patch_requests_source_address((settings.HTTP_SOURCE_ADDR, 0))
+	settings.HTTP_SOURCE_ADDR = settings.HTTP_SOURCE_ADDR[settings.WORKER_INDEX % len(settings.HTTP_SOURCE_ADDR)]
+	patch_requests_source_address((settings.HTTP_SOURCE_ADDR, 0))
 
-print(" %d -> Index %s\n -> Interface %s" % (os.getpid(), settings.WORKER_INDEX, settings.HTTP_SOURCE_ADDR))
+print("[Sync_worker]--- PID : %d" % os.getpid())
+print("[Sync_worker]--- Index : %s" % settings.WORKER_INDEX)
+print("[Sync_worker]--- Interface : %s" % settings.HTTP_SOURCE_ADDR)
 
 # We defer including the main body of the application till here so the settings aren't captured before we've set them up.
 # The better way would be to defer initializing services until they're requested, but it's 10:30 and this will work just as well.
 from tapiriik.sync import Sync
 
-Sync.InitializeWorkerBindings()
-
 sync_heartbeat("ready")
 
 worker_message("ready")
 
-Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion, max_users=RecycleInterval)
+Sync = Sync()
+Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion)
 
 worker_message("shutting down cleanly")
 db.sync_workers.remove({"_id": heartbeat_rec_id})
 close_connections()
 worker_message("shut down")
+print("-----[ ENDING SYNC_WORKER ]-----")
 sys.stdout.flush()

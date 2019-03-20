@@ -6,6 +6,7 @@ from tapiriik.database import db
 from datetime import datetime
 import json
 
+Sync = Sync()
 
 def providers(req):
     return {"service_providers": Service.List()}
