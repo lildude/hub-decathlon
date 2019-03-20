@@ -16,3 +16,4 @@
 # [Development install](070-development.md)
 
 # [Scripts summary](scripts/000-script-summary.md)
+# [Datamodel summary](datamodel/000-datamodel-summary.md)
