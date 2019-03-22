@@ -138,6 +138,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,12 +146,21 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'tapiriik.web.startup.Startup',
     'tapiriik.web.startup.ServiceWebStartup',
-    'tapiriik.auth.SessionAuth'
+    'tapiriik.auth.SessionAuth',
     # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # file-based sessions on windows are terrible
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+## X-XSS-Protection
+SECURE_BROWSER_XSS_FILTER = True
+
+## X-Frame-Options
+X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'tapiriik.urls'
 
