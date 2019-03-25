@@ -1,27 +1,27 @@
 # sync_cpulimit.py
 
-Ce script a pour but de limiter le nombre de CPU utilisé par les différents process de synchronisation
-Ce script est en exécution permanente, c'est à dire qu'il ne s'arrêtera pas de tourner tant qu'il n'y aura pas de plantage, ni d'intervention humaine pour l'arrêter.
-Il utilise les modules tapiriik, pymongo et kombu.
+This script aims to limit the number of CPUs used by the different synchronization processes.
+This script is in permanent execution, that is to say it will not stop turning as long as there will be no crash, nor human intervention to stop it.
+It uses tapiriif, pymongo and kombu modules.
 
-### Déroulement du script : 
-- Récupération du nombre limit de CPU utilisable, enregistré dans le fichier de configuration
-- Toutes les secondes (+ temps de traitement de la procédure suivante)
+### Script flow : 
+- Getting CPU limit, stored in conf file
+- Every second (+ treatment time of next lines)
 ```
 time.sleep(1)
 ```
-- Récupération des process ID fonctionnels ainsi que de leurs commandes
-- Si la commande exécutée pour activer le process comprend le fichier "sync.worker.py" et que si le process ID de celui-ci indique qu'il est terminé
+- Getting current process ID with their "launch commands"
+- If executed command contains "sync_worker.py" and if its process ID is tag as "ended"
 ```
 if pid not in cpulimit_procs or cpulimit_procs[pid].poll():
 ```
-- On ouvre un sous-process
+- Open new sub-process
 ```
 cpulimit_procs[pid] = subprocess.Popen(["cpulimit", "-l", str(worker_cpu_limit), "-p", pid])
 ```
-- Ensuite, pour tous les process ID contenus dans la liste des cpulimit process ID
-- Si l'un d'eux est identifié comme non terminé, on attend la fin de celui-ci
-- Puis on le supprime de la liste des process cpulimit 
+- For each process ID in cpulimit list
+- If one of them is identified as "not end", we wait the end of the process 
+- Then delete it from cpulimit list
 ```
 if cpulimit_procs[k].poll():
     cpulimit_procs[k].wait()

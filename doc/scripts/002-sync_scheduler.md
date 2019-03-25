@@ -1,19 +1,19 @@
 # sync_scheduler.py
 
-Ce script a pour but de récupérer la liste des users ayant besoin d'être synchronisé. Un message en queue est publié pour chacun d'entre eux.
-Ce script est en exécution permanente, c'est à dire qu'il ne s'arrêtera pas de tourner tant qu'il n'y aura pas de plantage, ni d'intervention humaine pour l'arrêter.
-Il utilise les modules tapiriik, pymongo et kombu.
+This script is getting user list. These users have to be sync. For every user, a new message is set in queue.
+This script is in permanent execution, that is to say, it won't stop running until there is no crash, nor any human intervention to stop it.
+It uses tapiriif, pymongo and kombu modules.
 
-### Déroulement du script : 
-- Définition des variables global pour la synchronisation et d'un message en queue
+### Script flow : 
+- Define new global vars for sync and new queue message reader
 ```
 Sync.InitializeWorkerBindings()
 ```
-- Définition d'un "producer" kombu. Le producer permet de publier des messages en queue
+- Define new kombu producer. This one allow to set a new message in queue
 ```
 producer = kombu.Producer(Sync._channel, Sync._exchange)
 ```
-- Définition d'une liste de user qui doivent être synchronisés
+- Define a user liste who has to be sync
 ```
 users = list(db.users.with_options(read_preference=ReadPreference.PRIMARY).find(
     {
@@ -26,11 +26,11 @@ users = list(db.users.with_options(read_preference=ReadPreference.PRIMARY).find(
     }
 ))
 ```
-- Mise à jour de cette liste de users avec un status "queued"
+- Update users list with "queued" status
 ```
 "$set": {"QueuedAt": queueing_at, "QueuedGeneration": generation}, "$unset": {"NextSynchronization": True}
 ```
-- Pour chacun des membres de cette liste, écriture d'un message en queue
+- For every item in list, write a message into queue
 
 # [Back to script summary](000-script-summary.md)
 

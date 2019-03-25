@@ -1,11 +1,11 @@
 # ratelimite_cron.py
 
-Ce script fait appel au service ratelimiting de Tapiriik.
-Il permet de rafraichir la liste des taux limites enregistrés dans la collection limit.
-Ces taux représentent le nombre d'appel maximum d'un service. Ils sont enregistrés en base car ce sont des limites à ne pas dépasser.
+This script calls ratelimiting of Tapiriik.
+It's refreshing some limit rate store un limit collection.
+These rates represent the maximum number of calls for a service. They are registered in base because they are not supposed to be exceeded.
 
-### Déroulement du script : 
-- appel de la fonction Refresh du service RateLimit de Tapiriik
+### Script flow: 
+- Call Refresh function of the RateLimit service of Tapiriik
 ```python
 for svc in Service.List():
 	RateLimit.Refresh(svc.ID, svc.GlobalRateLimits)
