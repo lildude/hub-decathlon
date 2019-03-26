@@ -35,7 +35,7 @@ class MotivatoExternalPaymentProvider(ExternalPaymentProvider):
 			User.AssociateExternalPayment(user, pmt, skip_deassoc=True)
 
 		# Bulk-remove these payments from users who don't own them (more or less - it'll leave anyone who switched remote accounts)
-		db.users.update({"_id": {"$nin": [x["_id"] for x in users]}}, {"$pull": {"ExternalPayments": {"_id": {"$in": [x["_id"] for x in payments]}}}}, multi=True)
+		db.users.update_many({"_id": {"$nin": [x["_id"] for x in users]}}, {"$pull": {"ExternalPayments": {"_id": {"$in": [x["_id"] for x in payments]}}}})
 
 		# We don't bother unsetting users who are no longer on the list - they'll be refreshed at their next sync
 

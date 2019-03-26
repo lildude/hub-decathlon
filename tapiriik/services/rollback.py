@@ -67,7 +67,7 @@ class RollbackTask:
         return json.dumps(self.__dict__, default=dthandler)
 
     def Schedule(self):
-        db.rollback_tasks.update({"_id": self._id}, {"$set": {"Scheduled": datetime.datetime.utcnow()}})
+        db.rollback_tasks.update_one({"_id": self._id}, {"$set": {"Scheduled": datetime.datetime.utcnow()}})
         from rollback_worker import schedule_rollback_task
         schedule_rollback_task(str(self._id))
 
@@ -89,5 +89,5 @@ class RollbackTask:
                     logger.exception("Deletion failed - %s" % e)
                 else:
                     deletion_status[svc_id][str(upload_id)] = True
-                db.rollback_tasks.update({"_id": self._id}, {"$set": {"DeletionStatus": deletion_status}})
+                db.rollback_tasks.update_one({"_id": self._id}, {"$set": {"DeletionStatus": deletion_status}})
         logger.info("Finished rollback %s" % self._id)

@@ -31,10 +31,10 @@ for worker in db.sync_workers.find({"Host": host}):
 
     # Clear it from the database if it's not alive.
     if not alive:
-        db.sync_workers.remove({"_id": worker["_id"]})
+        db.sync_workers.delete_one({"_id": worker["_id"]})
         # Unlock users attached to it.
-        db.users.update({"SynchronizationWorker": worker["Process"], "SynchronizationHost": host}, {"$unset":{"SynchronizationWorker": True}}, multi=True)
+        db.users.update_many({"SynchronizationWorker": worker["Process"], "SynchronizationHost": host}, {"$unset":{"SynchronizationWorker": True}})
 
-db.sync_watchdogs.update({"Host": host}, {"Host": host, "Timestamp": datetime.utcnow()}, upsert=True)
+db.sync_watchdogs.update_one({"Host": host}, {"Host": host, "Timestamp": datetime.utcnow()}, upsert=True)
 
 close_connections()
