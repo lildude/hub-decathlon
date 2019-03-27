@@ -54,5 +54,5 @@ for expired_payment in expired_payments:
 	}
 	message, plaintext_message = generate_message_from_template("email/payment_renew.html", context)
 	send_email(expired_payment["Email"], "tapiriik automatic synchronization expiry", message, plaintext_message=plaintext_message)
-	db.payments.update({"_id": expired_payment["_id"]}, {"$set": {"ReminderEmailSent": True}})
+	db.payments.update_one({"_id": expired_payment["_id"]}, {"$set": {"ReminderEmailSent": True}})
 	print("...sent")
