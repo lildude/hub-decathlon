@@ -10,7 +10,6 @@ from tapiriik.settings import MONGO_FULL_WRITE_CONCERN
 from datetime import datetime
 import zlib
 
-Sync = Sync()
 
 def sync_status(req):
     if not req.user:
@@ -72,6 +71,7 @@ def sync_schedule_immediate(req):
 
 @require_POST
 def sync_clear_errorgroup(req, service, group):
+    _sync = Sync()
     if not req.user:
         return HttpResponse(status=401)
 
