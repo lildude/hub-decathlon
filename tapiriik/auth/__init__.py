@@ -19,7 +19,6 @@ class User:
         "sync_skip_before": None,
         "historical_sync": False
     }
-    Sync = Sync()
     
     def Get(id):
         return db.users.find_one({"_id": ObjectId(id)})
@@ -67,7 +66,8 @@ class User:
         # Then, attach to us
         db.users.update_one({"_id": ObjectId(user["_id"])}, {"$addToSet": {collection: payment_like_object}})
         if schedule_now:
-            Sync.ScheduleImmediateSync(user)
+            _sync = Sync()
+            _sync.ScheduleImmediateSync(user)
 
     def AssociatePayment(user, payment, schedule_now=True):
         User._assocPaymentLikeObject(user, "Payments", payment, schedule_now)
@@ -167,13 +167,14 @@ class User:
                 user["ConnectedServices"].append({"Service": serviceRecord.Service.ID, "ID": serviceRecord._id})
                 delta = True
 
-        db.users.update_one({"_id": user["_id"]}, user)
+        _sync = Sync()
+        db.users.update_one({"_id": user["_id"]}, {'$set':user})
         if delta or (hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0):  # also schedule an immediate sync if there is an outstanding error (i.e. user reconnected)
             db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException.Type": UserExceptionType.Authorization}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
             db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException.Type": UserExceptionType.RenewPassword}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
-            Sync.SetNextSyncIsExhaustive(user, True)  # exhaustive, so it'll pick up activities from newly added services / ones lost during an error
+            _sync.SetNextSyncIsExhaustive(user, True)  # exhaustive, so it'll pick up activities from newly added services / ones lost during an error
             if hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0:
-                Sync.ScheduleImmediateSync(user)
+                _sync.ScheduleImmediateSync(user)
 
     def DisconnectService(serviceRecord, preserveUser=False):
         # not that >1 user should have this connection

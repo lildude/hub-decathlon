@@ -108,7 +108,7 @@ class Sync:
             db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow(), "NextSyncIsExhaustive": exhaustive}})
 
     def SetNextSyncIsExhaustive(self, user, exhaustive=False):
-        db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}})
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}}, upsert=True)
 
     def InitializeWorkerBindings(self):
 

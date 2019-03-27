@@ -30,18 +30,20 @@
 		</div>
 	{% if user.ConnectedServices|length > 1 %}
 		<div class="syncButtonBlock">
-			<div class="syncButtonAttachment left">{% trans "Queueing to Synchronize" %}</div><div class="syncButtonWrap"><a class="syncButton">{% trans "Synchronize Now" %}<div class="syncButtonIcon"></div></a><a href="#/settings" class="syncSettingsNubbin"><span class="sr">{% trans "Synchronization Settings" %}</span><div class="syncSettingsNubbinIcon"></div></a></div><div class="syncButtonAttachment right">{% trans "Attached info 10%" %}</div>
+			<div class="syncButtonAttachment left">{% trans "Queueing to Synchronize" %}</div><div class="syncButtonWrap"><a class="syncButton">{% trans "Synchronize Now" %}<div class="syncButtonIcon"></div></a><!--<a href="#/settings" class="syncSettingsNubbin"><span class="sr">{% trans "Synchronization Settings" %}</span><div class="syncSettingsNubbinIcon"></div></a>--></div><div class="syncButtonAttachment right">{% trans "Attached info 10%" %}</div>
 		</div>
-		{% include "settings-block.html" %}
+ 		{# BLOCK FOR SYNC GLOBAL SETTINGS#}
+		{#% include "settings-block.html" %#}
 
 		{% if user.NonblockingSyncErrorCount > 0 %}
 			<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
 		{% endif %}
  
-		{% if user|has_active_payment %}
-		{% else %}
-			{% include "payment.html" %}
-		{% endif %}
+ 		{# BLOCK FOR PAYMENT#}
+		{#% if user|has_active_payment %#}
+		{#% else %#}
+			{#% include "payment.html" %#}
+		{#% endif %#}
 		
 		{% for connection in user.ConnectedServices|svc_populate_conns %}
 			{% with svc=connection.Service %}
