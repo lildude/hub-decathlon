@@ -39,7 +39,7 @@ class ServiceRecord:
         return cachedb.extendedAuthDetails.find({"ID": self._id}).limit(1).count()
 
     def SetPartialSyncTriggerSubscriptionState(self, subscribed):
-        db.connections.update({"_id": self._id}, {"$set": {"PartialSyncTriggerSubscribed": subscribed}})
+        db.connections.update_one({"_id": self._id}, {"$set": {"PartialSyncTriggerSubscribed": subscribed}})
 
     def GetConfiguration(self):
         from tapiriik.services import Service
@@ -66,4 +66,4 @@ class ServiceRecord:
             del sparseConfig[k]
         self.Config = sparseConfig
         if not no_save:
-            db.connections.update({"_id": self._id}, {"$set": {"Config": sparseConfig}})
+            db.connections.update_one({"_id": self._id}, {"$set": {"Config": sparseConfig}})

@@ -1,7 +1,7 @@
 from tapiriik.database import db
 from datetime import datetime
 from pymongo.read_preferences import ReadPreference
-from helper.sqs.manager import SqsManager
+from tapiriik.helper.sqs.manager import SqsManager
 import time
 import uuid
 import json
@@ -27,7 +27,7 @@ while True:
     scheduled_ids = [x["_id"] for x in users]
     print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
 
-    db.users.update({"_id": {"$in": scheduled_ids}}, {"$set": {"QueuedAt": queueing_at, "QueuedGeneration": generation}, "$unset": {"NextSynchronization": True}}, multi=True)
+    db.users.update_many({"_id": {"$in": scheduled_ids}}, {"$set": {"QueuedAt": queueing_at, "QueuedGeneration": generation}, "$unset": {"NextSynchronization": True}}, upsert=False)
     print("[Sync_scheduler]--- Marked %d users as queued at %s" % (len(scheduled_ids), datetime.utcnow()))
 
     now = datetime.now()
@@ -42,7 +42,7 @@ while True:
             'message_generator': 'sync_scheduler',
             'generation': generation
         }
-        # TODO: search SynchronizationHostRestriction use cases
+
         # If not empty, add synchronization host restriction
         if "SynchronizationHostRestriction" in user and user["SynchronizationHostRestriction"]:
             body['routing_key'] = {

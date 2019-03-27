@@ -459,8 +459,8 @@ class DecathlonCoachService(ServiceBase):
 
 
     def DeleteCachedData(self, serviceRecord):
-        cachedb.decathloncoach_cache.remove({"Owner": serviceRecord.ExternalID})
-        cachedb.decathloncoach_activity_cache.remove({"Owner": serviceRecord.ExternalID})
+        cachedb.decathloncoach_cache.delete_many({"Owner": serviceRecord.ExternalID})
+        cachedb.decathloncoach_activity_cache.delete_many({"Owner": serviceRecord.ExternalID})
 
     
     def DeleteActivity(self, serviceRecord, uploadId):

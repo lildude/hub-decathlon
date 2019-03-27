@@ -29,7 +29,7 @@ os.chdir(oldCwd)
 
 # Function use to update heartbeat (status) of sync_worker document
 def sync_heartbeat(state, user=None):
-    db.sync_workers.update({"_id": heartbeat_rec_id}, {"$set": {"Heartbeat": datetime.utcnow(), "State": state, "User": user}})
+    db.sync_workers.update_one({"_id": heartbeat_rec_id}, {"$set": {"Heartbeat": datetime.utcnow(), "State": state, "User": user}})
 
 worker_message("initialized")
 
@@ -86,7 +86,7 @@ Sync = Sync()
 Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion)
 
 worker_message("shutting down cleanly")
-db.sync_workers.remove({"_id": heartbeat_rec_id})
+db.sync_workers.delete_one({"_id": heartbeat_rec_id})
 close_connections()
 worker_message("shut down")
 print("-----[ ENDING SYNC_WORKER ]-----")

@@ -10,8 +10,6 @@ import json
 import urllib.parse
 from datetime import datetime, timedelta
 
-Sync = Sync()
-
 def diag_requireAuth(view):
     def authWrapper(req, *args, **kwargs):
         if not DiagnosticsUser.IsAuthenticated(req):
@@ -72,14 +70,14 @@ def diag_queue_dashboard(req):
 
     delta = False
     if "deleteStalledWorker" in req.POST:
-        db.sync_workers.remove({"Process": int(req.POST["pid"])})
+        db.sync_workers.delete_many({"Process": int(req.POST["pid"])})
         delta = True
     if "unlockOrphaned" in req.POST:
         orphanedUserIDs = [x["_id"] for x in context["lockedSyncUsers"] if x["SynchronizationWorker"] not in context["allWorkerPIDs"]]
-        db.users.update({"_id":{"$in":orphanedUserIDs}}, {"$unset": {"SynchronizationWorker": None}}, multi=True)
+        db.users.update_many({"_id":{"$in":orphanedUserIDs}}, {"$unset": {"SynchronizationWorker": None}})
         delta = True
     if "requeueQueued" in req.POST:
-        db.users.update({"QueuedAt": {"$lt": datetime.utcnow()}, "$or": [{"SynchronizationWorker": {"$exists": False}}, {"SynchronizationWorker": None}]}, {"$set": {"NextSynchronization": datetime.utcnow(), "QueuedGeneration": "manual"}, "$unset": {"QueuedAt": True}}, multi=True)
+        db.users.update_many({"QueuedAt": {"$lt": datetime.utcnow()}, "$or": [{"SynchronizationWorker": {"$exists": False}}, {"SynchronizationWorker": None}]}, {"$set": {"NextSynchronization": datetime.utcnow(), "QueuedGeneration": "manual"}, "$unset": {"QueuedAt": True}})
 
     if delta:
         return redirect("diagnostics_queue_dashboard")
@@ -148,26 +146,27 @@ def diag_user(req, user):
         return render(req, "diag/error_user_not_found.html")
     delta = True # Easier to set this to false in the one no-change case.
     if "sync" in req.POST:
-        Sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
+        _sync = Sync()
+        _sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
     elif "unlock" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$unset": {"SynchronizationWorker": None}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"SynchronizationWorker": None}})
     elif "lock" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$set": {"SynchronizationWorker": 1}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$set": {"SynchronizationWorker": 1}})
     elif "requeue" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$unset": {"QueuedAt": None}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"QueuedAt": None}})
     elif "hostrestrict" in req.POST:
         host = req.POST["host"]
         if host:
-            db.users.update({"_id": ObjectId(user)}, {"$set": {"SynchronizationHostRestriction": host}})
+            db.users.update_one({"_id": ObjectId(user)}, {"$set": {"SynchronizationHostRestriction": host}})
         else:
-            db.users.update({"_id": ObjectId(user)}, {"$unset": {"SynchronizationHostRestriction": None}})
+            db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"SynchronizationHostRestriction": None}})
     elif "substitute" in req.POST:
         req.session["substituteUserid"] = user
         return redirect("dashboard")
     elif "svc_setauth" in req.POST and len(req.POST["authdetails"]):
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set":{"Authorization": json.loads(req.POST["authdetails"])}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set":{"Authorization": json.loads(req.POST["authdetails"])}})
     elif "svc_setconfig" in req.POST and len(req.POST["config"]):
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set":{"Config": json.loads(req.POST["config"])}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set":{"Config": json.loads(req.POST["config"])}})
     elif "svc_unlink" in req.POST:
         from tapiriik.services import Service
         from tapiriik.auth import User
@@ -181,14 +180,16 @@ def diag_user(req, user):
         except:
             pass
     elif "svc_marksync" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])},
-                              {"$addToSet": {"SynchronizedActivities": req.POST["uid"]}},
-                              multi=False)
+        db.connections.update_one(
+            {"_id": ObjectId(req.POST["id"])},
+            {"$addToSet": {"SynchronizedActivities": req.POST["uid"]}}
+        )
     elif "svc_clearexc" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$unset": {"ExcludedActivities": 1}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"ExcludedActivities": 1}})
     elif "svc_clearacts" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$unset": {"SynchronizedActivities": 1}})
-        Sync.SetNextSyncIsExhaustive(userRec, True)
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"SynchronizedActivities": 1}})
+        _sync = Sync()
+        _sync.SetNextSyncIsExhaustive(userRec, True)
     elif "svc_toggle_poll_sub" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
@@ -196,11 +197,11 @@ def diag_user(req, user):
     elif "svc_toggle_poll_trigger" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set": {"TriggerPartialSync": not svcRec.TriggerPartialSync}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set": {"TriggerPartialSync": not svcRec.TriggerPartialSync}})
     elif "svc_tryagain" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$pull": {"SyncErrors": {"Scope": "activity"}}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$pull": {"SyncErrors": {"Scope": "activity"}}})
         act_recs = db.activity_records.find_one({"UserID": ObjectId(user)})
         for act in act_recs["Activities"]:
             if "FailureCounts" in act and svcRec.Service.ID in act["FailureCounts"]:

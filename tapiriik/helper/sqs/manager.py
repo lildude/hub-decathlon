@@ -1,12 +1,12 @@
 # Synchronization module for decathloncoach.com
 # (c) 2019 Anael Jourdain, anael.jourdain.partner@decathlon.com
-from tapiriik.settings import AWS_SQS_ZONE, AWS_SQS_QUEUE_NAME
+from tapiriik.settings import AWS_REGION, AWS_SQS_QUEUE_NAME
 import json
 import boto3
 
 class SqsManager():
 
-    AWS_ZONE = AWS_SQS_ZONE
+    _AWS_REGION = AWS_REGION
     QUEUE_NAME = AWS_SQS_QUEUE_NAME
     _resource = None
     _queue = None
@@ -15,11 +15,11 @@ class SqsManager():
 
     def __init__(self):
         print("-----[ INITIALIZE A NEW SQS QUEUE MANAGER ]-----")
-        self.AWS_ZONE = AWS_SQS_ZONE
+        self._AWS_REGION = AWS_REGION
         # Create SQS client resource
-        self._resource = boto3.resource('sqs', region_name=self.AWS_ZONE)
-        self._client = boto3.client('sqs', region_name=self.AWS_ZONE)
-        print("[Helper SQS]--- Define SQS resource in %s AWS zone" % self.AWS_ZONE)
+        self._resource = boto3.resource('sqs', region_name=self._AWS_REGION)
+        self._client = boto3.client('sqs', region_name=self._AWS_REGION)
+        print("[Helper SQS]--- Define SQS resource in %s AWS zone" % self._AWS_REGION)
 
     # Function use to get a specific queue from AWS SQS, it uses self.QUEUE_NAME as parameter
     # Queue will be available in self._queue
@@ -27,7 +27,7 @@ class SqsManager():
 
         if queue_name:
             self.QUEUE_NAME = queue_name
-        print("[Helper SQS]--- Get queue %s in %s resource" % (self.QUEUE_NAME, self.AWS_ZONE))
+        print("[Helper SQS]--- Get queue %s in %s resource" % (self.QUEUE_NAME, self._AWS_REGION))
         self._queue = self._resource.get_queue_by_name(QueueName=self.QUEUE_NAME)
         self._queue_url = self._queue.url
 

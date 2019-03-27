@@ -40,7 +40,7 @@ rmq_user_queue_rate = rmq_user_queue_stats["message_stats"]["ack_details"]["avg_
 rmq_user_queue_wait_time = rmq_user_queue_length / rmq_user_queue_rate
 
 # sync time utilization
-db.sync_worker_stats.remove({"Timestamp": {"$lt": datetime.utcnow() - timedelta(hours=1)}})  # clean up old records
+db.sync_worker_stats.delete_many({"Timestamp": {"$lt": datetime.utcnow() - timedelta(hours=1)}})  # clean up old records
 timeUsedAgg = list(db.sync_worker_stats.aggregate([{"$group": {"_id": None, "total": {"$sum": "$TimeTaken"}}}]))
 totalSyncOps = db.sync_worker_stats.count()
 if timeUsedAgg:
@@ -89,7 +89,7 @@ if len(totalErrors) > 0:
 else:
     totalErrors = 0
 
-db.sync_status_stats.insert({
+db.sync_status_stats.insert_one({
         "Timestamp": datetime.utcnow(),
         "Locked": lockedSyncRecords,
         "Pending": pendingSynchronizations,
@@ -100,7 +100,7 @@ db.sync_status_stats.insert({
         "SyncQueueHeadTime": rmq_user_queue_wait_time
 })
 
-db.stats.update({}, {"$set": {
+db.stats.update_many({}, {"$set": {
                         "TotalDistanceSynced": distanceSynced,
                         "LastDayDistanceSynced": lastDayDistanceSynced,
                         "LastHourDistanceSynced": lastHourDistanceSynced,

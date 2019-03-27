@@ -26,7 +26,7 @@ def ab_user_experiment_begin(key, request):
 
 def ab_experiment_complete(key, userKey, result):
 	active_experiment = db.ab_experiments.find({"User": userKey, "Experiment": key, "Result": {"$exists": False}}, {"_id": 1}).sort("Begin", -1).limit(1)[0]
-	db.ab_experiments.update({"_id": active_experiment["_id"]}, {"$set": {"Result": result}})
+	db.ab_experiments.update_one({"_id": active_experiment["_id"]}, {"$set": {"Result": result}})
 
 def ab_user_experiment_complete(key, request, result):
 	ab_experiment_complete(key, request.user["_id"], result)

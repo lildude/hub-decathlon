@@ -23,8 +23,8 @@ class Payments:
 
     def ReversePayment(id):
         # Mark the transaction, and pull it from any users who have it.
-        db.payments.update({"Txn": id}, {"$set": {"Reversed": True}})
-        db.users.update({"Payments.Txn": id}, {"$pull": {"Payments": {"Txn": id}}}, multi=True)
+        db.payments.update_one({"Txn": id}, {"$set": {"Reversed": True}})
+        db.users.update_many({"Payments.Txn": id}, {"$pull": {"Payments": {"Txn": id}}})
 
     def GetPayment(id=None, email=None):
         if id:
@@ -35,8 +35,8 @@ class Payments:
                 return payment
 
     def GenerateClaimCode(user, payment):
-        db.payments_claim.remove({"Txn": payment["Txn"]})  # Remove any old codes, just to reduce the number kicking around at any one time.
-        return str(db.payments_claim.insert({"Txn": payment["Txn"], "User": user["_id"], "Timestamp": datetime.utcnow()}))  # Return is the new _id, aka the claim code.
+        db.payments_claim.delete_many({"Txn": payment["Txn"]})  # Remove any old codes, just to reduce the number kicking around at any one time.
+        return str(db.payments_claim.insert_one({"Txn": payment["Txn"], "User": user["_id"], "Timestamp": datetime.utcnow()}))  # Return is the new _id, aka the claim code.
 
     def HasOutstandingClaimCode(user):
         return db.payments_claim.find_one({"User": user["_id"]}) is not None
@@ -45,7 +45,7 @@ class Payments:
         claim = db.payments_claim.find_one({"_id": ObjectId(code)})
         if not claim:
             return (None, None)
-        db.payments_claim.remove(claim)
+        db.payments_claim.delete_one(claim)
         return (db.users.find_one({"_id": claim["User"]}), db.payments.find_one({"Txn": claim["Txn"]}))
 
     def EnsureExternalPayment(provider, externalID, duration=None):
@@ -65,12 +65,12 @@ class Payments:
                 "Timestamp": datetime.utcnow(),
                 "Expiry": datetime.utcnow() + duration if duration else None
             }
-            db.external_payments.insert(existingRecord)
+            db.external_payments.insert_one(existingRecord)
         return existingRecord
 
     def ExpireExternalPayment(provider, externalID):
         now = datetime.utcnow()
-        db.external_payments.update(
+        db.external_payments.update_one(
             {
                 "Provider": provider,
                 "ExternalID": externalID,
@@ -87,8 +87,8 @@ class Payments:
         # Could be already expired, no need to rerun the update
         if expired_payment:
             affected_user_ids = [x["_id"] for x in db.users.find({"ExternalPayments._id": expired_payment["_id"]}, {"_id": True})]
-            db.users.update({"_id": {"$in": affected_user_ids}}, {"$pull": {"ExternalPayments": {"_id": expired_payment["_id"]}}}, multi=True)
-            db.users.update({"_id": {"$in": affected_user_ids}}, {"$addToSet": {"ExternalPayments": expired_payment}}, multi=True)
+            db.users.update_many({"_id": {"$in": affected_user_ids}}, {"$pull": {"ExternalPayments": {"_id": expired_payment["_id"]}}})
+            db.users.update_many({"_id": {"$in": affected_user_ids}}, {"$addToSet": {"ExternalPayments": expired_payment}})
 
     def GetAndActivatePromo(code):
         promo = db.promo_codes.find_one({"Code": code})

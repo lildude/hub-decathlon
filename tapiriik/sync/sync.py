@@ -18,7 +18,7 @@ import pytz
 import json
 import bisect
 
-from helper.sqs.manager import SqsManager
+from tapiriik.helper.sqs.manager import SqsManager
 
 
 # Set this up separate from the logger used in this scope, so services logging messages are caught and logged into user's files.
@@ -103,12 +103,12 @@ class Sync:
 
     def ScheduleImmediateSync(self, user, exhaustive=None):
         if exhaustive is None:
-            db.users.update({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow()}})
+            db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow()}})
         else:
-            db.users.update({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow(), "NextSyncIsExhaustive": exhaustive}})
+            db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSynchronization": datetime.utcnow(), "NextSyncIsExhaustive": exhaustive}})
 
     def SetNextSyncIsExhaustive(self, user, exhaustive=False):
-        db.users.update({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}})
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"NextSyncIsExhaustive": exhaustive}}, upsert=True)
 
     def InitializeWorkerBindings(self):
 
@@ -152,25 +152,20 @@ class Sync:
         else:
             print('[Sync.PerformGlobalSync]--- Nothing to sync !')
 
-    # TODO : temp var _sqs_manager, change it to self.VAR when class will be refactored
     def _consumeSyncTask(self, body, receipt_handle, heartbeat_callback_direct, version):
         from tapiriik.auth import User
 
         user_id = body["user_id"]
         user = User.Get(user_id)
 
-        # TODO : avec sqs manager dans self, on peut se passer des deux lignes suivantes
-        # _sqs_manager = SqsManager()
-        # _sqs_manager.get_queue()
-
         # if user doesn't exists, stop process and delete message
         if user is None:
-            logger.warning("Could not find user %s - bailing" % user_id)
+            logger.warning("[Sync._consumeSyncTask]--- Could not find user %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         if 'generation' not in body:
-            logger.warning("Queue generation mismatch for %s - bailing" % user_id)
+            logger.warning("[Sync._consumeSyncTask]--- Queue generation mismatch for %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
@@ -178,7 +173,7 @@ class Sync:
             # QueuedGeneration being different means they've gone through sync_scheduler since this particular message was queued
             # So, discard this and wait for that message to surface
             # Should only happen when I manually requeue people
-            logger.warning("Queue generation mismatch for %s - bailing" % user_id)
+            logger.warning("[Sync._consumeSyncTask]--- Queue generation mismatch for %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
@@ -208,11 +203,11 @@ class Sync:
             next_sync = None
             if User.HasActivePayment(user):
                 if User.GetConfiguration(user)["suppress_auto_sync"]:
-                    logger.info("Not scheduling auto sync for paid user")
+                    logger.info("[Sync._consumeSyncTask]--- Not scheduling auto sync for paid user")
                 else:
                     next_sync = datetime.utcnow() + self.SyncInterval + timedelta(seconds=random.randint(-self.SyncIntervalJitter.total_seconds(), self.SyncIntervalJitter.total_seconds()))
             if result and result.ForceNextSync:
-                logger.info("Forcing next sync at %s" % result.ForceNextSync)
+                logger.info("[Sync._consumeSyncTask]--- Forcing next sync at %s" % result.ForceNextSync)
                 next_sync = result.ForceNextSync
             reschedule_update = {
                 "$set": {
@@ -225,12 +220,12 @@ class Sync:
             }
 
             if result and result.ForceExhaustive:
-                logger.info("Forcing next sync as exhaustive")
+                logger.info("[Sync._consumeSyncTask]--- Forcing next sync as exhaustive")
                 reschedule_update["$set"]["NextSyncIsExhaustive"] = True
             else:
                 reschedule_update["$unset"]["NextSyncIsExhaustive"] = ""
 
-            scheduling_result = db.users.update(
+            scheduling_result = db.users.update_one(
                 {
                     "_id": user["_id"]
                 }, reschedule_update)
@@ -238,12 +233,12 @@ class Sync:
 
             # Tack this on the end of the log file since otherwise it's lost for good (blegh, but nicer than moving logging out of the sync task?)
             user_log = open(USER_SYNC_LOGS + str(user["_id"]) + ".log", "a+")
-            user_log.write("\n%s\n" % reschedule_confirm_message)
+            user_log.write("[Sync._consumeSyncTask]---  \n%s\n" % reschedule_confirm_message)
             user_log.close()
 
             logger.debug(reschedule_confirm_message)
             sync_time = (datetime.utcnow() - sync_start).total_seconds()
-            db.sync_worker_stats.insert({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": sync_time})
+            db.sync_worker_stats.insert_one({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": sync_time})
 
         self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
 
@@ -259,10 +254,10 @@ class SynchronizationTask:
         self.user = user
 
     def _lockUser(self):
-        db.users.update({"_id": self.user["_id"]}, {"$set": {"SynchronizationWorker": os.getpid(), "SynchronizationHost": socket.gethostname(), "SynchronizationStartTime": datetime.utcnow()}})
+        db.users.update_one({"_id": self.user["_id"]}, {"$set": {"SynchronizationWorker": os.getpid(), "SynchronizationHost": socket.gethostname(), "SynchronizationStartTime": datetime.utcnow()}})
 
     def _unlockUser(self):
-        unlock_result = db.users.update(
+        unlock_result = db.users.update_one(
             {
                 "_id": self.user["_id"]
             }, {
@@ -270,14 +265,14 @@ class SynchronizationTask:
                     "SynchronizationWorker": None
                 }
             })
-        logger.debug("User unlock returned %s" % unlock_result)
+        logger.debug("[SynchronizationTask._unlockUser]--- User unlock returned %s" % unlock_result)
 
     def _loadServiceData(self):
         self._connectedServiceIds = [x["ID"] for x in self.user["ConnectedServices"]]
         self._serviceConnections = [ServiceRecord(x) for x in db.connections.find({"_id": {"$in": self._connectedServiceIds}})]
 
     def _updateSyncProgress(self, step, progress):
-        db.users.update({"_id": self.user["_id"]}, {"$set": {"SynchronizationProgress": progress, "SynchronizationStep": step}})
+        db.users.update_one({"_id": self.user["_id"]}, {"$set": {"SynchronizationProgress": progress, "SynchronizationStep": step}})
 
     def _initializeUserLogging(self):
         self._logging_file_handler = logging.handlers.RotatingFileHandler(USER_SYNC_LOGS + str(self.user["_id"]) + ".log", maxBytes=0, backupCount=5, encoding="utf-8")
@@ -294,7 +289,7 @@ class SynchronizationTask:
         self._extendedAuthDetails = list(cachedb.extendedAuthDetails.find({"ID": {"$in": self._connectedServiceIds}}))
 
     def _destroyExtendedAuthData(self):
-        cachedb.extendedAuthDetails.remove({"ID": {"$in": self._connectedServiceIds}})
+        cachedb.extendedAuthDetails.delete_many({"ID": {"$in": self._connectedServiceIds}})
 
     def _initializePersistedSyncErrorsAndExclusions(self):
         self._syncErrors = {}
@@ -334,12 +329,12 @@ class SynchronizationTask:
                 update_values["$unset"] = {"TriggerPartialSync": None}
 
             try:
-                db.connections.update({"_id": conn._id}, update_values)
+                db.connections.update_one({"_id": conn._id}, update_values)
             except pymongo.errors.WriteError as e:
                 if e.code == 17419: # Update makes document too large.
                     # Throw them all out - exhaustive sync will recover whichever still apply.
                     # NB we don't explicitly mark as exhaustive here, the error counts will trigger it if appropriate.
-                    db.connections.update({"_id": conn._id}, {"$unset": {"SyncErrors": "", "ExcludedActivities": ""}})
+                    db.connections.update_one({"_id": conn._id}, {"$unset": {"SyncErrors": "", "ExcludedActivities": ""}})
                 else:
                     raise
             nonblockingSyncErrorsCount += len([x for x in self._syncErrors[conn._id] if "Block" not in x or not x["Block"]])
@@ -347,7 +342,7 @@ class SynchronizationTask:
             forcingExhaustiveSyncErrorsCount += len([x for x in self._syncErrors[conn._id] if "Block" in x and x["Block"] and "TriggerExhaustive" in x and x["TriggerExhaustive"]])
             syncExclusionCount += len(self._syncExclusions[conn._id].items())
 
-        db.users.update({"_id": self.user["_id"]}, {"$set": {"NonblockingSyncErrorCount": nonblockingSyncErrorsCount, "BlockingSyncErrorCount": blockingSyncErrorsCount, "ForcingExhaustiveSyncErrorCount": forcingExhaustiveSyncErrorsCount, "SyncExclusionCount": syncExclusionCount}})
+        db.users.update_one({"_id": self.user["_id"]}, {"$set": {"NonblockingSyncErrorCount": nonblockingSyncErrorsCount, "BlockingSyncErrorCount": blockingSyncErrorsCount, "ForcingExhaustiveSyncErrorCount": forcingExhaustiveSyncErrorsCount, "SyncExclusionCount": syncExclusionCount}})
 
     def _writeBackActivityRecords(self):
         def _activityPrescences(prescences):
@@ -377,7 +372,7 @@ class SynchronizationTask:
             for x in self._activityRecords
         ]
 
-        db.activity_records.update(
+        db.activity_records.update_one(
             {"UserID": self.user["_id"]},
             {
                 "$set": {
@@ -760,14 +755,15 @@ class SynchronizationTask:
         if updateServicesWithExistingActivity:
             logger.debug("\t\tUpdating SynchronizedActivities")
             try:
-                db.connections.update({"_id": {"$in": list(activity.ServiceDataCollection.keys())}},
-                                      {"$addToSet": {"SynchronizedActivities": {"$each": list(activity.UIDs)}}},
-                                      multi=True)
+                db.connections.update_many(
+                    {"_id": {"$in": list(activity.ServiceDataCollection.keys())}},
+                    {"$addToSet": {"SynchronizedActivities": {"$each": list(activity.UIDs)}}}
+                )
             except pymongo.errors.WriteError as e:
                 if e.code == 17419: # Update makes document too large.
                     # Throw them all out - exhaustive sync will recover.
                     # I should probably check that this is actually due to transient issues - otherwise it'll keep happening.
-                    db.connections.update({"_id": {"$in": list(activity.ServiceDataCollection.keys())}}, {"$unset": {"SynchronizedActivities": ""}})
+                    db.connections.update_many({"_id": {"$in": list(activity.ServiceDataCollection.keys())}}, {"$unset": {"SynchronizedActivities": ""}})
                     self._sync_result.ForceExhaustive = True
                 else:
                     raise
@@ -1181,12 +1177,12 @@ class SynchronizationTask:
 
                             if uploaded_external_id:
                                 # record external ID, for posterity (and later debugging)
-                                db.uploaded_activities.insert({"ExternalID": uploaded_external_id, "Service": destSvc.ID, "UserExternalID": destinationSvcRecord.ExternalID, "Timestamp": datetime.utcnow()})
+                                db.uploaded_activities.insert_one({"ExternalID": uploaded_external_id, "Service": destSvc.ID, "UserExternalID": destinationSvcRecord.ExternalID, "Timestamp": datetime.utcnow()})
                             # flag as successful
-                            db.connections.update({"_id": destinationSvcRecord._id},
+                            db.connections.update_one({"_id": destinationSvcRecord._id},
                                                   {"$addToSet": {"SynchronizedActivities": {"$each": list(activity.UIDs)}}})
 
-                            db.sync_stats.update({"ActivityID": activity.UID}, {"$addToSet": {"DestinationServices": destSvc.ID, "SourceServices": activitySource.ID}, "$set": {"Distance": activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value, "Timestamp": datetime.utcnow()}}, upsert=True)
+                            db.sync_stats.update_one({"ActivityID": activity.UID}, {"$addToSet": {"DestinationServices": destSvc.ID, "SourceServices": activitySource.ID}, "$set": {"Distance": activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value, "Timestamp": datetime.utcnow()}}, upsert=True)
 
                         if len(successful_destination_service_ids):
                             self._pushRecentSyncActivity(full_activity, successful_destination_service_ids)
@@ -1203,33 +1199,33 @@ class SynchronizationTask:
 
             except SynchronizationCompleteException:
                 # This gets thrown when there is obviously nothing left to do - but we still need to clean things up.
-                logger.info("SynchronizationCompleteException thrown")
+                logger.info("[SynchronizationTask.Run]--- SynchronizationCompleteException thrown")
 
-            logger.info("Writing back service data")
+            logger.info("[SynchronizationTask.Run]--- Writing back service data")
             self._writeBackSyncErrorsAndExclusions()
 
             if exhaustive:
                 # Clean up potentially orphaned records, since we know everything is here.
-                logger.info("Clearing old activity records")
+                logger.info("[SynchronizationTask.Run]--- Clearing old activity records")
                 self._dropUntouchedActivityRecords()
 
-            logger.info("Writing back activity records")
+            logger.info("[SynchronizationTask.Run]--- Writing back activity records")
             self._writeBackActivityRecords()
 
-            logger.info("Finalizing")
+            logger.info("[SynchronizationTask.Run]--- Finalizing")
             # Clear non-persisted extended auth details.
             self._destroyExtendedAuthData()
 
-            logger.info("Unlocking user")
+            logger.info("[SynchronizationTask.Run]--- Unlocking user")
             # Unlock the user.
             self._unlockUser()
 
         except:
             # oops.
-            logger.exception("Core sync exception")
+            logger.exception("[SynchronizationTask.Run]--- Core sync exception")
             raise
         else:
-            logger.info("Finished sync for %s (worker %d)" % (self.user["_id"], os.getpid()))
+            logger.info("[SynchronizationTask.Run]--- Finished sync for %s (worker %d)" % (self.user["_id"], os.getpid()))
         finally:
             self._closeUserLogging()
 
