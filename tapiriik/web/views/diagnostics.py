@@ -10,8 +10,6 @@ import json
 import urllib.parse
 from datetime import datetime, timedelta
 
-Sync = Sync()
-
 def diag_requireAuth(view):
     def authWrapper(req, *args, **kwargs):
         if not DiagnosticsUser.IsAuthenticated(req):
@@ -148,7 +146,8 @@ def diag_user(req, user):
         return render(req, "diag/error_user_not_found.html")
     delta = True # Easier to set this to false in the one no-change case.
     if "sync" in req.POST:
-        Sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
+        _sync = Sync()
+        _sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
     elif "unlock" in req.POST:
         db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"SynchronizationWorker": None}})
     elif "lock" in req.POST:
@@ -189,7 +188,8 @@ def diag_user(req, user):
         db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"ExcludedActivities": 1}})
     elif "svc_clearacts" in req.POST:
         db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"SynchronizedActivities": 1}})
-        Sync.SetNextSyncIsExhaustive(userRec, True)
+        _sync = Sync()
+        _sync.SetNextSyncIsExhaustive(userRec, True)
     elif "svc_toggle_poll_sub" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])

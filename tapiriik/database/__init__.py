@@ -1,5 +1,5 @@
 from pymongo import MongoClient, MongoReplicaSetClient
-from tapiriik.settings import MONGO_HOST, MONGO_REPLICA_SET, MONGO_CLIENT_OPTIONS, REDIS_HOST, REDIS_CLIENT_OPTIONS
+from tapiriik.settings import MONGO_HOST, MONGO_REPLICA_SET, MONGO_CLIENT_OPTIONS, REDIS_HOST, REDIS_CLIENT_OPTIONS, MONGO_DB_PREFIX
 
 # MongoDB
 
@@ -9,11 +9,11 @@ if MONGO_REPLICA_SET:
 
 _connection = client_class(host=MONGO_HOST, **MONGO_CLIENT_OPTIONS)
 
-db = _connection["tapiriik"]
-cachedb = _connection["tapiriik_cache"]
-tzdb = _connection["tapiriik_tz"]
+db = _connection[MONGO_DB_PREFIX+"tapiriik"]
+cachedb = _connection[MONGO_DB_PREFIX+"tapiriik_cache"]
+tzdb = _connection[MONGO_DB_PREFIX+"tapiriik_tz"]
 # The main db currently has an unfortunate lock contention rate
-ratelimit = _connection["tapiriik_ratelimit"]
+ratelimit = _connection[MONGO_DB_PREFIX+"tapiriik_ratelimit"]
 
 # Redis
 if REDIS_HOST:

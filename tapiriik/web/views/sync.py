@@ -10,7 +10,6 @@ from tapiriik.settings import MONGO_FULL_WRITE_CONCERN
 from datetime import datetime
 import zlib
 
-Sync = Sync()
 
 def sync_status(req):
     if not req.user:
@@ -59,18 +58,20 @@ def sync_recent_activity(req):
 
 @require_POST
 def sync_schedule_immediate(req):
+    _sync = Sync()
     if not req.user:
         return HttpResponse(status=401)
-    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] < Sync.MinimumSyncInterval:
+    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] < _sync.MinimumSyncInterval:
         return HttpResponse(status=403)
     exhaustive = None
-    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] > Sync.MaximumIntervalBeforeExhaustiveSync:
+    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
         exhaustive = True
-    Sync.ScheduleImmediateSync(req.user, exhaustive)
+    _sync.ScheduleImmediateSync(req.user, exhaustive)
     return HttpResponse()
 
 @require_POST
 def sync_clear_errorgroup(req, service, group):
+    _sync = Sync()
     if not req.user:
         return HttpResponse(status=401)
 
@@ -84,10 +85,11 @@ def sync_clear_errorgroup(req, service, group):
         if "UserException" in x and "ClearGroup" in x["UserException"] and x["UserException"]["ClearGroup"] == group:
             to_clear_count += 1
 
+    _sync = Sync()
     if to_clear_count > 0:
             db.connections.update_one({"_id": rec._id}, {"$pull":{"SyncErrors":{"UserException.ClearGroup": group}}})
             db.users.update_one({"_id": req.user["_id"]}, {'$inc':{"BlockingSyncErrorCount":-to_clear_count}}) # In the interests of data integrity, update the summary counts immediately as opposed to waiting for a sync to complete.
-            Sync.ScheduleImmediateSync(req.user, True) # And schedule them for an immediate full resynchronization, so the now-unblocked services can be brought up to speed.            return HttpResponse()
+            _sync.ScheduleImmediateSync(req.user, True) # And schedule them for an immediate full resynchronization, so the now-unblocked services can be brought up to speed.            return HttpResponse()
             return HttpResponse()
 
     return HttpResponse(status=404)
