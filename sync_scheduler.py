@@ -9,7 +9,7 @@ import json
 
 print("-----[ INITIALIZE SYNC_SCHEDULER ]-----")
 sqsManager = SqsManager()
-sqsManager.get_queue('hub_decathlon_dev_anael')
+sqsManager.get_queue()
 while True:
     generation = str(uuid.uuid4())
     queueing_at = datetime.utcnow()
