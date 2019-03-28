@@ -79,6 +79,8 @@ class User:
         User._assocPaymentLikeObject(user, "Promos", promo, schedule_now)
 
     def HasActivePayment(user):
+        #for now every body is premium
+        return True 
         # Payments and Promos share the essential data field - Expiry
         # We don't really care if the payment has yet to take place yet - why would it be in the system then?
         # (Timestamp too, but the fact we rely on it here is only for backwards compatability with some old payment records)
