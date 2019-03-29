@@ -73,6 +73,7 @@ function ActivitiesController($scope, $http) {
         activity.FullySynchronized = fully_synchronized;
         activity.Prescence = sorted_prescences;
       }
+      console.log(activities);
       $scope.activities = activities;
     });
   };
@@ -101,6 +102,7 @@ function SyncSettingsController($scope, $http, $window){
     } else {
       $scope.tapiriik.User.Config.sync_skip_before = null;
     }
+    console.log($scope.tapiriik.User);
     $http.post("/account/configure", $scope.tapiriik.User.Config).success(function(){
       $.address.value(""); // Back to jquery land
     }).error(function(data, status){

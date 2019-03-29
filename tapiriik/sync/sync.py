@@ -779,9 +779,18 @@ class SynchronizationTask:
     def _syncActivityRedisKey(user):
         return "recent-sync:%s" % user["_id"]
 
-    def _pushRecentSyncActivity(self, activity, destinations):
+    def _pushRecentSyncActivity(self, activity, source, destinations):
         key = SynchronizationTask._syncActivityRedisKey(self.user)
-        redis.lpush(key, json.dumps({"Name": activity.Name, "StartTime": activity.StartTime.isoformat(), "Type": activity.Type, "Timestamp": datetime.utcnow().isoformat(), "Destinations": destinations}))
+        print(activity)
+        redis.lpush(key, json.dumps({
+            "Name": activity.Name,
+            "StartTime": activity.StartTime.isoformat(),
+            "Type": activity.Type,
+            "Timestamp": datetime.utcnow().isoformat(),
+            "Source": source,
+            "Destinations": destinations,
+            "Readable_date": activity.StartTime.utcnow().strftime("%Y-%m-%d")
+        }))
         redis.ltrim(key, 0, 4) # Only keep 5
 
     def RecentSyncActivity(user):
@@ -1185,7 +1194,7 @@ class SynchronizationTask:
                             db.sync_stats.update_one({"ActivityID": activity.UID}, {"$addToSet": {"DestinationServices": destSvc.ID, "SourceServices": activitySource.ID}, "$set": {"Distance": activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value, "Timestamp": datetime.utcnow()}}, upsert=True)
 
                         if len(successful_destination_service_ids):
-                            self._pushRecentSyncActivity(full_activity, successful_destination_service_ids)
+                            self._pushRecentSyncActivity(full_activity, activitySource.ID, successful_destination_service_ids)
                         del full_activity
                         processedActivities += 1
                     except ActivityShouldNotSynchronizeException:

@@ -2,21 +2,37 @@
 <div class="syncActivityBlock" ng-controller="RecentSyncActivityController">
 <table class="activitiesTable recentActivitiesTable fancyTable" ng-show="recent_activities.length > 0">
 	<tr class="headers">
-		<th colspan="2">
-			{% trans "Recently Synchronized Activities" %}
+		<th colspan="3">
+			<div class="cell cellHeader">
+				<span class="tag title">{% trans "Recently Synchronized Activities" %}</span>
+			</div>
 		</th>
 	</tr>
-	<tr ng-repeat="activity in recent_activities" class="activity">
-		<td class="activityHeader">
-			<span class="date" title="{[ activity.StartTime ]}">{[ activity.StartTime|date ]}</span> {[ activity.Name ]}
-		</td>
-		<td class="activityHeader">
-			<span class="tag float type">{[ activity.Type ]}</span>
-		</td>
-	</tr>
+	<div >
+		<tr ng-repeat="activity in recent_activities" class="activityRow">
+			<td class="activityHeader">
+				<div class="cell">
+					<span class="tag date" title="{[ activity.Readable_date ]}">{[ activity.Readable_date ]}</span> 
+				</div>
+			</td>
+			</td>
+			<td class="activityHeader">
+				<div class="cell">
+					<span class="tag float type">{[ activity.Type ]}</span>
+				</div>
+			</td>
+			<td class="activityHeader">
+				<div class="cell">
+					<span class="tag float source">({[ activity.Source ]})</span>
+				</div>
+			</td>
+		</tr>	
+	</div>
 	<tr class="footers">
-		<th colspan="2">
-			<a href="{% url 'activities_dashboard' %}">{% trans "All Activities" %} &raquo;</a>
+		<th colspan="3">
+			<div class="cell cellFooter">
+				<a href="{% url 'activities_dashboard' %}" class="button">{% trans "All Activities" %}</a>
+			</div>
 		</th>
 	</tr>
 </table>
