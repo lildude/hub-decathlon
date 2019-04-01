@@ -53,7 +53,8 @@ def sync_status(req):
 def sync_recent_activity(req):
     if not req.user:
         return HttpResponse(status=403)
-    res = SynchronizationTask.RecentSyncActivity(req.user)
+    _synchronization_task = SynchronizationTask(req.user)
+    res = _synchronization_task.RecentSyncActivity(req.user)
     return HttpResponse(json.dumps(res), content_type="application/json")
 
 @require_POST

@@ -781,7 +781,10 @@ class SynchronizationTask:
 
     def _pushRecentSyncActivity(self, activity, source, destinations):
         key = SynchronizationTask._syncActivityRedisKey(self.user)
-        print(activity)
+
+        diff_date = round((activity.EndTime - activity.StartTime).total_seconds() / 60.0, 0)
+        period = str(diff_date) + " minutes"
+
         redis.lpush(key, json.dumps({
             "Name": activity.Name,
             "StartTime": activity.StartTime.isoformat(),
@@ -789,11 +792,12 @@ class SynchronizationTask:
             "Timestamp": datetime.utcnow().isoformat(),
             "Source": source,
             "Destinations": destinations,
-            "Readable_date": activity.StartTime.utcnow().strftime("%Y-%m-%d")
+            "Readable_date": activity.StartTime.utcnow().strftime("%Y-%m-%d"),
+            "Period": period
         }))
         redis.ltrim(key, 0, 4) # Only keep 5
 
-    def RecentSyncActivity(user):
+    def RecentSyncActivity(self, user):
         return [json.loads(x.decode("UTF-8")) for x in redis.lrange(SynchronizationTask._syncActivityRedisKey(user), 0, 4)]
 
     def _downloadActivity(self, activity):

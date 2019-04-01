@@ -1,39 +1,42 @@
 {% load i18n %}
 <div class="syncActivityBlock" ng-controller="RecentSyncActivityController">
-<table class="activitiesTable recentActivitiesTable fancyTable" ng-show="recent_activities.length > 0">
-	<tr class="headers">
-		<th colspan="3">
-			<div class="cell cellHeader">
-				<span class="tag title">{% trans "Recently Synchronized Activities" %}</span>
+	<div class="block">
+		<div class="row">
+			<div class="col-md-12">
+
+				<table class="activitiesTable recentActivitiesTable" ng-show="recent_activities.length > 0">
+					<tr class="headers">
+						<th colspan="2">
+							<div class="cell cellHeader">
+								<span class="tag title">{% trans "Recently Synchronized Activities" %}</span>
+							</div>
+						</th>
+						<!--<th class="service-col" ng-repeat="svc in ServiceInfo|filter:{Connected:true}" title="{[ svc.DisplayName ]}">{[ svc.DisplayAbbreviation ]}</th>-->
+					</tr>
+					<tr class="activity" ng-repeat="activity in recent_activities">
+						<td class="dateCell text-center">{[ activity.Readable_date ]}<br>{[activity.Period]}</td>
+						<td class="infoCell text-left">
+							<strong>{[ activity.Type ]}</strong><br>
+							{[ activity.Name ]}<br>
+							<span class="label stationary" title="This activity has no sensor data." ng-show="activity.Stationary"><span class="default">{% trans "Stationary" %}</span></span>
+							<span class="label" title="You've marked this activity as private." ng-show="activity.Private"><span class="warning">{% trans "Private" %}</span></span>
+							<div class="sourceBlock">
+								Source: <span class="label source"> <span class="success">{[activity.Source]}</span></span>
+							</div>
+							<div class="destinationBlock">
+								<span class="label source" ng-repeat="destination in activity.Destinations"> <span class="success">{[ destination ]}</span></span>
+							</div>
+						</td>
+					</tr>
+					<tr class="footers">
+						<th colspan="2">
+							<div class="cell cellFooter">
+								<a href="{% url 'activities_dashboard' %}" class="button">{% trans "All Activities" %}</a>
+							</div>
+						</th>
+					</tr>
+				</table>
 			</div>
-		</th>
-	</tr>
-	<div >
-		<tr ng-repeat="activity in recent_activities" class="activityRow">
-			<td class="activityHeader">
-				<div class="cell">
-					<span class="tag date" title="{[ activity.Readable_date ]}">{[ activity.Readable_date ]}</span> 
-				</div>
-			</td>
-			</td>
-			<td class="activityHeader">
-				<div class="cell">
-					<span class="tag float type">{[ activity.Type ]}</span>
-				</div>
-			</td>
-			<td class="activityHeader">
-				<div class="cell">
-					<span class="tag float source">({[ activity.Source ]})</span>
-				</div>
-			</td>
-		</tr>	
+		</div>
 	</div>
-	<tr class="footers">
-		<th colspan="3">
-			<div class="cell cellFooter">
-				<a href="{% url 'activities_dashboard' %}" class="button">{% trans "All Activities" %}</a>
-			</div>
-		</th>
-	</tr>
-</table>
 </div>

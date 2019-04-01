@@ -73,7 +73,6 @@ function ActivitiesController($scope, $http) {
         activity.FullySynchronized = fully_synchronized;
         activity.Prescence = sorted_prescences;
       }
-      console.log(activities);
       $scope.activities = activities;
     });
   };
@@ -113,6 +112,7 @@ function SyncSettingsController($scope, $http, $window){
 
 function RecentSyncActivityController($scope, $http) {
   var updateTimer;
+
   $scope.$watch("tapiriik.Synchronizing", function() {
     if ($scope.tapiriik.Synchronizing && !updateTimer) {
       updateTimer = setInterval(update_recent_activity, 5000);
@@ -125,6 +125,7 @@ function RecentSyncActivityController($scope, $http) {
   var update_recent_activity = function() {
     $http.get("/sync/activity").success(function(data){
       $scope.recent_activities = data;
+      console.log(data);
     });
   };
   update_recent_activity();
