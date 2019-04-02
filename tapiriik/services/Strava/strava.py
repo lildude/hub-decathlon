@@ -3,8 +3,9 @@ from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBas
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb, db
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatistics, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
-from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity
+from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
 from tapiriik.services.fit import FITIO
+from tapiriik.services.ratelimiting import RateLimit, RateLimitExceededException
 
 from django.core.urlresolvers import reverse
 from datetime import datetime, timedelta
@@ -103,6 +104,7 @@ class StravaService(ServiceBase):
 
     def _requestWithAuth(self, reqLambda, serviceRecord):
         session = requests.Session()
+        self._rate_limit()
 
         if time.time() > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0) - 60:
             # Expired access token, or still running (now-deprecated) indefinite access token.
@@ -132,6 +134,7 @@ class StravaService(ServiceBase):
         code = req.GET.get("code")
         params = {"grant_type": "authorization_code", "code": code, "client_id": STRAVA_CLIENT_ID, "client_secret": STRAVA_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "strava"})}
 
+        self._rate_limit()
         response = requests.post("https://www.strava.com/oauth/token", data=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
@@ -463,3 +466,10 @@ class StravaService(ServiceBase):
     def DeleteActivity(self, serviceRecord, uploadId):
         del_res = self._requestWithAuth(lambda session: session.delete("https://www.strava.com/api/v3/activities/%d" % uploadId), serviceRecord)
         del_res.raise_for_status()
+
+    def _rate_limit(self):
+        try:
+            RateLimit.Limit(self.ID)
+        except RateLimitExceededException:
+            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
+
