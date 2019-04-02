@@ -15,6 +15,7 @@ class Service:
 
     def Init():
         Service._serviceMappings = {x.ID: x for x in Service.List()}
+        print(Service._serviceMappings)
         for svc in Service.List():
             if svc.IDAliases:
                 Service._serviceMappings.update({x: svc for x in svc.IDAliases})
@@ -46,7 +47,7 @@ class Service:
             BeginnerTriathlete,
             Setio,
             Singletracker,
-            DecathlonCoach,
+            Decathlon,
             PolarPersonalTrainer
         ] + PRIVATE_SERVICES
 
@@ -75,7 +76,7 @@ class Service:
             Setio,
             Singletracker,
             Aerobia,
-            DecathlonCoach,
+            Decathlon,
             PolarPersonalTrainer
         ] + PRIVATE_SERVICES
 

@@ -13,14 +13,14 @@ It is logging rollback task.
 { 
     "_id" : ObjectId("xxxxxxx"), 
     "PendingDeletions" : {
-        "decathloncoachpreprod" : [
+        "decathlonpreprod" : [
             "eu2beb87e79e8c211f9e", 
             "eu2d2c55122ae47a6183", 
             "eu2aaee0699037fb4f56", 
             "eu26ff6af9aac884ee7b", 
             "eu2caa85f322153860da"
         ], 
-        "decathloncoach" : [
+        "decathlon" : [
             "eu26c0cd3d3f39a428ae", 
             "eu2e760061b3d09d848f", 
             "eu2dd187a7d48d24b24d"
