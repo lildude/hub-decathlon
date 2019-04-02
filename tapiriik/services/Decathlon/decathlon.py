@@ -1,6 +1,6 @@
 # Synchronization module for decathloncoach.com
 # (c) 2018 Charles Anssens, charles.anssens@decathlon.com
-from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_API_KEY, DECATHLON_API_BASE_URL
+from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_API_KEY, DECATHLON_API_BASE_URL, DECATHLON_RATE_LIMITS
 from tapiriik.services.ratelimiting import RateLimit, RateLimitExceededException
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
@@ -37,7 +37,7 @@ class DecathlonService(ServiceBase):
     PartialSyncRequiresTrigger = False
     LastUpload = None
 
-    GlobalRateLimits = DECATHLONCOACH_RATE_LIMITS
+    GlobalRateLimits = DECATHLON_RATE_LIMITS
 
     OauthEndpoint = "https://account.geonaute.com"
     
