@@ -21,9 +21,9 @@ function preSubmit(){
 }
 $(function(){
 	$(".paymentForm input[type=text]").keyup(validatePrice);
-})
+});
 </script>
-<a href="#" style="display:block;overflow:hidden;" class="paymentButton">Automatic synchronization</a>
+<!--<a href="#" style="display:block;overflow:hidden;" class="paymentButton">Automatic synchronization</a>-->
 <form action="{{ config.pp.url }}" method="post" class="paymentForm" style="text-align:center;display:none;" onsubmit="preSubmit()">
 	<hr/>
 	<h3>Pay what you want for 1 year of automatic synchronization</h3>

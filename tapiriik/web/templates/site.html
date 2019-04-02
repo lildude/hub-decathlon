@@ -22,6 +22,7 @@
     {% if config.in_diagnostics %}
 	<script type="text/javascript">tapiriik = {diagnostics: true};</script>
 	<script type="text/javascript" src="{{ STATIC_URL }}js/Chart.min.js"></script>
+
 	<link rel="stylesheet" href="{{ STATIC_URL }}css/diagnostics.css" />
 	{% endif %}
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
@@ -38,6 +39,7 @@
 	<link rel="apple-touch-icon" sizes="180x180" href="{{ STATIC_URL }}img/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="{{ STATIC_URL }}img/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="{{ STATIC_URL }}img/favicon-16x16.png">
+	<link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700i" rel="stylesheet">
 	<link rel="manifest" href="{{ STATIC_URL }}site.webmanifest">
 	<link rel="mask-icon" href="{{ STATIC_URL }}img/safari-pinned-tab.svg" color="#5bbad5">
 	<meta name="msapplication-TileColor" content="#da532c">
@@ -46,45 +48,47 @@
 
 <body {% if celebration_mode %}class="{{ celebration_mode.BodyCSSClasses }}"{% endif %} ng-app="tapiriik">
 
-	<!-- I blame centre-aligning -->
-	<div class="contentOuter">
-		<div class="contentWrap">
-			<div class="mainBlock">
-				<div class="logo">
-					{% if celebration_mode.Logo %}
-						<a href="/"><img src="{{ STATIC_URL}}img/{{ celebration_mode.Logo }}" title="{{ celebration_mode.TitleText }}" alt="{{ celebration_mode.TitleText }}"/></a>
-					{% else %}
-						<a href="/">exercisync</a>
-					{% endif %}
-					{% if celebration_mode.Subtitle %}
-						<div class="sub">{{ celebration_mode.Subtitle }}</div>
-					{% else %}
-						<div class="sub">{% trans "when kudos on strava is not enough" %}</div>
-					{% endif %}
-				</div>
-				<div class="logoPad"></div>
-				<div class="contentOuterBorder">
-					<div class="content">
-		    			{% block content %}{% endblock %}
-		    		</div>
-	    		</div>
-	    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
-	    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
-	    		</div>
-	    	</div>
-    	</div>
-    </div>
-
-    <!-- I should procedurally generate these -->
-    <div class="environsWrap">
-	    <div class="environs">
-	    	<div class="background"></div>
-	    	<div class="mountains">
-	    		<div id="a" class="mountain"></div><div id="b" class="mountain"></div><div id="c" class="mountain"></div>
-	    		<div class="snow"></div>
-	    	</div>
-	    	<div class="sun"></div>
+    <div class="backgroundWrap">
+	    <div class="background">
 	    </div>
+	</div>
+
+	<!-- I blame centre-aligning -->
+	<div class="center">
+		<div class="header">
+			<div class="logo">
+				{% if celebration_mode.Logo %}
+					<a href="/"><img src="{{ STATIC_URL}}img/{{ celebration_mode.Logo }}" title="{{ celebration_mode.TitleText }}" alt="{{ celebration_mode.TitleText }}"/></a>
+				{% else %}
+					<div class="logoLink">
+						<a href="/"><div class="strong">HUB</div> by <div class="strong">DECATHLON</div></a>
+					</div>
+				{% endif %}
+				{% if celebration_mode.Subtitle %}
+					<div class="sub">{{ celebration_mode.Subtitle }}</div>
+				{% else %}
+					<div class="sub">{% trans "when kudos on strava is not enough" %}</div>
+				{% endif %}
+			</div>
+			<div class="logoPad"></div>
+		</div>
+
+	
+		<div class="content">
+			<div class="contentWrap">
+				<div class="mainBlock">
+					<div class="contentOuterBorder">
+						<div class="content">
+			    			{% block content %}{% endblock %}
+			    		</div>
+		    		</div>
+		    		<hr>
+		    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
+		    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
+		    		</div>
+		    	</div>
+	    	</div>
+	    </div>	
 	</div>
 
 	<script type="text/javascript">
