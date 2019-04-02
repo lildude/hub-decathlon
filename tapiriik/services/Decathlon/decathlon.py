@@ -1,11 +1,12 @@
 # Synchronization module for decathloncoach.com
 # (c) 2018 Charles Anssens, charles.anssens@decathlon.com
 from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_API_KEY, DECATHLON_API_BASE_URL
+from tapiriik.services.ratelimiting import RateLimit, RateLimitExceededException
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
-from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity
+from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
 from lxml import etree
 import xml.etree.ElementTree as xml
 from django.core.urlresolvers import reverse
@@ -35,7 +36,9 @@ class DecathlonService(ServiceBase):
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
     PartialSyncRequiresTrigger = False
     LastUpload = None
-    
+
+    GlobalRateLimits = DECATHLONCOACH_RATE_LIMITS
+
     OauthEndpoint = "https://account.geonaute.com"
     
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = False
@@ -161,17 +164,20 @@ class DecathlonService(ServiceBase):
     def RetrieveAuthorizationToken(self, req, level):
         code = req.GET.get("code")
         params = {"grant_type": "authorization_code", "code": code, "client_id": DECATHLON_CLIENT_ID, "client_secret": DECATHLON_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
- 
+
+        self._rate_limit()
         response = requests.get(self.accountOauth + "/accessToken", params=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
         data = response.json()
         refresh_token = data["access_token"]
         # Retrieve the user ID, meh.
-        id_resp = requests.get( self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
+        self._rate_limit()
+        id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
         return (id_resp.json()["ldid"], {"RefreshToken": refresh_token})
 
     def RevokeAuthorization(self, serviceRecord):
+        self._rate_limit()
         resp = requests.get(self.OauthEndpoint + "/logout?access_token="+serviceRecord.Authorization["RefreshToken"])
         if resp.status_code != 204 and resp.status_code != 200:
             raise APIException("Unable to deauthorize Decathlon auth token, status " + str(resp.status_code) + " resp " + resp.text)
@@ -179,7 +185,8 @@ class DecathlonService(ServiceBase):
 
 
     def _getAuthHeaders(self, serviceRecord=None):
-        response = requests.get( self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
+        self._rate_limit()
+        response = requests.get(self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
         if response.status_code != 200:
             if response.status_code >= 400 and response.status_code < 500:
                 raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
@@ -202,14 +209,14 @@ class DecathlonService(ServiceBase):
         
         period = []
         
-        aperiod = "%s%02d-%s%02d"% ( prev.year , prev.month, now.year , now.month)
+        aperiod = "%s%02d-%s%02d" % (prev.year, prev.month, now.year, now.month)
         period.append(aperiod)
         
         if exhaustive:
             for _ in range(20):
                 now = prev
                 prev = now - timedelta(6*365/12)
-                aperiod = "%s%02d-%s%02d"% (prev.year, prev.month, now.year, now.month)
+                aperiod = "%s%02d-%s%02d" % (prev.year, prev.month, now.year, now.month)
                 period.append(aperiod)
         
         for dateInterval in period:
@@ -237,10 +244,9 @@ class DecathlonService(ServiceBase):
                 activity = UploadedActivity()
                 activity.TZ = pytz.timezone("UTC")  
 
-                startdate =  ride.find('.//STARTDATE').text + ride.find('.//TIMEZONE').text
+                startdate = ride.find('.//STARTDATE').text + ride.find('.//TIMEZONE').text
                 datebase = parse(startdate)
-                
-    
+
                 activity.StartTime = datebase#pytz.utc.localize(datebase)
                 
                 activity.ServiceData = {"ActivityID": ride.find('ID').text, "Manual": ride.find('MANUAL').text}
@@ -290,7 +296,9 @@ class DecathlonService(ServiceBase):
         logger.info("\t\t DC LOADING  : " + str(activityID))
 
         headers = self._getAuthHeaders(svcRecord)
-        resp = requests.get(DECATHLON_API_BASE_URL + "/activity/" + activityID + "/fullactivity.xml", headers = headers)
+        self._rate_limit()
+        resp = requests.get(DECATHLON_API_BASE_URL + "/activity/" + activityID + "/fullactivity.xml", headers=headers)
+
         if resp.status_code == 401:
             raise APIException("No authorization to download activity", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
 
@@ -299,17 +307,15 @@ class DecathlonService(ServiceBase):
         except:
             raise APIException("Stream data returned from Decathlon is not XML")
 
-
         lap = Lap(stats = activity.Stats, startTime = activity.StartTime, endTime = activity.EndTime) 
         activity.Laps = [lap]
         lap.Waypoints = []
         
         activity.GPS = False
 
-
         #work on date
-        startdate =  root.find('.//STARTDATE').text
-        timezone =  root.find('.//TIMEZONE').text
+        startdate = root.find('.//STARTDATE').text
+        timezone = root.find('.//TIMEZONE').text
         datebase = parse(startdate+timezone)
 
 
@@ -384,7 +390,6 @@ class DecathlonService(ServiceBase):
             
             dataSummarySpeedAvg.text = str((int(speed_mh)))       
             dataSummarySpeedAvg.attrib["id"] = self._unitMap["speedaverage"]
-        
 
         datameasure = etree.SubElement(root, "DATA")                                         
         for lap in activity.Laps:
@@ -426,7 +431,6 @@ class DecathlonService(ServiceBase):
                 etree.SubElement(tracksummary, "SPORTID").text = "121"
                 etree.SubElement(tracksummary, "LDID").text = str(svcRecord.ExternalID)
 
-                
                 for wp in activity.GetFlatWaypoints():
                     if wp.Location is None or wp.Location.Latitude is None or wp.Location.Longitude is None:
                         continue  # drop the point
@@ -443,7 +447,9 @@ class DecathlonService(ServiceBase):
         activityXML = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8")
 
         headers = self._getAuthHeaders(svcRecord)
+        self._rate_limit()
         upload_resp = requests.post(DECATHLON_API_BASE_URL + "/activity/import.xml", data=activityXML, headers=headers)
+
         if upload_resp.status_code != 200:
             raise APIException("Could not upload activity %s %s" % (upload_resp.status_code, upload_resp.text))
         
@@ -457,6 +463,11 @@ class DecathlonService(ServiceBase):
 
         return upload_id
 
+    def _rate_limit(self):
+        try:
+            RateLimit.Limit(self.ID)
+        except RateLimitExceededException:
+            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
 
     def DeleteCachedData(self, serviceRecord):
         cachedb.decathlon_cache.delete_many({"Owner": serviceRecord.ExternalID})
@@ -465,5 +476,6 @@ class DecathlonService(ServiceBase):
     
     def DeleteActivity(self, serviceRecord, uploadId):
         headers = self._getAuthHeaders(serviceRecord)
+        self._rate_limit()
         del_res = requests.delete(DECATHLON_API_BASE_URL + "/activity/+d/summary.xml" % uploadId, headers=headers)
         del_res.raise_for_status()
