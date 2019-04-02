@@ -891,6 +891,7 @@ tapiriik.RefreshSyncCountdown = function(){
 			}
 		} else {
 			sync_button_active = false;
+			console.log(tapiriik.Synchronizing);
 			if (!tapiriik.Synchronizing){
 				var waitTimeMessage = "";
 				if (tapiriik.SynchronizationWaitTime > 60) { // Otherwise you'd expect a countdown, which this is generally not.
@@ -929,14 +930,16 @@ tapiriik.RefreshSyncCountdown = function(){
 		if (sync_state_text != $(".syncButtonAttachment.left").text()){
 			var currentWidth = $(".syncButtonAttachment.left").width();
 			var newWidth = measureText(sync_state_text);
-			if (currentWidth >= newWidth) {
+			var newWidth = currentWidth;
+			$(".syncButtonAttachment.left").text(sync_state_text);
+			/*if (currentWidth >= newWidth) {
 				$(".syncButtonAttachment.left").text(sync_state_text);
 			}
 			$(".syncButtonAttachment.left").animate({"width": newWidth + "px"}, 150, function(){
 				if (currentWidth < newWidth) {
 					$(".syncButtonAttachment.left").text(sync_state_text);
 				}
-			});
+			});*/
 		}
 		$(".syncButtonAttachment.right").text(sync_post_text);
 		if (sync_state_text) {
