@@ -1,54 +1,32 @@
 {% load services %}
 {% load i18n %}
 {% with extauth=provider.RequiresExtendedAuthorizationDetails hasextauth=connection.HasExtendedAuthorizationDetails %}
-<div class="serviceOuter col-md-3 col-xs-6">
-	<div class="service{% if inactive %} inactive {% endif %} {% if provider.ID in user.ConnectedServices|svc_ids and provider.ID not in config.disabled_services %} connected {% endif %}" id="{{ provider.ID }}">
-		{% if not user or provider.ID not in user.ConnectedServices|svc_ids %}
-			{% if provider.ID not in config.disabled_services %}
-				<a href="{{ provider.UserAuthorizationURL }}" class="authDialog" service="{{ provider.ID }}">
-			{% endif %}
-		{% endif %}
-		<!-- SERVICE CONNECTE BTN-->			
+<div class="serviceOuter col-md-3 col-xs-12">
+	<div class="service {{ provider.ID }}{% if inactive %} inactive {% endif %} {% if provider.ID in user.ConnectedServices|svc_ids and provider.ID not in config.disabled_services %} connected {% endif %}" id="{{ provider.ID }}">
 		<div class="button">
-			<div class="icon">{{ provider.DisplayName }}</div>
-		</div>
-
-		{% if not user or provider.ID not in user.ConnectedServices|svc_ids %}
 			{% if provider.ID not in config.disabled_services %}
-				</a>
-			{% endif %}
-		{% endif %}
-
-		<div class="controls">
-			<div class="controlsInner">
-				{% if provider.ID in config.disabled_services %}
-					Offline
+				{% if not user or provider.ID not in user.ConnectedServices|svc_ids %}
+					<a href="{{ provider.UserAuthorizationURL }}" id="login" class="authDialog" service="{{ provider.ID }}">
 				{% else %}
-					{% if provider.ID in user.ConnectedServices|svc_ids %}
-						<div class="line">
-							<a href="{{ provider.UserDisconnectURL }}" class="deauthDialog" service="{{ provider.ID }}"><span class="control" id="sync-dc">{% trans "Disconnect" %}<span class="sr"> {{ provider.DisplayName }}</span></a>
-						</div>
-						<div class="line">
-							{% if extauth and not hasextauth %}
-								<span class="status" id="sync-paused">{% trans "Paused" %}</span>
-							{% else %}
-								<span class="status" id="sync-ok">{% trans "Connected" %}</span>
-							{% endif %}
-						</div>
-						{% if user.ConnectedServices|length > 1 %}
-							{% if extauth and not hasextauth %}
-								<div class="line">
-									<a href="{{ provider.UserAuthorizationURL }}" class="authDialog" service="{{ provider.ID }}"><span class="control" id="reauth">{% trans "Reauthorize" %}<span class="sr"> {{ provider.DisplayName }}</span></span></a>
-								</div>
-							{% endif %}
-						{% endif %}
-					{% else %}
-						<div class="line">
-							<a href="{{ provider.UserAuthorizationURL }}" class="authDialog control" id="login" service="{{ provider.ID }}">{% trans "Connect" %}</a>
-						</div>
-					{% endif %}
+					<a href="{{ provider.UserDisconnectURL }}" id="logout" class="deauthDialog" service="{{ provider.ID }}">
 				{% endif %}
-			</div>
+						<div class="row">
+							<div class="col-md-10 col-xs-9">
+								<div class="text"><i>{{ provider.DisplayName }}</i></div>
+							</div>
+							<div class="col-md-2 col-xs-3">
+								<div class="icon">
+									{% if not user or provider.ID not in user.ConnectedServices|svc_ids %}
+										<img src="{{ STATIC_URL }}img/decathlon/SVG/addWhite.svg">
+									{% else %}
+										<img class="logged" src="{{ STATIC_URL }}img/decathlon/SVG/validWhite.svg">
+										<img class="logout" src="{{ STATIC_URL }}img/decathlon/SVG/stopWhite.svg">
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					</a>
+			{% endif %}
 		</div>
 	</div>
 </div>

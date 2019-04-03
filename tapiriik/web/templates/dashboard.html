@@ -13,7 +13,7 @@
 			<div class="syncButtonBlock">
 				<div class="syncButtonAttachment left">{% trans "Queueing to Synchronize" %}</div>
 				<div class="syncButtonWrap">
-					<a class="syncButton">{% trans "Synchronize Now" %}<div class="syncButtonIcon"></div></a>
+					<a class="syncButton">{% trans "Synchronize now" %}<div class="syncButtonIcon"></div></a>
 					<!--<a href="#/settings" class="syncSettingsNubbin"><span class="sr">{% trans "Synchronization Settings" %}</span><div class="syncSettingsNubbinIcon"></div></a>-->
 				</div>
 				<div class="syncButtonAttachment right">{% trans "Attached info 10%" %}</div>
@@ -28,7 +28,7 @@
 			{% endif %}
 		</div> 
 		<div class="block">
-			<div class="titleBlock">{% trans "Connected services." %}</div>
+			<div class="titleBlock">{% trans "Manage your services" %}</div>
 			<div class="serviceButtonOuter">
 				<div class="serviceButtonWrap row">
 				{% for connection in user.ConnectedServices|svc_populate_conns %}
@@ -37,6 +37,11 @@
 							{% include "service-button.html" with provider=svc connection=connection %}
 						{% endif %}
 					{% endwith %}
+				{% endfor %}
+				{% for provider in user.ConnectedServices|svc_providers_except %}
+					{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
+						{% include "service-button.html" with provider=provider inactive=True %}
+					{% endif %}
 				{% endfor %}
 				</div>
 			</div>
@@ -69,19 +74,6 @@
 			</div>
 		{% endinfotip %}
 	{% endif %}	
-	<div class="block">
-		<div class="titleBlock">{% trans "Unconnected services." %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for provider in user.ConnectedServices|svc_providers_except %}
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
-					{% if forloop.first %}<hr>{% infotip connectMore %}{% trans "You can synchronize more services by connecting them below" %}{% endinfotip %}{% endif %}
-					{% include "service-button.html" with provider=provider inactive=True %}
-				{% endif %}
-			{% endfor %}
-			</div>
-		</div>
-	</div>
 		
 	{% if user.Substitute %}
 		<h1>{% trans "Substituting user" %}</h1>
