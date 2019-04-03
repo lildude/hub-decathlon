@@ -1,7 +1,7 @@
 {% load services %}
 {% load i18n %}
 {% with extauth=provider.RequiresExtendedAuthorizationDetails hasextauth=connection.HasExtendedAuthorizationDetails %}
-<div class="serviceOuter col-md-3 col-xs-12">
+<div class="serviceOuter col-md-4 col-xs-12">
 	<div class="service {{ provider.ID }}{% if inactive %} inactive {% endif %} {% if provider.ID in user.ConnectedServices|svc_ids and provider.ID not in config.disabled_services %} connected {% endif %}" id="{{ provider.ID }}">
 		<div class="button">
 			{% if provider.ID not in config.disabled_services %}

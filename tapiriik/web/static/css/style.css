@@ -177,6 +177,7 @@ p.title{
 
 .content {
 	z-index:1;
+	padding: 0 15px;
 }
 
 .content .block{
