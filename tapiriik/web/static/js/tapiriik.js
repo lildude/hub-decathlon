@@ -835,17 +835,17 @@ tapiriik.UpdateSyncCountdown = function(){
 	$.ajax({"url":"/sync/status", success:function(data){
 		tapiriik.PendingSyncStatusUpdate = false;
 		$rootScope.$apply(function(){ // Tie us into Angularland
-		tapiriik.NextSync = data.NextSync !== null ? new Date(data.NextSync) : null;
-		tapiriik.LastSync = data.LastSync !== null ? new Date(data.LastSync) : null;
-		if (tapiriik.SyncHash !== undefined && tapiriik.SyncHash != data.Hash){
-			window.location.reload(); // show them the whatever's new
-		}
-		tapiriik.SyncHash = data.Hash;
-		tapiriik.SyncErrors = data.Errors;
-		tapiriik.Synchronizing = data.Synchronizing;
-		tapiriik.SynchronizationProgress = data.SynchronizationProgress;
-		tapiriik.SynchronizationStep = data.SynchronizationStep;
-		tapiriik.SynchronizationWaitTime = data.SynchronizationWaitTime;
+			tapiriik.NextSync = data.NextSync !== null ? new Date(data.NextSync) : null;
+			tapiriik.LastSync = data.LastSync !== null ? new Date(data.LastSync) : null;
+			if (tapiriik.SyncHash !== undefined && tapiriik.SyncHash != data.Hash){
+				window.location.reload(); // show them the whatever's new
+			}
+			tapiriik.SyncHash = data.Hash;
+			tapiriik.SyncErrors = data.Errors;
+			tapiriik.Synchronizing = data.Synchronizing;
+			tapiriik.SynchronizationProgress = data.SynchronizationProgress;
+			tapiriik.SynchronizationStep = data.SynchronizationStep;
+			tapiriik.SynchronizationWaitTime = data.SynchronizationWaitTime;
 		});
 		tapiriik.RefreshSyncCountdown();
 	}, error:function(req, opts, error){
@@ -891,7 +891,6 @@ tapiriik.RefreshSyncCountdown = function(){
 			}
 		} else {
 			sync_button_active = false;
-			console.log(tapiriik.Synchronizing);
 			if (!tapiriik.Synchronizing){
 				var waitTimeMessage = "";
 				if (tapiriik.SynchronizationWaitTime > 60) { // Otherwise you'd expect a countdown, which this is generally not.

@@ -1,7 +1,7 @@
 from tapiriik.services import Service
 from tapiriik.auth import User
 from tapiriik.sync import Sync
-from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
+from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
 from tapiriik.database import db
 from datetime import datetime
 import json
@@ -12,7 +12,22 @@ def providers(req):
 def config(req):
     in_diagnostics = "diagnostics" in req.path
     _sync = Sync()
-    return {"config": {"minimumSyncInterval": _sync.MinimumSyncInterval.seconds, "siteVer": SITE_VER, "pp": {"url": PP_WEBSCR, "buttonId": PP_BUTTON_ID}, "soft_launch": SOFT_LAUNCH_SERVICES, "disabled_services": DISABLED_SERVICES, "withdrawn_services": WITHDRAWN_SERVICES, "in_diagnostics": in_diagnostics}, "hidden_infotips": req.COOKIES.get("infotip_hide", None)}
+    return {
+        "config": {
+            "minimumSyncInterval": _sync.MinimumSyncInterval.seconds,
+            "siteVer": SITE_VER,
+            "pp": {
+                "url": PP_WEBSCR,
+                "buttonId": PP_BUTTON_ID
+            },
+            "connection_services": CONNECTION_SERVICES,
+            "soft_launch": SOFT_LAUNCH_SERVICES,
+            "disabled_services": DISABLED_SERVICES,
+            "withdrawn_services": WITHDRAWN_SERVICES,
+            "in_diagnostics": in_diagnostics
+        },
+        "hidden_infotips": req.COOKIES.get("infotip_hide", None)
+    }
 
 def user(req):
     return {"user":req.user}

@@ -83,17 +83,47 @@
 
 {% else %}
 	<div class="block">
-		<p class="info">{% trans "exercisync synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
-
+		<p class="info">{% trans "Decathlon HUB synchronizes your activities between Aerobia, Garmin Connect, Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
+	</div>
+	<dib class="block">
+		<div class="row">
+			<div class="col-md-2"></div>
+			<div class="col-md-4 col-xs-4">
+		    	<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach.png">
+			</div>
+			<div class="col-md-2 col-xs-4">
+		    	<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
+			</div>
+			<div class="col-md-2 col-xs-4">
+	    		<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
+			</div>
+			<div class="col-md-3"></div>
+		</div>
+	</dib>
+	<div class="block">
+		<div class="titleBlock">{% trans "Connect to your Decathlon services" %}</div>
 		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for provider in service_providers %}
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
-					{% include "service-button.html" with provider=provider %}
-				{% endif %}
-			{% endfor %}
+			<div class="serviceButtonWrap serviceButtonLogin row">
+				{% for provider in service_providers %}
+					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
+						{% include "service-button.html" with provider=provider inactive=True hideicon=True size=6 %}
+					{% endif %}
+				{% endfor %}
 			</div>
 		</div>
+	</div><div class="block logoPartners">
+		<div class="titleBlock">{% trans "Available services" %}</div>
+		<div class="partnerOuter row">
+			{% with localservices="decathlon decathlonpreprod" %}
+  			{% for provider in service_providers %}
+				{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+					{% include "service-logos.html" with provider=provider %}
+				{% endif %}
+			{% endfor %}
+			{% endwith %}
+		</div>
+	</div>
+	<div class="block">
 		<p class="info">{% trans "Did not find your service?" %} - {% trans "Try here" %}: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a></p>
 		<p class="info">{% trans "Your email, password, and fitness data are kept safe - full details on the" %} <a href="{% url "privacy" %}">{% trans "privacy page" %}</a>.</p>
 	</div>

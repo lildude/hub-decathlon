@@ -20,6 +20,9 @@ html{
 	background-size: cover;*/
 
 }
+img{
+	width:100%;
+}
 
 a{
 	font-family:'Roboto Condensed', sans-serif;
@@ -127,6 +130,7 @@ p.title{
 .backgroundWrap .background img.border{
 	display:none;
 	position: fixed;
+	width:auto;
 	z-index:1;
 }
 
@@ -406,6 +410,26 @@ p.title{
 }
 
 
+.serviceButtonLogin .service{
+	background-color:#0071B9;
+	color:#fff;
+	text-align:center;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	border-radius: 30px;
+}
+.serviceButtonLogin .service .button{
+	max-height: none;
+}
+.serviceButtonLogin .service .button a .text{
+	display:block;
+	width:100%;
+	text-align: center;
+	line-height: 60px;
+	font-size: 28px;
+	vertical-align:middle;
+}
+
 .activitiesTable{
 	width: 100%;
 	font-size:15px;
@@ -414,10 +438,34 @@ p.title{
 	color:#0071b9;
 	font-family:'Roboto Regular', sans-serif;	
 }
+.activitiesTable tr td p{
+	display: inline-block;
+	margin: 2px 0;
+}
 
 .activitiesTable tr td{
 	padding:10px 0;
 	width: 50%;
+}
+
+.activitiesTable .activity .absence{
+	display:block;
+	text-align: left;
+}
+.activitiesTable .activity .label{
+	margin-bottom: 5px;
+}
+.activitiesTable .activity .prescence span,
+.activitiesTable .activity .absence span,
+.activitiesTable .activity .absence p.small{
+	margin:0 0 0 0;
+	display:inline-block;
+  	font-size: 12px;
+    line-height: 150%;
+}
+
+.activitiesTable .activity .absence p.small{
+	color:#000;
 }
 
 
@@ -607,6 +655,7 @@ p.title{
 
 	.backgroundWrap .background img.border{
 		display:block;
+		width:auto;
 	}
 
 	.col-lg-1 {

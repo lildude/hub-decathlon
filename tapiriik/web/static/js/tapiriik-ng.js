@@ -101,7 +101,6 @@ function SyncSettingsController($scope, $http, $window){
     } else {
       $scope.tapiriik.User.Config.sync_skip_before = null;
     }
-    console.log($scope.tapiriik.User);
     $http.post("/account/configure", $scope.tapiriik.User.Config).success(function(){
       $.address.value(""); // Back to jquery land
     }).error(function(data, status){
@@ -125,7 +124,6 @@ function RecentSyncActivityController($scope, $http) {
   var update_recent_activity = function() {
     $http.get("/sync/activity").success(function(data){
       $scope.recent_activities = data;
-      console.log(data);
     });
   };
   update_recent_activity();
