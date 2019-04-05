@@ -74,6 +74,8 @@ DECATHLON_CLIENT_SECRET = "####"
 DECATHLON_CLIENT_ID = "####"
 DECATHLON_API_KEY = "####"
 DECATHLON_API_BASE_URL = "####"
+DECATHLON_RATE_LIMITS = []
+
 
 # Service available for first connection
 CONNECTION_SERVICES = [
