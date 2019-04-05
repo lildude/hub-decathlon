@@ -75,7 +75,11 @@ DECATHLON_CLIENT_ID = "####"
 DECATHLON_API_KEY = "####"
 DECATHLON_API_BASE_URL = "####"
 
-
+# Service available for first connection
+CONNECTION_SERVICES = [
+    "serviceid#1",
+    "serviceid#2"
+]
 
 AWS_REGION = "###"
 AWS_SQS_QUEUE_NAME="###"
