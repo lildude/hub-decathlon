@@ -44,9 +44,9 @@ a.button{
 	margin: 5px 0
 	font-size:15px;
 	line-height: 20px
-	-webkit-border-radius: 20px;
-	-moz-border-radius: 20px;
-	border-radius: 20px;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	border-radius: 30px;
 }
 
 div.cell{
@@ -113,6 +113,35 @@ p.title{
 }
 .label .warning{
 	background-color:#f0ad4e;
+}
+
+.panel{
+	position: relative;
+    padding: .75rem 1.25rem;
+    margin: 10px auto;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+
+.panel.panel-info{
+	color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff
+}
+.panel.panel-success{
+	color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+.panel.panel-danger{
+	color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+.panel.panel-warning{
+	color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;	
 }
 
 
@@ -436,7 +465,7 @@ p.title{
 	line-height:150%;
 	font-weight: 500;
 	color:#0071b9;
-	font-family:'Roboto Regular', sans-serif;	
+	font-family:'Roboto Regular', sans-serif;
 }
 .activitiesTable tr td p{
 	display: inline-block;
@@ -447,6 +476,13 @@ p.title{
 	padding:10px 0;
 	width: 50%;
 }
+.activitiesTable tr.footers{
+	margin-top:15px;
+}
+.activitiesTable tr.footers a.button{
+	display: inline-block;
+}
+
 
 .activitiesTable .activity .absence{
 	display:block;
@@ -468,6 +504,80 @@ p.title{
 	color:#000;
 }
 
+.dialogWrap{
+	position: relative;
+	border: 1px solid #707070;
+	margin:50px auto;
+	padding:25px;
+
+	color:#0071b9;
+	font-family:'Roboto Regular', sans-serif;
+	font-size: 16px;
+	line-height: 150%;
+}
+
+
+.dialogWrap .pic-dialog{
+	width:25%;
+	display: block;
+	margin: 0 auto 30px auto;
+}
+
+.dialogWrap form{
+	width:50%;
+	display: block;
+	position: relative;
+	margin: 20px auto;
+}
+.dialogWrap form input,
+.dialogWrap form label{
+	width: 100%;
+	display: block;
+	text-align:left;
+	margin-bottom:10px;
+}
+
+.dialogWrap form label{
+	font-weight: 700;
+}
+
+.dialogWrap form input{
+	width:100%;
+	border: 1px solid #0071b9;
+	height:38px;
+	padding: 5px;
+	font-size:18px;
+
+}
+.dialogWrap form .persist-controls{
+	display:block;
+	position:relative;
+	width:100%;
+}
+.dialogWrap form .persist-controls input[type=checkbox],
+.dialogWrap form .persist-controls label{
+	display: inline-block;
+	width: auto;
+	height:auto;
+	font-weight: 500;
+    font-size: 12px;
+    line-height: 150%;
+    margin-bottom: 10px;
+}
+.dialogWrap form button[type=submit]{
+	display: block;
+	margin: 0 auto;
+	width: 50%;
+	padding:10px 20px;
+	color:#fff;
+	font-weight: 700;
+	font-size:18px;
+	line-height: 120%;
+	background-color:#0071b9;
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+}
 
 .footers{
 	font-family:'Roboto Condensed', sans-serif;
@@ -597,7 +707,7 @@ p.title{
 }
 @media (min-width: 992px) {
 	.header{
-		margin-bottom:90px;
+		margin-bottom:120px;
 	}
 	
 	.col-md-1 {
@@ -650,7 +760,7 @@ p.title{
 }
 @media (min-width: 1200px) {
 	.header{
-		margin-bottom:190px;
+		margin-bottom:210px;
 	}
 
 	.backgroundWrap .background img.border{
@@ -707,6 +817,16 @@ p.title{
 	}
 }
 @media (max-width: 992px) {
+	.dialogWrap{
+		padding:25px;
+		margin:0;
+	}
+	.dialogWrap .pic-dialog{
+		width:50%;
+	}
+	.dialogWrap form{
+		width:100%;
+	}
 
 	.backgroundWrap{
 		display:none;

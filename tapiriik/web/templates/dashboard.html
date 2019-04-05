@@ -62,17 +62,17 @@
 
 	<!-- tooltip blocks -->
 	{% if user.ConnectedServices|length > 1 %}
-		{% infotip connectedWillSync %}
+		<!--{% infotip connectedWillSync %}-->
 			<div class="block">
 				<div class="tooltip">{% trans "Connected services will be synchronized automatically" %}</div>
 			</div>
-		{% endinfotip %}
+		<!--{% endinfotip %}-->
 	{% else %}
-		{% infotip connectOneMore %}
+		<!--{% infotip connectOneMore %}-->
 			<div class="block">
 				<div class="tooltip">{% trans "Connect a second service to synchronize your activities to &amp; from" %}</div>
 			</div>
-		{% endinfotip %}
+		<!--{% endinfotip %}-->
 	{% endif %}	
 		
 	{% if user.Substitute %}

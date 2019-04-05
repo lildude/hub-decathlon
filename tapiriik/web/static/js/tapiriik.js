@@ -252,6 +252,8 @@ tapiriik.ActivateRememberDetailsDialog = function(svcId){
 };
 
 tapiriik.OpenDeauthDialog = function(svcId){
+
+	// TODO : MODIFIER CE SCRIPT POUR QUE LE VISUEL CORRESPONDE A LA MAQUETTE
 	var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
 	form.bind("submit", function() {return false;});
 	$("#disconnect", form).click(function(){
@@ -280,7 +282,49 @@ tapiriik.OpenDeauthDialog = function(svcId){
 };
 
 tapiriik.CreateDirectLoginForm = function(svcId){
-	var form = $("<form novalidate><div class=\"error\" id=\"login-fail\">There was a problem logging you in</div><div class=\"error\" id=\"login-error\">There was a system error :(</div><label for=\"email\">Email/Username</label><input autofocus type=\"email\" id=\"email\"/><label for=\"password\">Password</label><input type=\"password\" id=\"password\"><br/><span class=\"persist-controls\"><input type=\"checkbox\" id=\"persist\"/><label for=\"persist\">Save these details</label><br/></span><center><button type=\"submit\" >Log in</button></center></form>");
+	/*
+	il faut réécrire proprement ce formulaire, en insérant correctement les variables.
+	
+	*/
+	console.log(svcId);
+
+	// TODO il faut ensuite adapter cet html pour le rendre présentable  et PROPRE, ajouter des classes 
+	// Puis enfin faire le css qui en découle
+	var form = $("<form novalidate>").append(
+		$("<div>")
+			.addClass('panel panel-danger error')
+			.attr('id','login-fail')
+			.html("There was a problem logging you in"),
+		$("<div>")
+			.addClass('panel panel-danger error')
+			.attr('id','login-error')
+			.html("There was a logging error"),
+		$('<label>')
+			.attr('for', 'email')
+			.html('Email/Username'),
+		$('<input autofocus type="email">')
+			.attr('id','email'),
+		$('<label>')
+			.attr('for', 'password')
+			.html('Password'),
+		$('<input type="password">')
+			.attr('id','password'),
+		$('<span>')
+			.addClass('persist-controls')
+			.append(
+				$('<input type="checkbox">')
+					.attr('id','persist'),
+				$('<label>')
+					.attr('for','persist')
+					.html('Save these details')
+			),
+		$('<button>')
+			.attr('type','submit')
+			.html('Login')
+	);
+
+
+	//var form = $("<form novalidate><div class=\"error\" id=\"login-fail\">There was a problem logging you in</div><div class=\"error\" id=\"login-error\">There was a system error :(</div><label for=\"email\">Email/Username</label><input autofocus type=\"email\" id=\"email\"/><label for=\"password\">Password</label><input type=\"password\" id=\"password\"><br/><span class=\"persist-controls\"><input type=\"checkbox\" id=\"persist\"/><label for=\"persist\">Save these details</label><br/></span><center><button type=\"submit\" >Log in</button></center></form>");
 	if (!tapiriik.ServiceInfo[svcId].UsesExtendedAuth){
 		$(".persist-controls",form).hide();
 	}
@@ -764,16 +808,21 @@ tapiriik.CreateServiceDialog = function(serviceID, contents) {
 		return;
 	}
 
+	// TODO : Changer l'image de sorte a ce que cela ne prenne pas TOUTE la place + la centrer
 	var icon;
 	if (serviceID != "tapiriik"){
-		icon = $("<img>").attr("src", tapiriik.StaticURL + "img/services/" + serviceID + "_l.png"); // Magic URL :\
+		icon = $("<img>").addClass('pic-dialog').attr("src", tapiriik.StaticURL + "img/decathlon/logos/" + serviceID + ".png").css({'width':'auto;'}); // Magic URL :\
 	} else {
 		icon = $("<div>").addClass("logo inline").text("tapiriik");
 	}
+
+	// TODO : Virer ce css en dur tout pas beau
 	popover = $("<div>").addClass("dialogPopoverWrap").append(tapiriik.CreatePopover(contents).css({"position":"relative"}));
-	popover.css({"position":"relative", "width":"100%"});
+	popover.css({"position":"relative"});
+
 	var dialogWrap = $("<div>").addClass("dialogWrap").append(icon).append(popover).hide();
-	$(".contentWrap").append(dialogWrap);
+
+	$(".contentMain .contentWrap").append(dialogWrap);
 	$(".mainBlock").fadeOut(250 * animationMultiplier, function(){
 		$(dialogWrap).fadeIn(250 * animationMultiplier);
 	});
