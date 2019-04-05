@@ -50,6 +50,8 @@
 
     <div class="backgroundWrap">
 	    <div class="background">
+	    	<img class="border" src="{{ STATIC_URL}}img/decathlon/border.png">
+	    	<img class="header" src="{{ STATIC_URL}}img/decathlon/main.png">
 	    </div>
 	</div>
 
@@ -64,31 +66,36 @@
 						<a href="/"><div class="strong">HUB</div> by <div class="strong">DECATHLON</div></a>
 					</div>
 				{% endif %}
-				{% if celebration_mode.Subtitle %}
-					<div class="sub">{{ celebration_mode.Subtitle }}</div>
-				{% else %}
-					<div class="sub">{% trans "when kudos on strava is not enough" %}</div>
-				{% endif %}
 			</div>
 			<div class="logoPad"></div>
 		</div>
 
 	
-		<div class="content">
+		<div class="content contentMain">
 			<div class="contentWrap">
 				<div class="mainBlock">
 					<div class="contentOuterBorder">
-						<div class="content">
-			    			{% block content %}{% endblock %}
-			    		</div>
-		    		</div>
-		    		<hr>
-		    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
-		    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
+						<div class="block">
+							{% if celebration_mode.Subtitle %}
+								<div class="subtitle">{{ celebration_mode.Subtitle }}</div>
+							{% else %}
+								<div class="subtitle">{% trans "Share your activities with other apps !" %}</div>
+							{% endif %}
+						</div>
+
+		    			{% block content %}{% endblock %}
 		    		</div>
 		    	</div>
 	    	</div>
 	    </div>	
+	    <div class="content contentFooter">
+	    	<div class="contentWrap">
+	    		<hr>
+	    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
+	    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
+    			</div>
+    		</div>
+		</div>
 	</div>
 
 	<script type="text/javascript">

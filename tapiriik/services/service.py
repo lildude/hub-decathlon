@@ -46,7 +46,7 @@ class Service:
             BeginnerTriathlete,
             Setio,
             Singletracker,
-            DecathlonCoach,
+            Decathlon,
             PolarPersonalTrainer
         ] + PRIVATE_SERVICES
 
@@ -75,7 +75,7 @@ class Service:
             Setio,
             Singletracker,
             Aerobia,
-            DecathlonCoach,
+            Decathlon,
             PolarPersonalTrainer
         ] + PRIVATE_SERVICES
 

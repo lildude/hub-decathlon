@@ -15,6 +15,7 @@ class RateLimit:
 				# Don't want to halt the synchronization worker to wait for 15min-1 hour
 				# So...
 				raise RateLimitExceededException()
+		print("[RateLimitCron]--- Adding 1 to count")
 		rl_db.limits.update_many({"Key": key}, {"$inc": {"Count": 1}})
 
 	def Refresh(key, limits):

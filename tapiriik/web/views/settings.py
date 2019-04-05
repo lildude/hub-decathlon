@@ -3,17 +3,17 @@ from tapiriik.auth import User
 
 def settings(request):
     available_settings = {
-        "allow_activity_flow_exception_bypass_via_self":
-            {"Title": "Route activities via",
+        "allow_activity_flow_exception_bypass_via_self": {
+            "Title": "Route activities via",
             "Description": "Allows activities to flow through this service to avoid a flow exception that would otherwise prevent them arriving at a destination.",
             "Field": "checkbox"
-            },
-        "sync_private":
-            {"Title": "Sync private activities",
+        },
+        "sync_private": {
+            "Title": "Sync private activities",
             "Description": "By default, all activities will be synced. Unsetting this will prevent private activities being taken from this service.",
             "Field": "checkbox",
             "Available": ["strava", "runkeeper"]
-            }
+        }
     }
     conns = User.GetConnectionRecordsByUser(request.user)
 

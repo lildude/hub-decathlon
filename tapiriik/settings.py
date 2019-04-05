@@ -269,7 +269,8 @@ SOFT_LAUNCH_SERVICES = []
 
 # Visibly disabled + excluded from synchronization
 DISABLED_SERVICES = []
-
+# Allow only these services to get connected
+CONNECTION_SERVICES = []
 # Services no longer available - will be removed across the site + excluded from sync.
 WITHDRAWN_SERVICES = [
     "nikeplus"

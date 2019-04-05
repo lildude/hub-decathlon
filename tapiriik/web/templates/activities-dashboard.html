@@ -17,29 +17,23 @@
 						<th colspan="2">&nbsp;</th>
 						<!--<th class="service-col" ng-repeat="svc in ServiceInfo|filter:{Connected:true}" title="{[ svc.DisplayName ]}">{[ svc.DisplayAbbreviation ]}</th>-->
 					</tr>
-					<tr class="activity" ng-class="{fullySynchronized: activity.FullySynchronized}" ng-repeat-start="activity in activities" ng-click="activity.ShowDetail = !activity.ShowDetail">
+					<tr class="activity" ng-class="{fullySynchronized: activity.FullySynchronized}" ng-repeat="activity in activities" ng-click="activity.ShowDetail = !activity.ShowDetail">
 						<td class="dateCell text-center">{[ activity.readable_date ]}<br>{[activity.period]}</td>
 						<td class="infoCell text-left">
-							<strong>{[ activity.Type ]}</strong><br>
-							{[ activity.Name ]}<br>
+							<p><strong>{[ activity.Type ]}</strong></p>
+							<p>{[ activity.Name ]}</p><br>
 							<span class="label stationary" title="This activity has no sensor data." ng-show="activity.Stationary"><span class="default">{% trans "Stationary" %}</span></span>
 							<span class="label" title="You've marked this activity as private." ng-show="activity.Private"><span class="warning">{% trans "Private" %}</span></span>
-							<div class="prescence">
-								<span ng-repeat="prescence in activity.Prescence" class="label prescence"> <span ng-class="{success: prescence.Present, danger: !prescence.Present}">{[DisplayNameByService(prescence.Service)]}</span></span>
+							<div class="prescenceList">
+								<span ng-repeat="svc in activity.Prescence|filter:{Present:true}" class="label"> <span class="success">{[DisplayNameByService(svc.Service)]}</span></span>
 							</div>
-						</td>
-					</tr>
-					<tr class="activityDetail" ng-repeat-end ng-show="activity.ShowDetail && !activity.FullySynchronized">
-						<td colspan="2" class="text-center">
-							<span class="disclosure"></span>
-							<span ng-hide="activity.FullySynchronized">
-								<p>{% trans "This activity was not synchronized to the following services:" %}</p>
-								<ul>
-									<li ng-repeat="absence in activity.Prescence|filter:{Present:false}">
-										<b>{[ DisplayNameByService(absence.Service) ]}</b>: {[ ExceptionExplanation(absence) ]}
-									</li>
-								</ul>
-							</span>
+							<div class="absenceList" ng-show="activity.ShowDetail && !activity.FullySynchronized">
+								<span class="disclosure"></span>
+								<div  ng-hide="activity.FullySynchronized">
+									<p><strong>{% trans "This activity was not synchronized to the following services:" %}</strong></p>
+									<span ng-repeat="svc in activity.Prescence|filter:{Present:false}" class="label absence"> <span class="danger">{[ DisplayNameByService(svc.Service) ]}</span> : <p class="small"><i>{[ ExceptionExplanation(svc) ]}</i></p></span>
+								</div>
+							</div>
 						</td>
 					</tr>
 				</table>

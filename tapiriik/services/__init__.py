@@ -40,8 +40,8 @@ from tapiriik.services.Aerobia import AerobiaService
 Aerobia = AerobiaService()
 from tapiriik.services.PolarFlow import PolarFlowService
 PolarFlow = PolarFlowService()
-from tapiriik.services.DecathlonCoach import DecathlonCoachService
-DecathlonCoach = DecathlonCoachService()
+from tapiriik.services.Decathlon import DecathlonService
+Decathlon = DecathlonService()
 from tapiriik.services.PolarPersonalTrainer import PolarPersonalTrainerService
 PolarPersonalTrainer = PolarPersonalTrainerService()
 
