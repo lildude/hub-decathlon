@@ -43,7 +43,7 @@ a.button{
 	padding:10px 20px;
 	margin: 5px 0;
 	font-size:15px;
-	line-height: 20px
+	line-height: 20px;
 	-webkit-border-radius: 30px;
 	-moz-border-radius: 30px;
 	border-radius: 30px;
@@ -62,13 +62,25 @@ button.button{
 	-moz-border-radius: 30px;
 	border-radius: 30px;
 }
+a.button.button-primary,
 button.button.button-primary{
 	background-color:#0071B9!important;
 }
+a.button.button-danger,
 button.button.button-danger{
 	background-color:#dc3545!important;
 }
 
+button.button.buttonLarge,
+a.button.buttonLarge{
+	padding:10px 20px;
+	margin: 5px 0;
+	font-size: 20px;
+	line-height: 120%;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	border-radius: 30px;
+}
 div.cell{
 	min-height:30px;
 	font-family:'Roboto Regular', sans-serif;
@@ -239,6 +251,11 @@ p.title{
 	width:100%;
 	margin: 0 auto 50px auto;
 }
+
+.block.text-center {
+	text-align:center;
+}
+
 .block .subtitle{
 	position:relative;
 	font-size:26px;
@@ -287,11 +304,17 @@ p.title{
     align-items: center;
   	justify-content: center
 }
+.block .syncButtonBlock .syncButtonWrap{
+	display: inline-block;
+	margin: 0 auto;
+}
 
 .block .syncButtonBlock .syncButtonAttachment{
 	font-size:24px;
 	line-height: 150%;
 	margin-bottom:15px;
+}
+.block .syncButtonBlock .syncButton {
 	cursor:pointer;
 }
 .block .syncButtonBlock .syncButton .syncButtonIcon{
