@@ -166,7 +166,7 @@ tapiriik.AddressChanged=function(){
 	} else {
 		tapiriik.CloseSyncSettingsDialog();
 	}
-	tapiriik.DoDismissServiceDialog();
+	//tapiriik.DoDismissServiceDialog();
 	tapiriik.DoDismissConfigPanel();
 };
 
@@ -254,7 +254,15 @@ tapiriik.ActivateRememberDetailsDialog = function(svcId){
 tapiriik.OpenDeauthDialog = function(svcId){
 
 	// TODO : MODIFIER CE SCRIPT POUR QUE LE VISUEL CORRESPONDE A LA MAQUETTE
-	var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
+
+	var form = $("<form/>")
+		.addClass('logout')
+		.append(
+			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Never mind'),
+			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
+			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
+		)
+	//var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
 	form.bind("submit", function() {return false;});
 	$("#disconnect", form).click(function(){
 		if (tapiriik.DeauthPending !== undefined) return false;
@@ -276,6 +284,7 @@ tapiriik.OpenDeauthDialog = function(svcId){
 
 	$("#cancel", form).click(function(){
 		history.back();
+		//$().redirect("/");
 	});
 
 	tapiriik.CreateServiceDialog(svcId, form);
@@ -811,13 +820,13 @@ tapiriik.CreateServiceDialog = function(serviceID, contents) {
 	// TODO : Changer l'image de sorte a ce que cela ne prenne pas TOUTE la place + la centrer
 	var icon;
 	if (serviceID != "tapiriik"){
-		icon = $("<img>").addClass('pic-dialog').attr("src", tapiriik.StaticURL + "img/decathlon/logos/" + serviceID + ".png").css({'width':'auto;'}); // Magic URL :\
+		icon = $("<img>").addClass('pic-dialog logo').attr("src", tapiriik.StaticURL + "img/decathlon/logos/" + serviceID + ".png"); // Magic URL :\
 	} else {
 		icon = $("<div>").addClass("logo inline").text("tapiriik");
 	}
 
 	// TODO : Virer ce css en dur tout pas beau
-	popover = $("<div>").addClass("dialogPopoverWrap").append(tapiriik.CreatePopover(contents).css({"position":"relative"}));
+	popover = $("<div>").addClass("dialogPopoverWrap").append(tapiriik.CreatePopover(contents));
 	popover.css({"position":"relative"});
 
 	var dialogWrap = $("<div>").addClass("dialogWrap").append(icon).append(popover).hide();
