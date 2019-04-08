@@ -22,6 +22,9 @@
 		<div class="block">
 			{% include "recent-sync-activity-block.html" %}
 		</div> 
+		<div class="block text-center">
+			<a href="{% url 'activities_dashboard' %}" class="button buttonLarge"><strong>{% trans "All Activities" %}</strong></a>
+		</div>
 		<div class="block">
 			{% if user.NonblockingSyncErrorCount > 0 %}
 				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
