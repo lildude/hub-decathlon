@@ -1,8 +1,8 @@
 # sync_watchdog.py
 
-Ce script a pour but de détecter si un process de synchronisation est en timeout ou crash.
-Si le process est kill, les users concernés seront "unlocké" pour être de nouveau synchronisé au prochain run worker.
-Il utilise les modules Tapiriik.
+This script is catching timeout or crashed process.
+If process is killed, users touched by this one will be "unlock". This change will perform a new resync worker for these users. 
+It uses Tapiriik modules.
 
 ### Script flow  :
 - Getting all sync_workers documents in DB
