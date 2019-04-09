@@ -7,6 +7,8 @@ from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
+from tapiriik.database import db
+
 from lxml import etree
 import xml.etree.ElementTree as xml
 from django.core.urlresolvers import reverse
@@ -231,10 +233,7 @@ class DecathlonService(ServiceBase):
             if resp.status_code == 403:
                     logger.info(resp.content)
                     raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
-    
-    
-    
-    
+
             root = xml.fromstring(resp.content)
       
             logger.info("\t\t nb activity : " + str(len(root.findall('.//ID'))))
@@ -288,7 +287,48 @@ class DecathlonService(ServiceBase):
 
         return activities, exclusions
 
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        data = json.loads(req.body.decode("UTF-8"))
+        # Get user id to sync
+        external_user_id = data['user_id']#[x["user_id"] for x in data]
+        # Find connections with external ID = req
 
+        print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- Looking for connection')
+        connection_id = db.connections.find_one(
+            {'ExternalID': external_user_id},
+            {'_id': 1}
+        )
+        # Find user with this connection ID
+
+        if connection_id:
+            print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- Looking for user')
+            user_id = db.users.aggregate(
+                [
+                    {
+                        '$match': {
+                            "ConnectedServices": {
+                                '$elemMatch': {
+                                    'Service': self.ID,
+                                    'ID': connection_id['_id']
+                                }
+                            },
+                            "NextSynchronization": {'$gt': datetime.utcnow()}
+                        }
+                    },
+                    {'$limit': 1}
+                ]
+            )
+
+            if user_id:
+                # Update user in mongo with "next sync" to now
+                print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- User updated')
+                try:
+                    return user_id.next()
+                except StopIteration:
+                    return False
+
+
+        return False
 
     def DownloadActivity(self, svcRecord, activity):
         activityID = activity.ServiceData["ActivityID"]
