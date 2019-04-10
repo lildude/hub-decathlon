@@ -58,6 +58,8 @@ urlpatterns = patterns('',
     url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
     url(r'^diagnostics/login$', 'tapiriik.web.views.diag_login', {}, name='diagnostics_login'),
 
+    url(r'^status/$', 'tapiriik.web.views.server_status', {}, name='server_status'),
+
     url(r'^supported-activities$', 'tapiriik.web.views.supported_activities', {}, name='supported_activities'),
     # url(r'^supported-services-poll$', 'tapiriik.web.views.supported_services_poll', {}, name='supported_services_poll'),
 
