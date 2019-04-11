@@ -113,5 +113,7 @@ def sync_trigger_partial_sync_callback(req, service):
             exhaustive = True
         _sync.ScheduleImmediateSync(response, exhaustive)
         return HttpResponse(status=204)
+    elif req.method == "GET":	
+        return svc.PartialSyncTriggerGET(req)
     else:
         return HttpResponse(status=400)
