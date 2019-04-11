@@ -288,47 +288,14 @@ class DecathlonService(ServiceBase):
         return activities, exclusions
 
     def ExternalIDsForPartialSyncTrigger(self, req):
+        # BE CAREFUL Decathlon is sending only one elem
+
         data = json.loads(req.body.decode("UTF-8"))
         # Get user id to sync
-        external_user_id = data['user_id']#[x["user_id"] for x in data]
-        # Find connections with external ID = req
+        external_user_ids = []
+        external_user_ids.append(data['user_id'])
 
-        print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- Looking for connection')
-        connection_id = db.connections.find_one(
-            {'ExternalID': external_user_id},
-            {'_id': 1}
-        )
-        # Find user with this connection ID
-
-        if connection_id:
-            print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- Looking for user')
-            user_id = db.users.aggregate(
-                [
-                    {
-                        '$match': {
-                            "ConnectedServices": {
-                                '$elemMatch': {
-                                    'Service': self.ID,
-                                    'ID': connection_id['_id']
-                                }
-                            },
-                            "NextSynchronization": {'$gt': datetime.utcnow()}
-                        }
-                    },
-                    {'$limit': 1}
-                ]
-            )
-
-            if user_id:
-                # Update user in mongo with "next sync" to now
-                print('[Decathlon.ExternalIDsForPartialSyncTrigger]--- User updated')
-                try:
-                    return user_id.next()
-                except StopIteration:
-                    return False
-
-
-        return False
+        return external_user_ids
 
     def DownloadActivity(self, svcRecord, activity):
         activityID = activity.ServiceData["ActivityID"]

@@ -3,6 +3,9 @@
 from tapiriik.settings import AWS_REGION, AWS_SQS_QUEUE_NAME
 import json
 import boto3
+from tapiriik.helper.logger.manager import LoggerManager
+
+_logger = LoggerManager().get_logger('Helper SQS')
 
 class SqsManager():
 
@@ -106,17 +109,6 @@ class SqsManager():
 
         while self._messages:
             for message in self._messages:
-                """
-                text = ''
-                if message.message_attributes is not None:
-                    user_id = message.message_attributes.get('user_id').get('StringValue')
-                    if user_id:
-                        text = 'User ID : ({0})'.format(user_id)
-
-                    routing_key = message.message_attributes.get('routing_key').get('StringValue')
-                    if routing_key:
-                        text = text + 'RoutingKey : ({0})'.format(routing_key)
-                """
                 # Print out the body and author (if set)
                 print('Message ID : {0} / {1}'.format(message.message_id ,message.body))
 

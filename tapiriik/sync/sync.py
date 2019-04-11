@@ -1,6 +1,6 @@
 from tapiriik.database import db, cachedb, redis
 from tapiriik.services import Service, ServiceRecord, APIExcludeActivity, ServiceException, ServiceExceptionScope, ServiceWarning, UserException, UserExceptionType
-from tapiriik.settings import USER_SYNC_LOGS, DISABLED_SERVICES, WITHDRAWN_SERVICES
+from tapiriik.settings import USER_SYNC_LOGS, DISABLED_SERVICES, WITHDRAWN_SERVICES, LOG_PATH
 from .activity_record import ActivityRecord, ActivityServicePrescence
 from datetime import datetime, timedelta
 import sys
@@ -99,7 +99,61 @@ class Sync:
 
     # TODO : change sync to real class
     def __init__(self):
-        print("-----[ INIT SYNC ]-----")
+        #logger = LoggerManager().get_logger("Sync.PerformGlobalSync")
+        logger.info('INIT SYNC')
+
+    def getUsersIDFromExternalId(self, users, service):
+        print('[Sync.getUsersIDFromExternalId]--- Looking for connection')
+
+        """connection_id = db.connections.find_one(
+            {'ExternalID': external_user_id},
+            {'_id': 1}
+        )"""
+
+        # Find connections with these external ID
+        print(users)
+
+        connections = list(db.connections.aggregate(
+            [
+                {
+                    '$match': {
+                        'ExternalID': {'$in': users}
+                    }
+                },
+                {
+                    '$project': {
+                        '_id': 1
+                    }
+                }
+            ]
+
+        ))
+        # Find user with these connection ID
+        connection_ids = []
+        if connections:
+            # Buil list of connection_id
+            for connection in connections:
+                connection_ids.append(connection['_id'])
+
+            print('[Sync.getUsersIDFromExternalId]--- Looking for user')
+            print(connection_ids)
+            users = db.users.aggregate(
+                [
+                    {
+                        '$match': {
+                            "ConnectedServices": {
+                                '$elemMatch': {
+                                    'Service': service,
+                                    'ID': {'$in': connection_ids}
+                                }
+                            },
+                            "NextSynchronization": {'$gt': datetime.utcnow()}
+                        }
+                    }
+                ]
+            )
+
+        return list(users)
 
     def ScheduleImmediateSync(self, user, exhaustive=None):
         if exhaustive is None:
