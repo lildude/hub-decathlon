@@ -719,6 +719,7 @@ class SynchronizationTask:
             self._syncErrors[conn._id].append(_packException(SyncStep.List))
             self._excludeService(conn, UserException(UserExceptionType.ListingError))
             return
+
         self._accumulateExclusions(conn, svcExclusions)
         self._accumulateActivities(conn, svcActivities, no_add=no_add)
 
@@ -792,7 +793,7 @@ class SynchronizationTask:
             "Timestamp": datetime.utcnow().isoformat(),
             "Source": source,
             "Destinations": destinations,
-            "Readable_date": activity.StartTime.utcnow().strftime("%Y-%m-%d"),
+            "Readable_date": activity.StartTime.strftime("%Y-%m-%d"),
             "Period": period
         }))
         redis.ltrim(key, 0, 4) # Only keep 5

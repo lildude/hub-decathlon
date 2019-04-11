@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from tapiriik.settings import DIAG_AUTH_TOTP_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
-from tapiriik.database import db
+from tapiriik.database import *
 from tapiriik.sync import Sync
 from tapiriik.auth import TOTP, DiagnosticsUser, User
 from bson.objectid import ObjectId
+from tapiriik.helper.common_use import *
 import hashlib
 import json
 import urllib.parse
 from datetime import datetime, timedelta
+import shutil
+
+import os
 
 def diag_requireAuth(view):
     def authWrapper(req, *args, **kwargs):
@@ -83,6 +87,42 @@ def diag_queue_dashboard(req):
         return redirect("diagnostics_queue_dashboard")
 
     return render(req, "diag/dashboard.html", context)
+
+@diag_requireAuth
+def server_status(req):
+
+    context = {}
+    # Add REDIS ping info
+    redis_response = redis.ping()
+    context['redis_status'] = redis_response
+
+
+    # Add db connection info
+    context['db'] = {
+        'tapiriik': False,
+        'tapiriik_cache': False,
+        'tapiriik_tz': False,
+        'tapiriik_ratelimit': False
+    }
+    if db:
+        context['db']['tapiriik'] = True
+    if cachedb:
+        context['db']['tapiriik_cache'] = True
+    if tzdb:
+        context['db']['tapiriik_tz'] = True
+    if ratelimit:
+        context['db']['tapiriik_ratelimit'] = True
+
+    # Add disk space info
+    disk_info = shutil.disk_usage("/")
+    disk = {}
+    disk['total'] = readable_byte(disk_info.total)
+    disk['used'] = readable_byte(disk_info.used)
+    disk['free'] = readable_byte(disk_info.free)
+
+    context['disk'] = disk
+
+    return render(req, "server_status.html", context)
 
 @diag_requireAuth
 def diag_errors(req):

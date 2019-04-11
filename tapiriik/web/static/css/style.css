@@ -116,6 +116,31 @@ p.title{
 	text-align:right;
 }
 
+span.label{
+	font-size:12px;
+	line-height:150%;
+	font-weight: 700;
+	font-family:'Roboto Regular', sans-serif;
+	text-align: center;
+	color:#fff;
+	padding:2px 5px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+span.label.default{
+	background-color:#337ab7;
+}
+span.label.success{
+	background-color:#5cb85c;
+}
+
+span.label.danger{
+	background-color:#d9534f;
+}
+span.label.warning{
+	background-color:#f0ad4e;
+}
 
 .label{
 	font-size:12px;

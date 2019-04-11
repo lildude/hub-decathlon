@@ -99,11 +99,21 @@ def sync_clear_errorgroup(req, service, group):
 def sync_trigger_partial_sync_callback(req, service):
     svc = Service.FromID(service)
     if req.method == "POST":
-        from sync_remote_triggers import trigger_remote
-        affected_connection_external_ids = svc.ExternalIDsForPartialSyncTrigger(req)
-        trigger_remote.apply_async(args=[service, affected_connection_external_ids])
+        # Call function to set next sync for user
+        response = svc.ExternalIDsForPartialSyncTrigger(req)
+        _sync = Sync()
+        if not response:
+            return HttpResponse(status=401)
+        if "LastSynchronization" in response and response["LastSynchronization"] is not None and datetime.utcnow() - \
+                response["LastSynchronization"] < _sync.MinimumSyncInterval:
+            return HttpResponse(status=403)
+        exhaustive = None
+        if "LastSynchronization" in response and response["LastSynchronization"] is not None and datetime.utcnow() - \
+                response["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
+            exhaustive = True
+        _sync.ScheduleImmediateSync(response, exhaustive)
         return HttpResponse(status=204)
-    elif req.method == "GET":
+    elif req.method == "GET":	
         return svc.PartialSyncTriggerGET(req)
     else:
         return HttpResponse(status=400)
