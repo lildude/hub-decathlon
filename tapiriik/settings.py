@@ -40,6 +40,9 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'tapiriik/locale'),
 )
 
+#LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os.pardir)) + '/logs'
+LOG_PATH = os.path.abspath("logs")
+
 SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not

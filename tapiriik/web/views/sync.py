@@ -99,20 +99,32 @@ def sync_clear_errorgroup(req, service, group):
 def sync_trigger_partial_sync_callback(req, service):
     svc = Service.FromID(service)
     if req.method == "POST":
-        # Call function to set next sync for user
+        # if whe're using decathlon services, force resync
+        # Get users ids list, depending of services
         response = svc.ExternalIDsForPartialSyncTrigger(req)
+
         _sync = Sync()
-        if not response:
+        # Get users _id list from external ID
+        users_to_sync = _sync.getUsersIDFromExternalId(response, service)
+
+        if not users_to_sync:
             return HttpResponse(status=401)
-        if "LastSynchronization" in response and response["LastSynchronization"] is not None and datetime.utcnow() - \
-                response["LastSynchronization"] < _sync.MinimumSyncInterval:
-            return HttpResponse(status=403)
-        exhaustive = None
-        if "LastSynchronization" in response and response["LastSynchronization"] is not None and datetime.utcnow() - \
-                response["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
-            exhaustive = True
-        _sync.ScheduleImmediateSync(response, exhaustive)
+        else:
+            for user in users_to_sync:
+
+                # For each users, if we can sync now
+                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
+                        user["LastSynchronization"] < _sync.MinimumSyncInterval:
+                    return HttpResponse(status=403)
+                exhaustive = None
+                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
+                        user["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
+                    exhaustive = True
+                # Force immadiate sync
+                _sync.ScheduleImmediateSync(user, exhaustive)
+
         return HttpResponse(status=204)
+
     elif req.method == "GET":	
         return svc.PartialSyncTriggerGET(req)
     else:
