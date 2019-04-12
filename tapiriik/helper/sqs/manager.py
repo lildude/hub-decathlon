@@ -3,9 +3,6 @@
 from tapiriik.settings import AWS_REGION, AWS_SQS_QUEUE_NAME
 import json
 import boto3
-from tapiriik.helper.logger.manager import LoggerManager
-
-_logger = LoggerManager().get_logger('Helper SQS')
 
 class SqsManager():
 
