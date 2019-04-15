@@ -4,8 +4,9 @@ import os
 import signal
 import socket
 from datetime import timedelta, datetime
+import logging
 
-print("Sync watchdog run at %s" % datetime.now())
+logging.info("Sync watchdog run at %s" % datetime.now())
 
 host = socket.gethostname()
 
@@ -15,7 +16,7 @@ for worker in db.sync_workers.find({"Host": host}):
     try:
         os.kill(worker["Process"], 0)
     except os.error:
-        print("%s is no longer alive" % worker)
+        logging.info("%s is no longer alive" % worker)
         alive = False
 
     # Has it been stalled for too long?
@@ -25,7 +26,7 @@ for worker in db.sync_workers.find({"Host": host}):
         timeout = timedelta(minutes=10)  # But everything else shouldn't
 
     if alive and worker["Heartbeat"] < datetime.utcnow() - timeout:
-        print("%s timed out" % worker)
+        logging.warning("%s timed out" % worker)
         os.kill(worker["Process"], signal.SIGKILL)
         alive = False
 

@@ -1,6 +1,6 @@
 from tapiriik.database import db, cachedb, redis
 from tapiriik.services import Service, ServiceRecord, APIExcludeActivity, ServiceException, ServiceExceptionScope, ServiceWarning, UserException, UserExceptionType
-from tapiriik.settings import USER_SYNC_LOGS, DISABLED_SERVICES, WITHDRAWN_SERVICES, LOG_PATH
+from tapiriik.settings import USER_SYNC_LOGS, DISABLED_SERVICES, WITHDRAWN_SERVICES, LOG_PATH, _GLOBAL_LOGGER
 from .activity_record import ActivityRecord, ActivityServicePrescence
 from datetime import datetime, timedelta
 import sys
@@ -20,21 +20,22 @@ import bisect
 
 from tapiriik.helper.sqs.manager import SqsManager
 
-
 # Set this up separate from the logger used in this scope, so services logging messages are caught and logged into user's files.
-_global_logger = logging.getLogger("tapiriik")
-
-_global_logger.setLevel(logging.DEBUG)
+_global_logger = _GLOBAL_LOGGER
+#_global_logger = LOGGER.get_logging()
+_global_logger.setLevel(logging.INFO)
 
 # In celery tasks, sys.stdout has already been monkeypatched
 # So we'll assume they know what they're doing.
-if hasattr(sys.stdout, "buffer"):
+"""if hasattr(sys.stdout, "buffer"):
     logging_console_handler = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8'))
-    logging_console_handler.setLevel(logging.DEBUG)
-    logging_console_handler.setFormatter(logging.Formatter('%(message)s'))
+    logging_console_handler.setLevel(logging.INFO)
+    logging_console_handler.setFormatter(logging.Formatter('%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(pathname)s/%(filename)s:%(lineno)d ','%Y-%m-%d %H:%M:%S'))
     _global_logger.addHandler(logging_console_handler)
-
-logger = logging.getLogger("tapiriik.sync.worker")
+"""
+#logger = logging.getLogger('Tapiriik')
+logger = _global_logger
+#logger = LOGGER.use_logger("tapiriik sync worker").get_logging()
 
 def _formatExc():
     try:
@@ -100,10 +101,11 @@ class Sync:
     # TODO : change sync to real class
     def __init__(self):
         #logger = LoggerManager().get_logger("Sync.PerformGlobalSync")
-        logger.info('INIT SYNC')
+        _global_logger= logging.getLogger('Sync')
 
     def getUsersIDFromExternalId(self, users, service):
-        print('[Sync.getUsersIDFromExternalId]--- Looking for connection')
+        #print('[Sync.getUsersIDFromExternalId]--- Looking for connection')
+        _global_logger.info("Looking for connection")
 
         """connection_id = db.connections.find_one(
             {'ExternalID': external_user_id},
@@ -111,8 +113,6 @@ class Sync:
         )"""
 
         # Find connections with these external ID
-        print(users)
-
         connections = list(db.connections.aggregate(
             [
                 {
@@ -135,8 +135,8 @@ class Sync:
             for connection in connections:
                 connection_ids.append(connection['_id'])
 
-            print('[Sync.getUsersIDFromExternalId]--- Looking for user')
-            print(connection_ids)
+            #print('[Sync.getUsersIDFromExternalId]--- Looking for user')
+            _global_logger.info('Looking for user')
             users = db.users.aggregate(
                 [
                     {
@@ -182,7 +182,7 @@ class Sync:
 
     def PerformGlobalSync(self, heartbeat_callback=None, version=None):
 
-        print("-----[ PERFORM GLOBAL SYNC ]-----")
+        _global_logger.info("-----[ PERFORM GLOBAL SYNC ]-----")
         self._sqs_manager = SqsManager()
         self._sqs_manager.get_queue()
 
@@ -190,21 +190,26 @@ class Sync:
         self._sqs_manager.get_message(['all'])
 
         # sqsManager._messages is a list but contain only one message
-        print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(self._sqs_manager._messages))
+        #print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(self._sqs_manager._messages))
+        _global_logger.info('Processing %d message of sync' % len(self._sqs_manager._messages))
         if self._sqs_manager._messages:
 
             for message in self._sqs_manager._messages:
                 # Print out the body and author (if set)
-                print('[Sync.PerformGlobalSync]--- Message ID : {0}'.format(message.message_id, message.body))
-                print('[Sync.PerformGlobalSync]--- Message Body : {0}'.format(message.body))
+                #print('[Sync.PerformGlobalSync]--- Message ID : {0}'.format(message.message_id, message.body))
+                #print('[Sync.PerformGlobalSync]--- Message Body : {0}'.format(message.body))
+                _global_logger.info('Message ID : {0}'.format(message.message_id, message.body))
+                _global_logger.info('Message Body : {0}'.format(message.body))
 
                 if message:
                     body_dict = json.loads(message.body)
                     receipt_handle = message.receipt_handle
-                    print('[Sync.PerformGlobalSync]--- Sync user : {0}'.format(body_dict['user_id']))
+                    #print('[Sync.PerformGlobalSync]--- Sync user : {0}'.format(body_dict['user_id']))
+                    _global_logger.info('Sync user : {0}'.format(body_dict['user_id']))
                     self._consumeSyncTask(body_dict, receipt_handle, heartbeat_callback, version)
         else:
-            print('[Sync.PerformGlobalSync]--- Nothing to sync !')
+            #print('[Sync.PerformGlobalSync]--- Nothing to sync !')
+            _global_logger.info('Nothing to sync')
 
     def _consumeSyncTask(self, body, receipt_handle, heartbeat_callback_direct, version):
         from tapiriik.auth import User
@@ -214,12 +219,12 @@ class Sync:
 
         # if user doesn't exists, stop process and delete message
         if user is None:
-            logger.warning("[Sync._consumeSyncTask]--- Could not find user %s - bailing" % user_id)
+            _global_logger.warning("Could not find user %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
         if 'generation' not in body:
-            logger.warning("[Sync._consumeSyncTask]--- Queue generation mismatch for %s - bailing" % user_id)
+            _global_logger.warning("Queue generation mismatch for %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
@@ -227,7 +232,7 @@ class Sync:
             # QueuedGeneration being different means they've gone through sync_scheduler since this particular message was queued
             # So, discard this and wait for that message to surface
             # Should only happen when I manually requeue people
-            logger.warning("[Sync._consumeSyncTask]--- Queue generation mismatch for %s - bailing" % user_id)
+            _global_logger.warning("Queue generation mismatch for %s - bailing" % user_id)
             self._sqs_manager.delete_message_by_receipt_handle(receipt_handle)
             return
 
@@ -257,11 +262,11 @@ class Sync:
             next_sync = None
             if User.HasActivePayment(user):
                 if User.GetConfiguration(user)["suppress_auto_sync"]:
-                    logger.info("[Sync._consumeSyncTask]--- Not scheduling auto sync for paid user")
+                    _global_logger.info("Not scheduling auto sync for paid user")
                 else:
                     next_sync = datetime.utcnow() + self.SyncInterval + timedelta(seconds=random.randint(-self.SyncIntervalJitter.total_seconds(), self.SyncIntervalJitter.total_seconds()))
             if result and result.ForceNextSync:
-                logger.info("[Sync._consumeSyncTask]--- Forcing next sync at %s" % result.ForceNextSync)
+                _global_logger.info("Forcing next sync at %s" % result.ForceNextSync)
                 next_sync = result.ForceNextSync
             reschedule_update = {
                 "$set": {
@@ -274,7 +279,7 @@ class Sync:
             }
 
             if result and result.ForceExhaustive:
-                logger.info("[Sync._consumeSyncTask]--- Forcing next sync as exhaustive")
+                _global_logger.info("[Sync._consumeSyncTask]--- Forcing next sync as exhaustive")
                 reschedule_update["$set"]["NextSyncIsExhaustive"] = True
             else:
                 reschedule_update["$unset"]["NextSyncIsExhaustive"] = ""
@@ -287,10 +292,10 @@ class Sync:
 
             # Tack this on the end of the log file since otherwise it's lost for good (blegh, but nicer than moving logging out of the sync task?)
             user_log = open(USER_SYNC_LOGS + str(user["_id"]) + ".log", "a+")
-            user_log.write("[Sync._consumeSyncTask]---  \n%s\n" % reschedule_confirm_message)
+            user_log.write(" \n%s\n" % reschedule_confirm_message)
             user_log.close()
 
-            logger.debug(reschedule_confirm_message)
+            _global_logger.debug(reschedule_confirm_message)
             sync_time = (datetime.utcnow() - sync_start).total_seconds()
             db.sync_worker_stats.insert_one({"Timestamp": datetime.utcnow(), "Worker": os.getpid(), "Host": socket.gethostname(), "TimeTaken": sync_time})
 
@@ -301,11 +306,12 @@ class Sync:
 
 
 class SynchronizationTask:
-    _logFormat = '[%(levelname)-8s] %(asctime)s (%(name)s:%(lineno)d) %(message)s'
+    _logFormat = '%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d'
     _logDateFormat = '%Y-%m-%d %H:%M:%S'
 
     def __init__(self, user):
         self.user = user
+        self._global_logger = logging.getLogger('SynchronizationTask')
 
     def _lockUser(self):
         db.users.update_one({"_id": self.user["_id"]}, {"$set": {"SynchronizationWorker": os.getpid(), "SynchronizationHost": socket.gethostname(), "SynchronizationStartTime": datetime.utcnow()}})
@@ -319,7 +325,7 @@ class SynchronizationTask:
                     "SynchronizationWorker": None
                 }
             })
-        logger.debug("[SynchronizationTask._unlockUser]--- User unlock returned %s" % unlock_result)
+        self._global_logger.debug("User unlock returned %s" % unlock_result)
 
     def _loadServiceData(self):
         self._connectedServiceIds = [x["ID"] for x in self.user["ConnectedServices"]]
@@ -329,13 +335,13 @@ class SynchronizationTask:
         db.users.update_one({"_id": self.user["_id"]}, {"$set": {"SynchronizationProgress": progress, "SynchronizationStep": step}})
 
     def _initializeUserLogging(self):
-        self._logging_file_handler = logging.handlers.RotatingFileHandler(USER_SYNC_LOGS + str(self.user["_id"]) + ".log", maxBytes=0, backupCount=5, encoding="utf-8")
+        self._logging_file_handler = logging.handlers.RotatingFileHandler(LOG_PATH + '/dc_log_' + str(self.user["_id"]) + ".log", maxBytes=0, backupCount=5, encoding="utf-8")
         self._logging_file_handler.setFormatter(logging.Formatter(self._logFormat, self._logDateFormat))
         self._logging_file_handler.doRollover()
-        _global_logger.addHandler(self._logging_file_handler)
+        self._global_logger.addHandler(self._logging_file_handler)
 
     def _closeUserLogging(self):
-        _global_logger.removeHandler(self._logging_file_handler)
+        self._global_logger.removeHandler(self._logging_file_handler)
         self._logging_file_handler.flush()
         self._logging_file_handler.close()
 
@@ -499,7 +505,7 @@ class SynchronizationTask:
             elif hasattr(conn, "SynchronizedActivities") and len([x for x in activity.UIDs if x in conn.SynchronizedActivities]):
                 continue
             elif activity.Type not in conn.Service.SupportedActivities:
-                logger.debug("[SynchronizationTask._determineRecipientServices]--- \t...%s doesn't support type %s" % (conn.Service.ID, activity.Type))
+                self._global_logger.debug("\t...%s doesn't support type %s" % (conn.Service.ID, activity.Type))
                 activity.Record.MarkAsNotPresentOn(conn, UserException(UserExceptionType.TypeUnsupported))
             else:
                 recipientServices.append(conn)
@@ -642,7 +648,7 @@ class SynchronizationTask:
         eligibleServices = []
         for destinationSvcRecord in recipientServices:
             if self._isServiceExcluded(destinationSvcRecord):
-                logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\tExcluded " + destinationSvcRecord.Service.ID)
+                self._global_logger.info("\tExcluded " + destinationSvcRecord.Service.ID)
                 activity.Record.MarkAsNotPresentOn(destinationSvcRecord, self._getServiceExclusionUserException(destinationSvcRecord))
                 continue  # we don't know for sure if it needs to be uploaded, hold off for now
             flowException = True
@@ -656,29 +662,29 @@ class SynchronizationTask:
                     break
 
             if flowException:
-                logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\tFlow exception for " + destinationSvcRecord.Service.ID)
+                self._global_logger.info("\tFlow exception for " + destinationSvcRecord.Service.ID)
                 activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.FlowException))
                 continue
 
             destSvc = destinationSvcRecord.Service
             if destSvc.RequiresConfiguration(destinationSvcRecord):
-                logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\t" + destSvc.ID + " not configured")
+                self._global_logger.info("\t" + destSvc.ID + " not configured")
                 activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.NotConfigured))
                 continue  # not configured, so we won't even try
             if not destSvc.ReceivesStationaryActivities and activity.Stationary:
-                logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\t" + destSvc.ID + " doesn't receive stationary activities")
+                self._global_logger.info("\t" + destSvc.ID + " doesn't receive stationary activities")
                 activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.StationaryUnsupported))
                 continue # Missing this originally, no wonder...
             # ReceivesNonGPSActivitiesWithOtherSensorData doesn't matter if the activity is stationary.
             # (and the service accepts stationary activities - guaranteed immediately above)
             if not activity.Stationary:
                 if not (destSvc.ReceivesNonGPSActivitiesWithOtherSensorData or activity.GPS is not False):
-                    logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\t" + destSvc.ID + " doesn't receive non-GPS activities")
+                    self._global_logger.info("\t" + destSvc.ID + " doesn't receive non-GPS activities")
                     activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.NonGPSUnsupported))
                     continue
 
             if activity.Record.GetFailureCount(destinationSvcRecord) >= destSvc.UploadRetryCount:
-                logger.info("[SynchronizationTask._determineEligibleRecipientServices]--- \t\t" + destSvc.ID + " has exceeded upload retry count")
+                self._global_logger.info("\t" + destSvc.ID + " has exceeded upload retry count")
                 # There's already an error in the activity Record, no need to add anything more here
                 continue
 
@@ -698,14 +704,14 @@ class SynchronizationTask:
     def _ensurePartialSyncPollingSubscription(self, conn):
         if conn.Service.PartialSyncRequiresTrigger and not conn.PartialSyncTriggerSubscribed:
             if conn.Service.RequiresExtendedAuthorizationDetails and not conn.ExtendedAuthorization:
-                logger.info("[SynchronizationTask._ensurePartialSyncPollingSubscription]--- No ext auth details, cannot subscribe")
+                self._global_logger.info("No ext auth details, cannot subscribe")
                 return # We (probably) can't subscribe unless we have their credentials. May need to change this down the road.
             try:
                 conn.Service.SubscribeToPartialSyncTrigger(conn)
             except ServiceException as e:
                 # Force sync as exhaustive until we're sure we're properly subscribed.
                 self._sync_result.ForceExhaustive = True
-                logger.exception("[SynchronizationTask._ensurePartialSyncPollingSUbscription]--- Failure while subscribing to partial sync trigger")
+                self._global_logger.exception("Failure while subscribing to partial sync trigger")
 
     def _primeExtendedAuthDetails(self, conn):
         if conn.Service.RequiresExtendedAuthorizationDetails:
@@ -725,29 +731,29 @@ class SynchronizationTask:
 
         # ...and for this specific service
         if [x for x in self._syncErrors[conn._id] if x["Scope"] == ServiceExceptionScope.Service]:
-            logger.info("[SynchronizationTask._downloadActivityList]--- Service %s is blocked:" % conn.Service.ID)
+            self._global_logger.info("Service %s is blocked:" % conn.Service.ID)
             self._excludeService(conn, _unpackUserException([x for x in self._syncErrors[conn._id] if x["Scope"] == ServiceExceptionScope.Service][0]))
             return
 
         if svc.ID in DISABLED_SERVICES or svc.ID in WITHDRAWN_SERVICES:
-            logger.info("[SynchronizationTask._downloadActivityList]--- Service %s is widthdrawn" % conn.Service.ID)
+            self._global_logger.info("Service %s is widthdrawn" % conn.Service.ID)
             self._excludeService(conn, UserException(UserExceptionType.Other))
             return
 
         if exhaustive and not svc.SupportsExhaustiveListing and not self._activities:
             # If we get to this point, we must already have activity listings from another service.
-            logger.info("[SynchronizationTask._downloadActivityList]--- Account does not contain any services supporting exhaustive activity listing")
+            self._global_logger.info("Account does not contain any services supporting exhaustive activity listing")
             self._excludeService(conn, UserException(UserExceptionType.Other))
             return
 
         if svc.RequiresExtendedAuthorizationDetails:
             if not conn.ExtendedAuthorization:
-                logger.info("[SynchronizationTask._downloadActivityList]--- No extended auth details for " + svc.ID)
+                self._global_logger.info("No extended auth details for " + svc.ID)
                 self._excludeService(conn, UserException(UserExceptionType.MissingCredentials))
                 return
 
         try:
-            logger.info("[SynchronizationTask._downloadActivityList]--- \tRetrieving list from " + svc.ID)
+            self._global_logger.info("Retrieving list from " + svc.ID)
             if not exhaustive or not self._activities:
                 svcActivities, svcExclusions = svc.DownloadActivityList(conn, exhaustive)
             else:
@@ -792,7 +798,7 @@ class SynchronizationTask:
         # Attempt to assign fallback TZs to all stationary/potentially-stationary activities, since we may not be able to determine TZ any other way.
         fallbackTZ = self._estimateFallbackTZ(self._activities)
         if fallbackTZ:
-            logger.info("[SynchronizationTask._applyFallbackTZ]--- Setting fallback TZs to %s" % fallbackTZ )
+            self._global_logger.info("Setting fallback TZs to %s" % fallbackTZ )
             for act in self._activities:
                 act.FallbackTZ = fallbackTZ
 
@@ -808,7 +814,7 @@ class SynchronizationTask:
                 break
 
         if updateServicesWithExistingActivity:
-            logger.debug("[SynchronizationTask._updateSynchronizedActivities]--- \t\tUpdating SynchronizedActivities")
+            self._global_logger.debug("\tUpdating SynchronizedActivities")
             try:
                 db.connections.update_many(
                     {"_id": {"$in": list(activity.ServiceDataCollection.keys())}},
@@ -868,24 +874,24 @@ class SynchronizationTask:
 
         for dlSvcRecord in actAvailableFromSvcs:
             dlSvc = dlSvcRecord.Service
-            logger.info("[SynchronizationTask._downloadActivity]--- \tfrom " + dlSvc.ID)
+            self._global_logger.info("\tfrom " + dlSvc.ID)
             if not dlSvc.SuppliesActivities:
                 activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.NoSupplier))
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...does not supply activities")
+                self._global_logger.info("\t...does not supply activities")
                 continue
             if activity.UID in self._syncExclusions[dlSvcRecord._id]:
                 activity.Record.MarkAsNotPresentOtherwise(_unpackUserException(self._syncExclusions[dlSvcRecord._id][activity.UID]))
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...has activity exclusion logged")
+                self._global_logger.info("\t...has activity exclusion logged")
                 continue
             if self._isServiceExcluded(dlSvcRecord):
                 activity.Record.MarkAsNotPresentOtherwise(self._getServiceExclusionUserException(dlSvcRecord))
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...service became excluded after listing") # Because otherwise we'd never have been trying to download from it in the first place.
+                self._global_logger.info("\t...service became excluded after listing") # Because otherwise we'd never have been trying to download from it in the first place.
                 continue
             if activity.Record.GetFailureCount(dlSvcRecord) >= dlSvc.DownloadRetryCount:
                 # We don't re-call MarkAsNotPresentOtherwise here
                 # ...since its existing value will be the more illuminating as to the error
                 # (and we can just check the failure count if we want to know if it's being ignored)
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...download retry count exceeded")
+                self._global_logger.info("\t...download retry count exceeded")
                 continue
 
             workingCopy = copy.copy(activity)  # we can hope
@@ -910,7 +916,7 @@ class SynchronizationTask:
                     activity.Record.MarkAsNotPresentOtherwise(e.UserException)
                     continue
             except APIExcludeActivity as e:
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\texcluded by service: %s" % e.Message)
+                self._global_logger.info("[\texcluded by service: %s" % e.Message)
                 e.Activity = workingCopy
                 self._accumulateExclusions(dlSvcRecord, e)
                 activity.Record.MarkAsNotPresentOtherwise(e.UserException)
@@ -931,13 +937,13 @@ class SynchronizationTask:
             activity.Record.ResetFailureCount(dlSvcRecord)
 
             if workingCopy.Private and not dlSvcRecord.GetConfiguration()["sync_private"]:
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...is private and restricted from sync")  # Sync exclusion instead?
+                self._global_logger.info("\t...is private and restricted from sync")  # Sync exclusion instead?
                 activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.Private))
                 continue
             try:
                 workingCopy.CheckSanity()
             except:
-                logger.info("[SynchronizationTask._downloadActivity]--- \t\t...failed sanity check")
+                self._global_logger.info("\t...failed sanity check")
                 self._accumulateExclusions(dlSvcRecord, APIExcludeActivity("Sanity check failed " + _formatExc(), activity=workingCopy, user_exception=UserException(UserExceptionType.SanityError)))
                 activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.SanityError))
                 continue
@@ -1002,7 +1008,7 @@ class SynchronizationTask:
 
         self._initializeUserLogging()
 
-        logger.info("[Sync.Run]--- Beginning sync for " + str(self.user["_id"]) + "(exhaustive: " + str(exhaustive) + ")")
+        self._global_logger.info("Beginning sync for " + str(self.user["_id"]) + "(exhaustive: " + str(exhaustive) + ")")
 
         # Sets up serviceConnections
         self._loadServiceData()
@@ -1032,16 +1038,16 @@ class SynchronizationTask:
 
                     self._primeExtendedAuthDetails(conn)
 
-                    logger.info("[Sync.Run]--- Ensuring partial sync poll subscription")
+                    self._global_logger.info("Ensuring partial sync poll subscription")
                     self._ensurePartialSyncPollingSubscription(conn)
 
                     if not exhaustive and conn.Service.PartialSyncRequiresTrigger and "TriggerPartialSync" not in conn.__dict__ and not conn.Service.ShouldForcePartialSyncTrigger(conn):
-                        logger.info("[Sync.Run]--- Service %s has not been triggered" % conn.Service.ID)
+                        self._global_logger.info("Service %s has not been triggered" % conn.Service.ID)
                         self._deferredServices.append(conn._id)
                         continue
 
                     if not conn.Service.SuppliesActivities:
-                        logger.info("[Sync.Run]--- Service %s does not supply activities - deferring listing till first upload" % conn.Service.ID)
+                        self._global_logger.info("Service %s does not supply activities - deferring listing till first upload" % conn.Service.ID)
                         self._deferredServices.append(conn._id)
                         continue
 
@@ -1050,7 +1056,6 @@ class SynchronizationTask:
 
                     self._updateSyncProgress(SyncStep.List, conn.Service.ID)
                     self._downloadActivityList(conn, exhaustive)
-
                 self._applyFallbackTZ()
 
                 # Makes reading the logs much easier.
@@ -1060,8 +1065,8 @@ class SynchronizationTask:
                 processedActivities = 0
 
                 for activity in self._activities:
-                    logger.info("[Sync.Run]--- " + str(activity) + " " + str(activity.UID[:3]) + " from " + str([[y.Service.ID for y in self._serviceConnections if y._id == x][0] for x in activity.ServiceDataCollection.keys()]))
-                    logger.info("[Sync.Run]--- Name: %s Notes: %s Distance: %s%s" % (activity.Name[:15] if activity.Name else "", activity.Notes[:15] if activity.Notes else "", activity.Stats.Distance.Value, activity.Stats.Distance.Units))
+                    self._global_logger.info("" + str(activity) + " " + str(activity.UID[:3]) + " from " + str([[y.Service.ID for y in self._serviceConnections if y._id == x][0] for x in activity.ServiceDataCollection.keys()]))
+                    self._global_logger.info("Name: %s Notes: %s Distance: %s%s" % (activity.Name[:15] if activity.Name else "", activity.Notes[:15] if activity.Notes else "", activity.Stats.Distance.Value, activity.Stats.Distance.Units))
                     try:
                         activity.Record = self._findOrCreateActivityRecord(activity) # Make it a member of the activity, to avoid passing it around as a seperate parameter everywhere.
 
@@ -1094,7 +1099,7 @@ class SynchronizationTask:
                                     time_past += dst_offset
 
                                 time_remaining = timedelta(seconds=self._user_config["sync_upload_delay"]) - time_past
-                                logger.debug("[Sync.Run]--- %s since upload" % time_past)
+                                self._global_logger.debug("%s since upload" % time_past)
                                 if time_remaining > timedelta(0):
                                     activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.Deferred))
                                     # Only reschedule if it won't slow down their auto-sync timing
@@ -1103,7 +1108,7 @@ class SynchronizationTask:
                                         # Reschedule them so this activity syncs immediately on schedule
                                         sync_result.ForceScheduleNextSyncOnOrBefore(next_sync)
 
-                                    logger.info("[Sync.Run]--- \t\t...is delayed for %s (out of %s)" % (time_remaining, timedelta(seconds=self._user_config["sync_upload_delay"])))
+                                    self._global_logger.info("\t...is delayed for %s (out of %s)" % (time_remaining, timedelta(seconds=self._user_config["sync_upload_delay"])))
                                     # We need to ensure we check these again when the sync re-runs
                                     for conn in actAvailableFromConns:
                                         self._persistServiceTrigger(conn)
@@ -1112,12 +1117,12 @@ class SynchronizationTask:
                         if self._user_config["sync_skip_before"]:
                             if self._user_config["historical_sync"]:
                                 if activity.StartTime.replace(tzinfo=None) > self._user_config["sync_skip_before"]:
-                                    logger.info("[Sync.Run]--- \t\t...predates configured sync window")
+                                    self._global_logger.info("\t...predates configured sync window")
                                     activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.PredatesWindow))
                                     raise ActivityShouldNotSynchronizeException()
                             else:
                                 if activity.StartTime.replace(tzinfo=None) < self._user_config["sync_skip_before"]:
-                                    logger.info("[Sync.Run]--- \t\t...predates configured sync window")
+                                    self._global_logger.info("\t...predates configured sync window")
                                     activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.PredatesWindow))
                                     raise ActivityShouldNotSynchronizeException()
 
@@ -1130,7 +1135,7 @@ class SynchronizationTask:
                                     break
 
                             if not override_private:
-                                logger.info("[Sync.Run]--- \t\t...is private and restricted from sync (pre-download)")  # Sync exclusion instead?
+                                self._global_logger.info("\t...is private and restricted from sync (pre-download)")  # Sync exclusion instead?
                                 activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.Private))
                                 raise ActivityShouldNotSynchronizeException()
 
@@ -1147,14 +1152,14 @@ class SynchronizationTask:
                             eligibleServices = self._determineEligibleRecipientServices(activity=activity, recipientServices=recipientServices)
 
                             if not len(eligibleServices):
-                                logger.info("[Sync.Run]--- \t\t...has no eligible destinations")
+                                self._global_logger.info("\t...has no eligible destinations")
                                 totalActivities -= 1  # Again, doesn't really count.
                                 raise ActivityShouldNotSynchronizeException()
 
                             has_deferred = False
                             for conn in eligibleServices:
                                 if conn._id in self._deferredServices:
-                                    logger.info("[Sync.Run]--- Doing deferred list from %s" % conn.Service.ID)
+                                    self._global_logger.info("Doing deferred list from %s" % conn.Service.ID)
                                     # no_add since...
                                     #  a) we're iterating over the list it'd be adding to, and who knows what will happen then
                                     #  b) for the current use of deferred services, we don't care about new activities
@@ -1181,7 +1186,7 @@ class SynchronizationTask:
                         self._updateSyncProgress(SyncStep.Download, syncProgress)
 
                         # The second most important line of logging in the application...
-                        logger.info("[Sync.Run]--- \t\t...to " + str([x.Service.ID for x in recipientServices]))
+                        self._global_logger.info("\t...to " + str([x.Service.ID for x in recipientServices]))
 
                         # Download the full activity record
                         full_activity, activitySource = self._downloadActivity(activity)
@@ -1197,17 +1202,17 @@ class SynchronizationTask:
                         try:
                             full_activity.EnsureTZ()
                         except Exception as e:
-                            logger.error("[Sync.Run]--- \tCould not determine TZ %s" % e)
+                            self._global_logger.error("\tCould not determine TZ %s" % e)
                             self._accumulateExclusions(full_activity.SourceConnection, APIExcludeActivity("Could not determine TZ", activity=full_activity, permanent=False))
                             activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.UnknownTZ))
                             raise ActivityShouldNotSynchronizeException()
                         else:
-                            logger.debug("[Sync.Run]--- \tDetermined TZ %s" % full_activity.TZ)
+                            self._global_logger.debug("\tDetermined TZ %s" % full_activity.TZ)
 
                         try:
                             full_activity.CheckTimestampSanity()
                         except ValueError as e:
-                            logger.warning("[Sync.Run]--- \t\t...failed timestamp sanity check - %s" % e)
+                            self._global_logger.warning("\t...failed timestamp sanity check - %s" % e)
                             # self._accumulateExclusions(full_activity.SourceConnection, APIExcludeActivity("Timestamp sanity check failed", activity=full_activity, permanent=True))
                             # activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.SanityError))
                             # raise ActivityShouldNotSynchronizeException()
@@ -1223,22 +1228,22 @@ class SynchronizationTask:
                                 heartbeat_callback(SyncStep.Upload)
                             destSvc = destinationSvcRecord.Service
                             if not destSvc.ReceivesStationaryActivities and full_activity.Stationary:
-                                logger.info("[Sync.Run]--- \t\t...marked as stationary during download")
+                                self._global_logger.info("\t...marked as stationary during download")
                                 activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.StationaryUnsupported))
                                 continue
                             if not full_activity.Stationary:
                                 if not (destSvc.ReceivesNonGPSActivitiesWithOtherSensorData or full_activity.GPS):
-                                    logger.info("[Sync.Run]--- \t\t...marked as non-GPS during download")
+                                    self._global_logger.info("\t...marked as non-GPS during download")
                                     activity.Record.MarkAsNotPresentOn(destinationSvcRecord, UserException(UserExceptionType.NonGPSUnsupported))
                                     continue
 
                             uploaded_external_id = None
-                            logger.info("[Sync.Run]--- \t  Uploading to " + destSvc.ID)
+                            self._global_logger.info("\t  Uploading to " + destSvc.ID)
                             try:
                                 uploaded_external_id = self._uploadActivity(full_activity, destinationSvcRecord)
                             except UploadException:
                                 continue # At this point it's already been added to the error collection, so we can just bail.
-                            logger.info("[Sync.Run]--- \t  Uploaded")
+                            self._global_logger.info("\t  Uploaded")
 
                             activity.Record.MarkAsSynchronizedTo(destinationSvcRecord)
                             successful_destination_service_ids.append(destSvc.ID)
@@ -1267,33 +1272,33 @@ class SynchronizationTask:
 
             except SynchronizationCompleteException:
                 # This gets thrown when there is obviously nothing left to do - but we still need to clean things up.
-                logger.info("[SynchronizationTask.Run]--- SynchronizationCompleteException thrown")
+                self._global_logger.info("SynchronizationCompleteException thrown")
 
-            logger.info("[SynchronizationTask.Run]--- Writing back service data")
+            self._global_logger.info("Writing back service data")
             self._writeBackSyncErrorsAndExclusions()
 
             if exhaustive:
                 # Clean up potentially orphaned records, since we know everything is here.
-                logger.info("[SynchronizationTask.Run]--- Clearing old activity records")
+                self._global_logger.info("Clearing old activity records")
                 self._dropUntouchedActivityRecords()
 
-            logger.info("[SynchronizationTask.Run]--- Writing back activity records")
+            self._global_logger.info("Writing back activity records")
             self._writeBackActivityRecords()
 
-            logger.info("[SynchronizationTask.Run]--- Finalizing")
+            self._global_logger.info("Finalizing")
             # Clear non-persisted extended auth details.
             self._destroyExtendedAuthData()
 
-            logger.info("[SynchronizationTask.Run]--- Unlocking user")
+            self._global_logger.info("Unlocking user")
             # Unlock the user.
             self._unlockUser()
 
         except:
             # oops.
-            logger.exception("[SynchronizationTask.Run]--- Core sync exception")
+            self._global_logger.exception("Core sync exception")
             raise
         else:
-            logger.info("[SynchronizationTask.Run]--- Finished sync for %s (worker %d)" % (self.user["_id"], os.getpid()))
+            self._global_logger.info("Finished sync for %s (worker %d)" % (self.user["_id"], os.getpid()))
         finally:
             self._closeUserLogging()
 

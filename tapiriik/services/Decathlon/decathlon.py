@@ -25,8 +25,6 @@ import json
 from dateutil.parser import parse
 
 
-logger = logging.getLogger(__name__)
-
 class DecathlonService(ServiceBase):
     ID = "decathlon"
     DisplayName = "Decathlon"
@@ -147,6 +145,7 @@ class DecathlonService(ServiceBase):
     SupportedActivities = list(_activityTypeMappings.keys())
 
     def __init__(self):
+        logging.getLogger('Decathlon SVC')
         return None
 
     def UserUploadedActivityURL(self, uploadId):
@@ -185,7 +184,6 @@ class DecathlonService(ServiceBase):
             raise APIException("Unable to deauthorize Decathlon auth token, status " + str(resp.status_code) + " resp " + resp.text)
         pass
 
-
     def _getAuthHeaders(self, serviceRecord=None):
         self._rate_limit()
         response = requests.get(self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
@@ -195,12 +193,10 @@ class DecathlonService(ServiceBase):
             raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text))
         requestKey = response.json()["requestKey"]
         return {"Authorization": "Bearer %s" % requestKey, 'User-Agent': 'Python Tapiriik Hub' , 'X-Api-Key':DECATHLON_API_KEY}
-        
-        
+
     def _parseDate(self, date):
         #model '2017-12-01T12:00:00+00:00'
         return datetime.strptime(date, "%Y-%m-%dT%H:%M:%S+%Z").replace(tzinfo=pytz.utc)
-        
 
     def DownloadActivityList(self, svcRecord, exhaustive=False):
         activities = []
@@ -208,7 +204,7 @@ class DecathlonService(ServiceBase):
 
         now = datetime.now()
         prev = now - timedelta(6*365/12)
-        
+
         period = []
         
         aperiod = "%s%02d-%s%02d" % (prev.year, prev.month, now.year, now.month)
@@ -225,19 +221,18 @@ class DecathlonService(ServiceBase):
             headers = self._getAuthHeaders(svcRecord)
             resp = requests.get(DECATHLON_API_BASE_URL + "/users/" + str(svcRecord.ExternalID) + "/activities.xml?date=" + dateInterval, headers=headers)
             if resp.status_code == 400:
-                logger.info(resp.content)
+                logging.info(resp.content)
                 raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
             if resp.status_code == 401:
-                    logger.info(resp.content)
-                    raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
+                logging.info(resp.content)
+                raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
             if resp.status_code == 403:
-                    logger.info(resp.content)
-                    raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
+                logging.info(resp.content)
+                raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
 
             root = xml.fromstring(resp.content)
       
-            logger.info("\t\t nb activity : " + str(len(root.findall('.//ID'))))
-      
+            logging.info("\t\t nb activity : " + str(len(root.findall('.//ID'))))
             for ride in root.iter('ACTIVITY'):
     
                 activity = UploadedActivity()
@@ -250,12 +245,12 @@ class DecathlonService(ServiceBase):
                 
                 activity.ServiceData = {"ActivityID": ride.find('ID').text, "Manual": ride.find('MANUAL').text}
                 
-                logger.info("\t\t Decathlon Activity ID : " + ride.find('ID').text)
+                logging.info("\t\t Decathlon Activity ID : " + ride.find('ID').text)
     
     
                 if ride.find('SPORTID').text not in self._reverseActivityTypeMappings:
                     exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride.find('SPORTID').text, activity_id=ride.find('ID').text, user_exception=UserException(UserExceptionType.Other)))
-                    logger.info("\t\tDecathlon Unknown activity, sport id " + ride.find('SPORTID').text+" is not mapped")
+                    logging.info("\t\tDecathlon Unknown activity, sport id " + ride.find('SPORTID').text+" is not mapped")
                     continue
     
                 activity.Type = self._reverseActivityTypeMappings[ride.find('SPORTID').text]
@@ -300,7 +295,7 @@ class DecathlonService(ServiceBase):
     def DownloadActivity(self, svcRecord, activity):
         activityID = activity.ServiceData["ActivityID"]
 
-        logger.info("\t\t DC LOADING  : " + str(activityID))
+        logging.info("\t\t DC LOADING  : " + str(activityID))
 
         headers = self._getAuthHeaders(svcRecord)
         self._rate_limit()
@@ -325,17 +320,14 @@ class DecathlonService(ServiceBase):
         timezone = root.find('.//TIMEZONE').text
         datebase = parse(startdate+timezone)
 
-
         for pt in root.iter('LOCATION'):
             wp = Waypoint()
             
             delta = int(pt.get('elapsed_time'))
             formatedDate = datebase + timedelta(seconds=delta)
 
-
             wp.Timestamp = formatedDate#self._parseDate(formatedDate.isoformat())
-            
-            
+
             wp.Location = Location()
             wp.Location.Latitude = float(pt.find('LATITUDE').text[:8])
             wp.Location.Longitude = float(pt.find('LONGITUDE').text[:8])
@@ -358,7 +350,7 @@ class DecathlonService(ServiceBase):
 
     
     def UploadActivity(self, svcRecord, activity):
-        logger.info("UPLOAD To Decathlon Activity tz " + str(activity.TZ) + " dt tz " + str(activity.StartTime.tzinfo) + " starttime " + str(activity.StartTime))
+        logging.info("UPLOAD To Decathlon Activity tz " + str(activity.TZ) + " dt tz " + str(activity.StartTime.tzinfo) + " starttime " + str(activity.StartTime))
         
         #XML build
         root = etree.Element("ACTIVITY")
@@ -387,8 +379,7 @@ class DecathlonService(ServiceBase):
             dataSummaryKcal = etree.SubElement(summary, "VALUE")
             dataSummaryKcal.text = str((int(activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value)))       
             dataSummaryKcal.attrib["id"] = self._unitMap["kcal"]
-            
-            
+
         #Speed average, We accept meter/hour
         if activity.Stats.Speed.Average is not None:
             dataSummarySpeedAvg = etree.SubElement(summary, "VALUE")

@@ -1,15 +1,21 @@
 from datetime import datetime
+from tapiriik.settings import _GLOBAL_LOGGER
 import os
+import logging.handlers
+import io
+import sys
 
 # I'm trying to track down where some missing seconds are going in the sync process
 # Will grep these out of the log at some later date
 
+import logging
 
 def worker_message(state, now=datetime.now()):
-    print("[Sync_worker]--- PID: %d  | status: %s | at %s" % (os.getpid(), state, now.strftime("%Y-%m-%d %H:%M:%S %Z")))
+    #print("[Sync_worker]--- PID: %d  | status: %s | at %s" % (os.getpid(), state, now.strftime("%Y-%m-%d %H:%M:%S %Z")))
+    logging.info("PID: %d  | status: %s" % (os.getpid(), state))
 
 
-print("-----[ INITIALIZE SYNC_WORKER ]-----")
+logging.info("-----[ INITIALIZE SYNC_WORKER ]-----")
 worker_message("booting")
 
 from tapiriik.requests_lib import patch_requests_with_default_timeout, patch_requests_source_address
@@ -70,10 +76,6 @@ if isinstance(settings.HTTP_SOURCE_ADDR, list):
 	settings.HTTP_SOURCE_ADDR = settings.HTTP_SOURCE_ADDR[settings.WORKER_INDEX % len(settings.HTTP_SOURCE_ADDR)]
 	patch_requests_source_address((settings.HTTP_SOURCE_ADDR, 0))
 
-print("[Sync_worker]--- PID : %d" % os.getpid())
-print("[Sync_worker]--- Index : %s" % settings.WORKER_INDEX)
-print("[Sync_worker]--- Interface : %s" % settings.HTTP_SOURCE_ADDR)
-
 # We defer including the main body of the application till here so the settings aren't captured before we've set them up.
 # The better way would be to defer initializing services until they're requested, but it's 10:30 and this will work just as well.
 from tapiriik.sync import Sync
@@ -89,5 +91,5 @@ worker_message("shutting down cleanly")
 db.sync_workers.delete_one({"_id": heartbeat_rec_id})
 close_connections()
 worker_message("shut down")
-print("-----[ ENDING SYNC_WORKER ]-----")
+logging.info("-----[ ENDING SYNC_WORKER ]-----")
 sys.stdout.flush()
