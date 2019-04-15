@@ -47,7 +47,7 @@ LOCALE_PATHS = (
 LOG_PATH = os.path.abspath("logs")
 
 logging.basicConfig(
-    filename=os.path.abspath("logs") + '/dc_log_global.log',
+    filename=os.path.abspath("logs") + '/log_global.log',
     level=logging.INFO,
     format='%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d',
     datefmt='%Y-%m-%d %H:%M:%S',
@@ -165,7 +165,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'tapiriik.web.startup.Startup',
     'tapiriik.web.startup.ServiceWebStartup',
-    'tapiriik.auth.SessionAuth'
+    'tapiriik.auth.SessionAuth',
+    'tapiriik.device_support.DeviceSupportMiddleware'
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -192,6 +193,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.stats',
     'tapiriik.web.context_processors.providers',
     'tapiriik.web.context_processors.celebration_mode',
+    'tapiriik.web.context_processors.device_support',
     'django.core.context_processors.static',
     'django.template.context_processors.i18n')
 

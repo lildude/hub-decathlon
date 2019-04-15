@@ -335,7 +335,7 @@ class SynchronizationTask:
         db.users.update_one({"_id": self.user["_id"]}, {"$set": {"SynchronizationProgress": progress, "SynchronizationStep": step}})
 
     def _initializeUserLogging(self):
-        self._logging_file_handler = logging.handlers.RotatingFileHandler(LOG_PATH + '/dc_log_' + str(self.user["_id"]) + ".log", maxBytes=0, backupCount=5, encoding="utf-8")
+        self._logging_file_handler = logging.handlers.RotatingFileHandler(LOG_PATH + '/log_' + str(self.user["_id"]) + ".log", maxBytes=0, backupCount=5, encoding="utf-8")
         self._logging_file_handler.setFormatter(logging.Formatter(self._logFormat, self._logDateFormat))
         self._logging_file_handler.doRollover()
         self._global_logger.addHandler(self._logging_file_handler)

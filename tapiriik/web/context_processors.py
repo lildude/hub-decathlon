@@ -81,6 +81,7 @@ def js_bridge(req):
 def stats(req):
     return {"stats": db.stats.find_one()}
 
+
 def celebration_mode(req):
     active_config = None
     now = datetime.now()
@@ -89,3 +90,11 @@ def celebration_mode(req):
             active_config = config
             break
     return {"celebration_mode": active_config}
+
+
+def device_support(req):
+    device_support = "web"
+    if 'device_support' in req.COOKIES:
+        device_support = req.COOKIES.get('device_support')
+
+    return {"device_support": device_support}
