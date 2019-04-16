@@ -81,6 +81,7 @@ function ActivitiesController($scope, $http) {
 }
 
 function SyncSettingsController($scope, $http, $window){
+
   $scope.$watch("tapiriik.User.Config.sync_skip_before", function(){
     if ($scope.tapiriik.User.Config.sync_skip_before) {
       var date = new Date($scope.tapiriik.User.Config.sync_skip_before);
@@ -88,25 +89,34 @@ function SyncSettingsController($scope, $http, $window){
       $scope.sync_skip_before_entry = date.getDate() + " " + month_abbrs[date.getMonth()] + " " + date.getFullYear();
     }
   });
-  $scope.sync_suppress_options = [{k: true, v: "manually"}, {k: false, v: "automatically"}];
+
+  $scope.sync_suppress_options = [
+    {k: true, v: "manually"},
+    {k: false, v: "automatically"}
+  ];
   $scope.sync_delay_options = [{k: 0, v: "as soon as possible"}, {k: 20*60, v: "20 minutes"}, {k: 60*60, v: "1 hour"}, {k: 60*60*3, v: "3 hours"}, {k: 60*60*6, v: "6 hours"}, {k: 60*60*12, v: "12 hours"}, {k: 60*60*24, v: "1 day"}];
   $scope.historical_sync_options = [{k: false, v: "before"}, {k: true, v: "after"}];
+
   $scope.save = function(){
     if (isNaN(Date.parse($scope.sync_skip_before_entry)) && $scope.sync_skip_before_entry) {
       alert("Double-check that date");
       return;
     }
+
     if ($scope.sync_skip_before_entry) {
-      $scope.tapiriik.User.Config.sync_skip_before = new Date($scope.sync_skip_before_entry);
+      $scope.tapiriik.User.Config.sync_skip_before = new Date($scope.sync_skip_before_entry + ' 00:00:00 GMT');
     } else {
       $scope.tapiriik.User.Config.sync_skip_before = null;
     }
+
     $http.post("/account/configure", $scope.tapiriik.User.Config).success(function(){
       $.address.value(""); // Back to jquery land
     }).error(function(data, status){
       alert("Error saving settings - " + status + ": " + data);
     });
+
   };
+
 }
 
 function RecentSyncActivityController($scope, $http) {
