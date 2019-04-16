@@ -161,11 +161,9 @@ tapiriik.AddressChanged=function(){
 			tapiriik.OpenDropboxInfoDialog();
 			return;
 		}
-	} else if (components[0] == "settings") {
-		tapiriik.OpenSyncSettingsDialog();
-	} else {
-		tapiriik.CloseSyncSettingsDialog();
 	}
+	tapiriik.OpenSyncSettingsDialog();
+	
 	//tapiriik.DoDismissServiceDialog();
 	tapiriik.DoDismissConfigPanel();
 };
@@ -775,15 +773,11 @@ tapiriik.OpenPaymentPromoClaimCompletedDialog = function(){
 };
 
 tapiriik.OpenSyncSettingsDialog = function(){
-	$(".syncSettingsBlock").slideDown(250);
+	//$(".syncSettingsBlock").slideDown(250);
 
 	// Apply datepicker here,
 	// because it is associated with an HTML element.
 	tapiriik.ApplyDatepicker();
-};
-
-tapiriik.CloseSyncSettingsDialog = function(){
-	$(".syncSettingsBlock").slideUp(250);
 };
 
 tapiriik.CreateConfigPanel = function(serviceID, contents){
@@ -1128,6 +1122,7 @@ tapiriik.ApplyDatepicker = function() {
 		var picker = new Pikaday({
 			field: element,
 			firstDay: 1,
+			format: 'D MMM YYYY',
 			toString: dateFormat
 		});
 	};

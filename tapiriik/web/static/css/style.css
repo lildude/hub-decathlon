@@ -409,6 +409,33 @@ body.mobile .header .logo a{
 	font-weight:300;
 }
 
+form .syncSettingsCloze{
+	margin: 5px auto;
+	text-align:center;
+	font-family:'Roboto Regular', sans-serif;
+	font-size: 16px;
+	color:#B4B4B4;
+}
+form .syncSettingsCloze > * {
+	display: inline-block;
+}
+form .syncSettingsCloze input.date{
+
+    padding: 4px 5px;
+    margin: 0 5px;
+    font-size: 15px;
+    line-height: 20px;
+	color:#0071b9;
+  	max-width: 100px;
+  	text-align: center;
+}
+form .syncSettingsCloze .syncSettingsSaveButton{
+    margin:0 5px;
+    padding: 5px 10px;
+    border-width: 1px;
+    line-height: 20px;
+}
+
 .serviceButtonOuter{
 	display: inline-block;
     margin: 0 auto;
@@ -669,6 +696,9 @@ body.mobile .header .logo a{
 	font-family:'Roboto Condensed', sans-serif;
 	font-weight:700;
 	text-align: center;
+}
+.marginBottom10{
+	margin-bottom: 10px;
 }
 
 .row {
@@ -932,9 +962,30 @@ body.mobile .header .logo a{
 	}
 }
 
+body.mobile.unlog .header {
+	margin-top:90px;
+}
+body.mobile.unlog .header .logo a{
+	color:#fff;
+}
+body.mobile.unlog .serviceButtonWrap:{
+	display: inline-block;
+    margin: 0 auto;
+    text-align: right;
+    width: 100%;
+}
+body.mobile.unlog p.info{
+	font-weight: 500;
+	margin: 10px;
+}
+
+body.mobile.unlog{
+	color:#fff;
+	background-color:#0071b9;
+}
 
 body.mobile .header .logo .strong{
-	font-size:36px;
+	/*font-size:36px;*/
 }
 body.mobile .header{
 	margin-bottom: 20px;
@@ -942,7 +993,6 @@ body.mobile .header{
 body.mobile .subtitle{
 	font-size:20px;
 }
-
 body.mobile .content .block{
 	margin-bottom: 30px;
 }
