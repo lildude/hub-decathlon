@@ -2,6 +2,9 @@ import os
 import sys
 from datetime import datetime
 from django.utils.translation import ugettext_lazy as _
+import logging
+import logging.handlers
+import io
 
 # Django settings for tapiriik project.
 
@@ -42,6 +45,20 @@ LOCALE_PATHS = (
 
 #LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os.pardir)) + '/logs'
 LOG_PATH = os.path.abspath("logs")
+
+logging.basicConfig(
+    filename=os.path.abspath("logs") + '/log_global.log',
+    level=logging.INFO,
+    format='%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+_GLOBAL_LOGGER = logging.getLogger()
+_GLOBAL_LOGGER.setLevel(logging.INFO)
+logging_console_handler = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8'))
+logging_console_handler.setLevel(logging.INFO)
+logging_console_handler.setFormatter(logging.Formatter('%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d','%Y-%m-%d %H:%M:%S'))
+_GLOBAL_LOGGER.addHandler(logging_console_handler)
 
 SITE_ID = 1
 
@@ -148,7 +165,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'tapiriik.web.startup.Startup',
     'tapiriik.web.startup.ServiceWebStartup',
-    'tapiriik.auth.SessionAuth'
+    'tapiriik.auth.SessionAuth',
+    'tapiriik.device_support.DeviceSupportMiddleware'
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -175,6 +193,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.stats',
     'tapiriik.web.context_processors.providers',
     'tapiriik.web.context_processors.celebration_mode',
+    'tapiriik.web.context_processors.device_support',
     'django.core.context_processors.static',
     'django.template.context_processors.i18n')
 

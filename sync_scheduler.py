@@ -1,15 +1,20 @@
 from tapiriik.database import db
+from tapiriik.settings import _GLOBAL_LOGGER
 from datetime import datetime
 from pymongo.read_preferences import ReadPreference
 from tapiriik.helper.sqs.manager import SqsManager
 import time
 import uuid
 import json
+import logging
 
 
-print("-----[ INITIALIZE SYNC_SCHEDULER ]-----")
+logger = logging.getLogger('Sync Scheduler')
+logger = _GLOBAL_LOGGER
+logger.info("-----[ INITIALIZE SYNC_SCHEDULER ]-----")
 sqsManager = SqsManager()
 sqsManager.get_queue()
+
 while True:
     generation = str(uuid.uuid4())
     queueing_at = datetime.utcnow()
@@ -25,10 +30,12 @@ while True:
             ))
 
     scheduled_ids = [x["_id"] for x in users]
-    print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
+    #print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
+    logger.info("Found %d users" % (len(scheduled_ids)))
 
     db.users.update_many({"_id": {"$in": scheduled_ids}}, {"$set": {"QueuedAt": queueing_at, "QueuedGeneration": generation}, "$unset": {"NextSynchronization": True}}, upsert=False)
-    print("[Sync_scheduler]--- Marked %d users as queued at %s" % (len(scheduled_ids), datetime.utcnow()))
+    #print("[Sync_scheduler]--- Marked %d users as queued at %s" % (len(scheduled_ids), datetime.utcnow()))
+    logger.info("Marked %d users as queued" % (len(scheduled_ids)))
 
     now = datetime.now()
     messages = []
@@ -62,6 +69,7 @@ while True:
 
     # publish all message
     sqsManager.send_messages(messages)
-    print("[Sync_scheduler]--- Scheduled %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
+    #print("[Sync_scheduler]--- Scheduled %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
+    logger.info("Scheduled %d users" % (len(scheduled_ids)))
 
     time.sleep(1)

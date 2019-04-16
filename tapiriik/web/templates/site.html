@@ -46,15 +46,15 @@
 	<meta name="theme-color" content="#ffffff">
 </head>
 
-<body {% if celebration_mode %}class="{{ celebration_mode.BodyCSSClasses }}"{% endif %} ng-app="tapiriik">
-
-    <div class="backgroundWrap">
-	    <div class="background">
-	    	<img class="border" src="{{ STATIC_URL}}img/decathlon/border.png">
-	    	<img class="header" src="{{ STATIC_URL}}img/decathlon/main.png">
-	    </div>
-	</div>
-
+<body class="{{device_support}}{% if celebration_mode %} {{ celebration_mode.BodyCSSClasses }}{% endif %}" ng-app="tapiriik">
+	{% ifequal device_support 'web' %}
+    	<div class="backgroundWrap">
+	    	<div class="background">
+	    		<img class="border" src="{{ STATIC_URL}}img/decathlon/border.png">
+	    		<img class="header" src="{{ STATIC_URL}}img/decathlon/main.png">
+		    </div>
+		</div>
+	{% endifequal %}
 	<!-- I blame centre-aligning -->
 	<div class="center">
 		<div class="header">
@@ -69,8 +69,6 @@
 			</div>
 			<div class="logoPad"></div>
 		</div>
-
-	
 		<div class="content contentMain">
 			<div class="contentWrap">
 				<div class="mainBlock">
@@ -87,15 +85,17 @@
 		    		</div>
 		    	</div>
 	    	</div>
-	    </div>	
-	    <div class="content contentFooter">
-	    	<div class="contentWrap">
-	    		<hr>
-	    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
-	    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
-    			</div>
-    		</div>
-		</div>
+	    </div>
+	    {% ifequal device_support 'web' %}
+		    <div class="content contentFooter">
+		    	<div class="contentWrap">
+		    		<hr>
+		    		<div class="footers"><a href="{% url 'faq' %}">{% trans "FAQ" %}</a> | <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> | <a href="{% url 'credits' %}">{% trans "Credits" %}</a>{% if user %} | <a href="#" onclick="tapiriik.Logout();">{% trans "Log out" %}</a>{% endif %}<br/><span style="font-size:95%;font-weight:normal">{% trans "All trademarks displayed are property of their respective owners" %}</br>
+		    			<a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a>
+	    			</div>
+	    		</div>
+			</div>
+		{% endifequal %}
 	</div>
 
 	<script type="text/javascript">

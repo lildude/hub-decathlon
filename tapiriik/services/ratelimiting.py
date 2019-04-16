@@ -1,7 +1,9 @@
 from tapiriik.database import ratelimit as rl_db
+from tapiriik.settings import _GLOBAL_LOGGER
 from pymongo.read_preferences import ReadPreference
 from datetime import datetime, timedelta
 import math
+import logging
 
 class RateLimitExceededException(Exception):
 	pass
@@ -15,7 +17,7 @@ class RateLimit:
 				# Don't want to halt the synchronization worker to wait for 15min-1 hour
 				# So...
 				raise RateLimitExceededException()
-		print("[RateLimitCron]--- Adding 1 to count")
+		_GLOBAL_LOGGER.info("Adding 1 to count")
 		rl_db.limits.update_many({"Key": key}, {"$inc": {"Count": 1}})
 
 	def Refresh(key, limits):

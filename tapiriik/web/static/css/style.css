@@ -43,9 +43,6 @@ a.button{
 	margin: 5px 0;
 	font-size:15px;
 	line-height: 20px;
-	-webkit-border-radius: 30px;
-	-moz-border-radius: 30px;
-	border-radius: 30px;
 }
 
 
@@ -57,9 +54,6 @@ button.button{
 	margin: 5px;
 	font-size:15px;
 	line-height: 20px
-	-webkit-border-radius: 30px;
-	-moz-border-radius: 30px;
-	border-radius: 30px;
 }
 a.button.button-primary,
 button.button.button-primary{
@@ -76,9 +70,6 @@ a.button.buttonLarge{
 	margin: 5px 0;
 	font-size: 20px;
 	line-height: 120%;
-	-webkit-border-radius: 30px;
-	-moz-border-radius: 30px;
-	border-radius: 30px;
 }
 div.cell{
 	min-height:30px;
@@ -246,6 +237,9 @@ span.label.warning{
 	line-height: 150%;
 
 	color:#fff;
+}
+body.mobile .header .logo a{
+	color:#0071b9;
 }
 
 .header .logo .logoLink{
@@ -512,9 +506,6 @@ span.label.warning{
 	background-color:#0071B9;
 	color:#fff;
 	text-align:center;
-	-webkit-border-radius: 30px;
-	-moz-border-radius: 30px;
-	border-radius: 30px;
 }
 .serviceButtonLogin .service .button{
 	max-height: none;
@@ -659,9 +650,6 @@ span.label.warning{
 	font-size:18px;
 	line-height: 120%;
 	background-color:#0071b9;
-	-webkit-border-radius: 20px;
-	-moz-border-radius: 20px;
-	border-radius: 20px;
 }
 
 .dialogWrap form.logout{
@@ -683,8 +671,7 @@ span.label.warning{
 	text-align: center;
 }
 
-
- .row {
+.row {
   display: grid;
   grid-template-columns: repeat(12, 5fr);
   grid-gap: 15px;
@@ -914,6 +901,12 @@ span.label.warning{
 		grid-column-end: span 12;
 	}
 }
+@media (max-width: 768px) {
+	.dialogWrap .pic-dialog.logo{
+		width:75%;
+	}
+}
+
 @media (max-width: 992px) {
 	.dialogWrap{
 		padding:25px;
@@ -937,4 +930,19 @@ span.label.warning{
 	.header .logo a{
 		color:#0071b9;
 	}
+}
+
+
+body.mobile .header .logo .strong{
+	font-size:36px;
+}
+body.mobile .header{
+	margin-bottom: 20px;
+}
+body.mobile .subtitle{
+	font-size:20px;
+}
+
+body.mobile .content .block{
+	margin-bottom: 30px;
 }
