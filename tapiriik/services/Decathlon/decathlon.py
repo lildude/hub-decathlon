@@ -173,6 +173,15 @@ class DecathlonService(ServiceBase):
         refresh_token = data["access_token"]
         # Retrieve the user ID, meh.
         id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
+
+        # # register the webhook to receive callbacks for new activities
+        jwt = id_resp.json()["requestKey"]
+        headers = {"Authorization": "Bearer %s" % jwt, 'User-Agent': 'Python Tapiriik Hub' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
+        data_json = '{"user": "/v2/users/'+id_resp.json()["ldid"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
+        requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
+        self._rate_limit()
+        
+
         return (id_resp.json()["ldid"], {"RefreshToken": refresh_token})
 
     def RevokeAuthorization(self, serviceRecord):
