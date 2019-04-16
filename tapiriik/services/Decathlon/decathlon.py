@@ -166,26 +166,22 @@ class DecathlonService(ServiceBase):
         code = req.GET.get("code")
         params = {"grant_type": "authorization_code", "code": code, "client_id": DECATHLON_CLIENT_ID, "client_secret": DECATHLON_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
 
-        self._rate_limit()
         response = requests.get(self.accountOauth + "/accessToken", params=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
         data = response.json()
         refresh_token = data["access_token"]
         # Retrieve the user ID, meh.
-        self._rate_limit()
         id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
         return (id_resp.json()["ldid"], {"RefreshToken": refresh_token})
 
     def RevokeAuthorization(self, serviceRecord):
-        self._rate_limit()
         resp = requests.get(self.OauthEndpoint + "/logout?access_token="+serviceRecord.Authorization["RefreshToken"])
         if resp.status_code != 204 and resp.status_code != 200:
             raise APIException("Unable to deauthorize Decathlon auth token, status " + str(resp.status_code) + " resp " + resp.text)
         pass
 
     def _getAuthHeaders(self, serviceRecord=None):
-        self._rate_limit()
         response = requests.get(self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
         if response.status_code != 200:
             if response.status_code >= 400 and response.status_code < 500:
