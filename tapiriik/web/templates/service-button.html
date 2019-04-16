@@ -12,7 +12,13 @@
 				{% endif %}
 						<div class="row">
 							<div class="col-md-{% if not hideicon %}10{% else %}12{% endif %} col-xs-{% if not hideicon %}9{% else %}12{% endif %}">
-								<div class="text"><i>{{ provider.DisplayName }}</i></div>
+								<div class="text"><i><!--
+									-->{% if not user and device_support = 'mobile' %}<!--
+										-->OK<!--
+									-->{% else %}<!--
+										-->{{ provider.DisplayName }}<!--
+									-->{% endif %}<!--
+								--></i></div>
 							</div>
 							{% if not hideicon %}
 								<div class="col-md-2 col-xs-3">

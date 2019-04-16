@@ -46,7 +46,7 @@
 	<meta name="theme-color" content="#ffffff">
 </head>
 
-<body class="{{device_support}}{% if celebration_mode %} {{ celebration_mode.BodyCSSClasses }}{% endif %}" ng-app="tapiriik">
+<body class="{{device_support}}{% if celebration_mode %} {{ celebration_mode.BodyCSSClasses }}{% endif %}{% if user = none %} unlog{% endif %}" ng-app="tapiriik">
 	{% ifequal device_support 'web' %}
     	<div class="backgroundWrap">
 	    	<div class="background">
