@@ -671,8 +671,7 @@ body.mobile .header .logo a{
 	text-align: center;
 }
 
-
- .row {
+.row {
   display: grid;
   grid-template-columns: repeat(12, 5fr);
   grid-gap: 15px;
@@ -902,6 +901,12 @@ body.mobile .header .logo a{
 		grid-column-end: span 12;
 	}
 }
+@media (max-width: 768px) {
+	.dialogWrap .pic-dialog.logo{
+		width:75%;
+	}
+}
+
 @media (max-width: 992px) {
 	.dialogWrap{
 		padding:25px;
@@ -925,4 +930,19 @@ body.mobile .header .logo a{
 	.header .logo a{
 		color:#0071b9;
 	}
+}
+
+
+body.mobile .header .logo .strong{
+	font-size:36px;
+}
+body.mobile .header{
+	margin-bottom: 20px;
+}
+body.mobile .subtitle{
+	font-size:20px;
+}
+
+body.mobile .content .block{
+	margin-bottom: 30px;
 }
