@@ -932,9 +932,30 @@ body.mobile .header .logo a{
 	}
 }
 
+body.mobile.unlog .header {
+	margin-top:90px;
+}
+body.mobile.unlog .header .logo a{
+	color:#fff;
+}
+body.mobile.unlog .serviceButtonWrap:{
+	display: inline-block;
+    margin: 0 auto;
+    text-align: right;
+    width: 100%;
+}
+body.mobile.unlog p.info{
+	font-weight: 500;
+	margin: 10px;
+}
+
+body.mobile.unlog{
+	color:#fff;
+	background-color:#0071b9;
+}
 
 body.mobile .header .logo .strong{
-	font-size:36px;
+	/*font-size:36px;*/
 }
 body.mobile .header{
 	margin-bottom: 20px;
@@ -942,7 +963,6 @@ body.mobile .header{
 body.mobile .subtitle{
 	font-size:20px;
 }
-
 body.mobile .content .block{
 	margin-bottom: 30px;
 }
