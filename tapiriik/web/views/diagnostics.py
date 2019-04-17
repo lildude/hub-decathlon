@@ -124,6 +124,10 @@ def server_status(req):
 
     return render(req, "server_status.html", context)
 
+
+def server_status_elb(req):
+    return HttpResponse(status=200)
+
 @diag_requireAuth
 def diag_errors(req):
     context = {}
