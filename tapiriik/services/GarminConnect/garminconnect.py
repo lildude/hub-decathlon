@@ -48,7 +48,6 @@ class GarminConnectService(ServiceBase):
 
     _activityMappings = {
                                 "running": ActivityType.Running,
-                                "indoor_running": ActivityType.Running,
                                 "cycling": ActivityType.Cycling,
                                 "mountain_biking": ActivityType.MountainBiking,
                                 "walking": ActivityType.Walking,
@@ -122,6 +121,9 @@ class GarminConnectService(ServiceBase):
 
     _obligatory_headers = {
         "Referer": "https://sync.tapiriik.com"
+    }
+    _garmin_signin_headers={
+        "origin": "https://sso.garmin.com"
     }
 
     def __init__(self):
@@ -221,11 +223,11 @@ class GarminConnectService(ServiceBase):
             # "locale": "en"
         }
         # I may never understand what motivates people to mangle a perfectly good protocol like HTTP in the ways they do...
-        preResp = session.get("https://sso.garmin.com/sso/login", params=params)
+        preResp = session.get("https://sso.garmin.com/sso/signin", params=params)
         if preResp.status_code != 200:
             raise APIException("SSO prestart error %s %s" % (preResp.status_code, preResp.text))
 
-        ssoResp = session.post("https://sso.garmin.com/sso/login", params=params, data=data, allow_redirects=False)
+        ssoResp = session.post("https://sso.garmin.com/sso/signin", headers=self._garmin_signin_headers, params=params, data=data, allow_redirects=False)
         if ssoResp.status_code != 200 or "temporarily unavailable" in ssoResp.text:
             raise APIException("SSO error %s %s" % (ssoResp.status_code, ssoResp.text))
 
@@ -336,11 +338,8 @@ class GarminConnectService(ServiceBase):
                 activity.StartTime = pytz.utc.localize(datetime.strptime(act["startTimeGMT"], "%Y-%m-%d %H:%M:%S"))
                 if act["elapsedDuration"] is not None:
                     activity.EndTime = activity.StartTime + timedelta(0, float(act["elapsedDuration"])/1000)
-                elif act["duration"] is not None:
-                    activity.EndTime = activity.StartTime + timedelta(0, float(act["duration"]))
                 else:
-                    # somehow duration is not defined. Set 1 second then.
-                    activity.EndTime = activity.StartTime + timedelta(0, 1)
+                    activity.EndTime = activity.StartTime + timedelta(0, float(act["duration"]))
 
                 logger.debug("Activity s/t " + str(activity.StartTime) + " on page " + str(page))
 
@@ -451,14 +450,85 @@ class GarminConnectService(ServiceBase):
             # Nothing else to download
             return activity
 
-        # https://connect.garmin.com/modern/proxy/download-service/export/tcx/activity/###
+        # https://connect.garmin.com/modern/proxy/activity-service/activity/###/details
         activityID = activity.ServiceData["ActivityID"]
-        res = self._request_with_reauth(lambda session: session.get("https://connect.garmin.com/modern/proxy/download-service/export/tcx/activity/{}".format(activityID)), serviceRecord)
+        res = self._request_with_reauth(lambda session: session.get("https://connect.garmin.com/modern/proxy/activity-service/activity/{}/details?maxSize=999999999".format(activityID)), serviceRecord)
         try:
-            tcx_data = res.text
-            activity = TCXIO.Parse(tcx_data.encode('utf-8'), activity)
+            raw_data = res.json()
         except ValueError:
             raise APIException("Activity data parse error for %s: %s" % (res.status_code, res.text))
+
+        if "metricDescriptors" not in raw_data:
+            activity.Stationary = True # We were wrong, oh well
+            return activity
+
+        attrs_map = {}
+        def _map_attr(gc_key, wp_key, units, in_location=False, is_timestamp=False):
+            attrs_map[gc_key] = {
+                "key": wp_key,
+                "to_units": units,
+                "in_location": in_location, # Blegh
+                "is_timestamp": is_timestamp # See above
+            }
+
+        _map_attr("directSpeed", "Speed", ActivityStatisticUnit.MetersPerSecond)
+        _map_attr("sumDistance", "Distance", ActivityStatisticUnit.Meters)
+        _map_attr("directHeartRate", "HR", ActivityStatisticUnit.BeatsPerMinute)
+        _map_attr("directBikeCadence", "Cadence", ActivityStatisticUnit.RevolutionsPerMinute)
+        _map_attr("directDoubleCadence", "RunCadence", ActivityStatisticUnit.StepsPerMinute) # 2*x mystery solved
+        _map_attr("directAirTemperature", "Temp", ActivityStatisticUnit.DegreesCelcius)
+        _map_attr("directPower", "Power", ActivityStatisticUnit.Watts)
+        _map_attr("directElevation", "Altitude", ActivityStatisticUnit.Meters, in_location=True)
+        _map_attr("directLatitude", "Latitude", None, in_location=True)
+        _map_attr("directLongitude", "Longitude", None, in_location=True)
+        _map_attr("directTimestamp", "Timestamp", None, is_timestamp=True)
+
+        # Figure out which metrics we'll be seeing in this activity
+        attrs_indexed = {}
+        for measurement in raw_data["metricDescriptors"]:
+            key = measurement["key"]
+            if key in attrs_map:
+                if attrs_map[key]["to_units"]:
+                    attrs_map[key]["from_units"] = self._unitMap[measurement["unit"]["key"]]
+                    if attrs_map[key]["to_units"] == attrs_map[key]["from_units"]:
+                        attrs_map[key]["to_units"] = attrs_map[key]["from_units"] = None
+                attrs_indexed[measurement["metricsIndex"]] = attrs_map[key]
+
+        # Process the data frames
+        frame_idx = 0
+        active_lap_idx = 0
+        for frame in raw_data["activityDetailMetrics"]:
+            wp = Waypoint()
+            for idx, attr in attrs_indexed.items():
+                value = frame["metrics"][idx]
+                target_obj = wp
+                if attr["in_location"]:
+                    if not wp.Location:
+                        wp.Location = Location()
+                    target_obj = wp.Location
+
+                # Handle units
+                if attr["is_timestamp"]:
+                    value = pytz.utc.localize(datetime.utcfromtimestamp(value / 1000))
+                elif attr["to_units"]:
+                    value = ActivityStatistic.convertValue(value, attr["from_units"], attr["to_units"])
+
+                # Write the value (can't use __dict__ because __slots__)
+                setattr(target_obj, attr["key"], value)
+
+            # Fix up lat/lng being zero (which appear to represent missing coords)
+            if wp.Location and wp.Location.Latitude == 0 and wp.Location.Longitude == 0:
+                wp.Location.Latitude = None
+                wp.Location.Longitude = None
+            # Please visit a physician before complaining about this
+            if wp.HR == 0:
+                wp.HR = None
+            # Bump the active lap if required
+            while (active_lap_idx < len(activity.Laps) - 1 and # Not the last lap
+                   activity.Laps[active_lap_idx + 1].StartTime <= wp.Timestamp):
+                active_lap_idx += 1
+            activity.Laps[active_lap_idx].Waypoints.append(wp)
+            frame_idx += 1
 
         return activity
 
