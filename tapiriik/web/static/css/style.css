@@ -170,6 +170,10 @@ span.label.warning{
     border-radius: .25rem;
 }
 
+.panel .panel-block{
+	display:block;
+	width: 100%;
+}
 .panel.panel-info{
 	color: #004085;
     background-color: #cce5ff;
@@ -411,13 +415,18 @@ body.mobile .header .logo a{
 
 form .syncSettingsCloze{
 	margin: 5px auto;
+	width:50%;
 	text-align:center;
 	font-family:'Roboto Regular', sans-serif;
 	font-size: 16px;
 	color:#B4B4B4;
 }
+
 form .syncSettingsCloze > * {
 	display: inline-block;
+}
+form .syncSettingsCloze .panel-block{
+	display: block;
 }
 form .syncSettingsCloze input.date{
 
@@ -933,6 +942,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 @media (max-width: 768px) {
 	.dialogWrap .pic-dialog.logo{
+		width:75%;
+	}
+
+	form .syncSettingsCloze{
 		width:75%;
 	}
 }
