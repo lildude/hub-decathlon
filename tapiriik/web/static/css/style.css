@@ -38,7 +38,8 @@ a:hover{
 
 a.button{
 	color:#fff;
-	background:#0071b9;
+	/*background:#0071b9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0071b9 100%);
 	padding:10px 20px;
 	margin: 5px 0;
 	font-size:15px;
@@ -49,19 +50,36 @@ a.button{
 button.button{
 	cursor:pointer;
 	color:#fff;
-	background:#0071b9;
+	/*background:#0071b9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0071b9 100%);
 	padding:10px 20px;
 	margin: 5px;
 	font-size:15px;
 	line-height: 20px
 }
+
+a.button:hover, button.button:hover{
+	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%);
+}
 a.button.button-primary,
 button.button.button-primary{
-	background-color:#0071B9!important;
+	/*background-color:#0071B9!important;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0071b9 100%)!important;
+}
+a.button.button-primary:hover,
+button.button.button-primary:hover{
+	/*background-color:#0071B9!important;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%)!important;
 }
 a.button.button-danger,
 button.button.button-danger{
-	background-color:#dc3545!important;
+	/*background-color:#dc3545!important*/;
+	background:linear-gradient(180deg, #ff7381 0%, #dc3545 100%)!important;
+}
+a.button.button-danger:hover,
+button.button.button-danger:hover{
+	/*background-color:#dc3545!important*/;
+	background:linear-gradient(180deg, #ff7381 0%, #ff7381 100%)!important;
 }
 
 button.button.buttonLarge,
@@ -170,6 +188,10 @@ span.label.warning{
     border-radius: .25rem;
 }
 
+.panel .panel-block{
+	display:block;
+	width: 100%;
+}
 .panel.panel-info{
 	color: #004085;
     background-color: #cce5ff;
@@ -303,6 +325,18 @@ body.mobile .header .logo a{
 	-moz-border-radius: 30px;
 	border-radius: 30px;
 }
+.tooltip.tooltipGrey{
+	text-align: justify;
+	color:#B4B4B4;
+    font-family: 'Roboto Regular', sans-serif;
+    font-style: none;
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 110%;
+}
+.tooltip.tooltipGrey p{
+	margin: 0;
+}
 
 .block .titleBlock{
 	text-align:center;
@@ -411,13 +445,18 @@ body.mobile .header .logo a{
 
 form .syncSettingsCloze{
 	margin: 5px auto;
+	width:50%;
 	text-align:center;
 	font-family:'Roboto Regular', sans-serif;
 	font-size: 16px;
 	color:#B4B4B4;
 }
+
 form .syncSettingsCloze > * {
 	display: inline-block;
+}
+form .syncSettingsCloze .panel-block{
+	display: block;
 }
 form .syncSettingsCloze input.date{
 
@@ -464,13 +503,28 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 
 .service.inactive {
-	background:#04050640;
+	/*background:#04050640;*/
+	background:linear-gradient(180deg, #04050640 0%, #04050661 100%);
+}
+.service.inactive:hover {
+	/*background:#04050640;*/
+	background:linear-gradient(180deg, #04050640 0%, #04050640 100%);
 }
 .service.connected{
-	background:#0071B9;
+	/*background:#0071B9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0071B9 100%);
+}
+.service.connected:hover{
+	/*background:#0071B9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%);
 }
 .service.connected.decathlon{
-	background:#cee500;
+	/*background:#cee500;*/
+	background:linear-gradient(180deg, #fcba15 0%, #e0a105 100%);
+}
+.service.connected.decathlon:hover{
+	/*background:#cee500;*/
+	background:linear-gradient(180deg, #fcba15 0%, #fcba15 100%);
 }
 
 .service .button {
@@ -530,9 +584,14 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 
 
 .serviceButtonLogin .service{
-	background-color:#0071B9;
+	/*background-color:#0071B9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0071B9 100%);
 	color:#fff;
 	text-align:center;
+}
+.serviceButtonLogin .service:hover{
+	/*background-color:#0071B9;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%);
 }
 .serviceButtonLogin .service .button{
 	max-height: none;
@@ -692,15 +751,38 @@ form .syncSettingsCloze .syncSettingsSaveButton{
     line-height: 20px;
 }
 
+.partnerOuter .partner{
+	text-align: center;
+}
+.partnerOuter .partner img{
+	width: 80%;
+}
+.privacyTable{
+	width:100%;
+	text-align: center;
+}
+.privacyTable .serviceCol{
+	max-width:100px;
+	padding: 2px 5px;
+}
+
 .footers{
 	font-family:'Roboto Condensed', sans-serif;
 	font-weight:700;
 	text-align: center;
 }
+.marginBottom0{
+	margin-bottom: 0px;
+}
 .marginBottom10{
 	margin-bottom: 10px;
 }
-
+.marginBottom20{
+	margin-bottom: 20px;
+}
+.textJustify:{
+	text-align: justify;
+}
 .row {
   display: grid;
   grid-template-columns: repeat(12, 5fr);
@@ -933,6 +1015,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 @media (max-width: 768px) {
 	.dialogWrap .pic-dialog.logo{
+		width:75%;
+	}
+
+	form .syncSettingsCloze{
 		width:75%;
 	}
 }

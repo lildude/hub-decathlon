@@ -94,17 +94,17 @@
 	</div>
 	<dib class="block">
 		<div class="row">
-			<div class="col-md-2"></div>
 			<div class="col-md-4 col-xs-4">
 		    	<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach.png">
 			</div>
-			<div class="col-md-2 col-xs-4">
+			<div class="col-md-2 col-xs-1"></div>
+			<div class="col-md-2 col-xs-3">
 		    	<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
 			</div>
-			<div class="col-md-2 col-xs-4">
+			<div class="col-md-2 col-xs-1"></div>
+			<div class="col-md-2 col-xs-3">
 	    		<img class="logo" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
 			</div>
-			<div class="col-md-3"></div>
 		</div>
 	</dib>
 	<div class="block">
@@ -113,12 +113,12 @@
 			<div class="serviceButtonWrap serviceButtonLogin row">
 				{% for provider in service_providers %}
 					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-						{% include "service-button.html" with provider=provider inactive=True hideicon=True size=6 %}
+						{% include "service-button.html" with provider=provider inactive=True hideicon=True size=4 centered=True %}
 					{% endif %}
 				{% endfor %}
 			</div>
 		</div>
-	</div>`
+	</div>
 	<div class="block logoPartners">
 		<div class="titleBlock">{% trans "Available services" %}</div>
 		<div class="partnerOuter row">
