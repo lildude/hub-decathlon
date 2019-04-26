@@ -63,7 +63,9 @@
 					<a href="/"><img src="{{ STATIC_URL}}img/{{ celebration_mode.Logo }}" title="{{ celebration_mode.TitleText }}" alt="{{ celebration_mode.TitleText }}"/></a>
 				{% else %}
 					<div class="logoLink">
-						<a href="/"><div class="strong">HUB</div> by <div class="strong">DECATHLON</div></a>
+						<a href="/">
+							<img class="logo" src="{{ STATIC_URL}}img/logo.svg"></img>
+						</a>
 					</div>
 				{% endif %}
 			</div>

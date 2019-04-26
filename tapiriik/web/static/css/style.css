@@ -234,7 +234,7 @@ span.label.warning{
 .center {
 	display: block;
 	margin: 0 auto;
-	padding: 40px 0;
+	padding: 0 0 40px 0;
 	width:100%;
 	max-width:1024px;
 	z-index:1;
@@ -267,7 +267,7 @@ body.mobile .header .logo a{
 	position: relative;
 	font-size:28px;
 	line-height:150%;
-	margin: 10px auto;
+	margin: 0 auto;
 }
 .header .logo .strong{
 	display: inline-block;
@@ -276,6 +276,9 @@ body.mobile .header .logo a{
 }
 .header .logo a{
 	color:#fff;
+	max-width: 50%;
+	display:block;
+	margin:0 auto;
 }
 
 
@@ -853,6 +856,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 @media (min-width: 768px) {
 
+	.header .logo a img{
+		max-width: 60%
+	}
+
 	.col-sm-1 {
 		grid-column-end: span 1;
 	}
@@ -904,6 +911,11 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 @media (min-width: 992px) {
 	.header{
 		margin-bottom:120px;
+	}
+
+	.header .logo a img{
+		max-width:50%;
+		margin:0 auto;
 	}
 	
 	.col-md-1 {
@@ -957,6 +969,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 @media (min-width: 1200px) {
 	.header{
 		margin-bottom:210px;
+	}
+
+	.header .logo a img{
+		max-width: 60%
 	}
 
 	.backgroundWrap .background img.border{
@@ -1040,17 +1056,26 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 
 	.header{
 		margin:0 auto 40px auto;
+		background:linear-gradient(180deg, #0071B9 60%, #4EB0ED 150%);
 	}
 
 	.header .logo a{
 		color:#0071b9;
+		max-width:80%;
+		margin:0 auto;
 	}
 }
-
+body.mobile.unlog .center{
+	padding: 40px 0
+}
 body.mobile.unlog .header {
-	margin-top:90px;
+	margin-top:40px;
+	background:none;
 }
 body.mobile.unlog .header .logo a{
+	color:#fff;
+}
+body.mobile.unlog .block .subtitle{
 	color:#fff;
 }
 body.mobile.unlog .serviceButtonWrap:{
