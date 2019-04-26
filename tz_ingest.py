@@ -10,8 +10,6 @@ from tapiriik.database import tzdb
 print("Dropping boundaries collection")
 tzdb.drop_collection("boundaries")
 
-print("Setting up index")
-tzdb.boundaries.ensure_index([("Boundary", pymongo.GEOSPHERE)])
 
 print("Reading shapefile")
 records = []

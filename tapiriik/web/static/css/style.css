@@ -3,7 +3,6 @@
 body {
 	font-family:'Roboto Regular', sans-serif;
 	font-weight:300;
-;
 	/*background-color:#394863;*/
 	height:100%;
 	width:100%;
@@ -503,28 +502,28 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 
 .service.inactive {
-	/*background:#04050640;*/
+	/*background:#B6B6B9;*/
 	background:linear-gradient(180deg, #04050640 0%, #04050661 100%);
 }
 .service.inactive:hover {
-	/*background:#04050640;*/
+	/*background:#B6B6B9;*/
 	background:linear-gradient(180deg, #04050640 0%, #04050640 100%);
 }
 .service.connected{
-	/*background:#0071B9;*/
-	background:linear-gradient(180deg, #4EB0ED 0%, #0071B9 100%);
+	/*background:#0F79B5;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0F79B5 100%);
 }
 .service.connected:hover{
-	/*background:#0071B9;*/
+	/*background:#0F79B5;*/
 	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%);
 }
 .service.connected.decathlon{
-	/*background:#cee500;*/
-	background:linear-gradient(180deg, #fcba15 0%, #e0a105 100%);
+	/*background:#FDB247;*/
+	background:linear-gradient(180deg, #FDB247 0%, #fba428 100%);
 }
 .service.connected.decathlon:hover{
-	/*background:#cee500;*/
-	background:linear-gradient(180deg, #fcba15 0%, #fcba15 100%);
+	/*background:#FDB247;*/
+	background:linear-gradient(180deg, #FDB247 0%, #FDB247 100%);
 }
 
 .service .button {
