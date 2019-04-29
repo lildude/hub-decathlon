@@ -3,7 +3,6 @@
 body {
 	font-family:'Roboto Regular', sans-serif;
 	font-weight:300;
-;
 	/*background-color:#394863;*/
 	height:100%;
 	width:100%;
@@ -235,7 +234,7 @@ span.label.warning{
 .center {
 	display: block;
 	margin: 0 auto;
-	padding: 40px 0;
+	padding: 0 0 40px 0;
 	width:100%;
 	max-width:1024px;
 	z-index:1;
@@ -245,7 +244,7 @@ span.label.warning{
 .header{
 	font-family:'Roboto Condensed', sans-serif;
 	font-weight:700;
-	margin: 0 auto 40px auto;
+	margin: 0 auto 50px auto;
 }
 
 .header .logo{
@@ -268,7 +267,7 @@ body.mobile .header .logo a{
 	position: relative;
 	font-size:28px;
 	line-height:150%;
-	margin: 10px auto;
+	margin: 0 auto;
 }
 .header .logo .strong{
 	display: inline-block;
@@ -277,8 +276,15 @@ body.mobile .header .logo a{
 }
 .header .logo a{
 	color:#fff;
+	max-width: 50%;
+	display:block;
+	margin:0 auto;
 }
 
+.header .logo a img{
+	max-width: 50%;
+	margin:0 auto;
+}
 
 .content {
 	z-index:1;
@@ -503,28 +509,28 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 
 .service.inactive {
-	/*background:#04050640;*/
+	/*background:#B6B6B9;*/
 	background:linear-gradient(180deg, #04050640 0%, #04050661 100%);
 }
 .service.inactive:hover {
-	/*background:#04050640;*/
+	/*background:#B6B6B9;*/
 	background:linear-gradient(180deg, #04050640 0%, #04050640 100%);
 }
 .service.connected{
-	/*background:#0071B9;*/
-	background:linear-gradient(180deg, #4EB0ED 0%, #0071B9 100%);
+	/*background:#0F79B5;*/
+	background:linear-gradient(180deg, #4EB0ED 0%, #0F79B5 100%);
 }
 .service.connected:hover{
-	/*background:#0071B9;*/
+	/*background:#0F79B5;*/
 	background:linear-gradient(180deg, #4EB0ED 0%, #4EB0ED 100%);
 }
 .service.connected.decathlon{
-	/*background:#cee500;*/
-	background:linear-gradient(180deg, #fcba15 0%, #e0a105 100%);
+	/*background:#FDB247;*/
+	background:linear-gradient(180deg, #FDB247 0%, #fba428 100%);
 }
 .service.connected.decathlon:hover{
-	/*background:#cee500;*/
-	background:linear-gradient(180deg, #fcba15 0%, #fcba15 100%);
+	/*background:#FDB247;*/
+	background:linear-gradient(180deg, #FDB247 0%, #FDB247 100%);
 }
 
 .service .button {
@@ -804,6 +810,13 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 
 @media (min-width: 0) {
 
+	.header .logo .logoLink img.logo.blue{
+		display:block;
+	}
+	.header .logo .logoLink img.logo.white{
+		display:none;
+	}
+
 	.col-xs-1 {
 		grid-column-end: span 1;
 	}
@@ -903,10 +916,13 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	}
 }
 @media (min-width: 992px) {
-	.header{
-		margin-bottom:120px;
-	}
 	
+	.header .logo .logoLink img.logo.blue{
+		display:none;
+	}
+	.header .logo .logoLink img.logo.white{
+		display:block;
+	}
 	.col-md-1 {
 		grid-column-end: span 1;
 	}
@@ -956,9 +972,6 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	}
 }
 @media (min-width: 1200px) {
-	.header{
-		margin-bottom:210px;
-	}
 
 	.backgroundWrap .background img.border{
 		display:block;
@@ -1021,6 +1034,14 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	form .syncSettingsCloze{
 		width:75%;
 	}
+
+	.header{
+		margin:20px auto;
+	}
+
+	.header .logo a img.logo{
+		max-width: 100%;
+	}
 }
 
 @media (max-width: 992px) {
@@ -1039,19 +1060,38 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 		display:none;
 	}
 
+
 	.header{
-		margin:0 auto 40px auto;
+		margin:20px auto;
 	}
 
 	.header .logo a{
 		color:#0071b9;
+		max-width:80%;
+		margin:0 auto;
 	}
-}
+	.header .logo a img.logo{
+		max-width: 60%;
+	}
 
+}
+body.mobile.unlog .center{
+	padding: 40px 0
+}
 body.mobile.unlog .header {
-	margin-top:90px;
+	margin-top:40px;
+	background:none;
 }
 body.mobile.unlog .header .logo a{
+	color:#fff;
+}
+body.mobile.unlog .header .logo a img.logo.blue{
+	display: none;
+}
+body.mobile.unlog .header .logo a img.logo.white{
+	display: block;
+}
+body.mobile.unlog .block .subtitle{
 	color:#fff;
 }
 body.mobile.unlog .serviceButtonWrap:{

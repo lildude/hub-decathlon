@@ -11,6 +11,6 @@ webpack-stats.json
 environment
 venv/
 tapiriik/local_settings.py
-static/
+/static/
 logs/
 .DS_Store

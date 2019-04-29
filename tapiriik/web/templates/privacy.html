@@ -15,7 +15,7 @@
 			</tr>
 			{% for service in services %}
 			<tr class="{% cycle 'odd' '' %}">
-				<td class="serviceCol"><img src="{{ STATIC_URL }}img/decathlon/logos/{{ service.ID }}.png" alt="{{ service.DisplayName }}"></td>
+				<td class="serviceCol"><img src="{{ STATIC_URL }}img/services/{{ service.ID }}.png" alt="{{ service.DisplayName }}"></td>
 				<td>{{ service.email|safe }}</td>
 				<td>{{ service.password|safe }}</td>
 				<td>{{ service.tokens|safe }}</td>
