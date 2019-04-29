@@ -244,7 +244,7 @@ span.label.warning{
 .header{
 	font-family:'Roboto Condensed', sans-serif;
 	font-weight:700;
-	margin: 0 auto 40px auto;
+	margin: 0 auto 50px auto;
 }
 
 .header .logo{
@@ -281,6 +281,10 @@ body.mobile .header .logo a{
 	margin:0 auto;
 }
 
+.header .logo a img{
+	max-width: 50%;
+	margin:0 auto;
+}
 
 .content {
 	z-index:1;
@@ -863,10 +867,6 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 @media (min-width: 768px) {
 
-	.header .logo a img{
-		max-width: 60%
-	}
-
 	.col-sm-1 {
 		grid-column-end: span 1;
 	}
@@ -916,14 +916,6 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	}
 }
 @media (min-width: 992px) {
-	.header{
-		margin-bottom:120px;
-	}
-
-	.header .logo a img{
-		max-width:50%;
-		margin:0 auto;
-	}
 	
 	.header .logo .logoLink img.logo.blue{
 		display:none;
@@ -980,13 +972,6 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	}
 }
 @media (min-width: 1200px) {
-	.header{
-		margin-bottom:210px;
-	}
-
-	.header .logo a img{
-		max-width: 60%
-	}
 
 	.backgroundWrap .background img.border{
 		display:block;
@@ -1049,6 +1034,14 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	form .syncSettingsCloze{
 		width:75%;
 	}
+
+	.header{
+		margin:20px auto;
+	}
+
+	.header .logo a img.logo{
+		max-width: 100%;
+	}
 }
 
 @media (max-width: 992px) {
@@ -1067,9 +1060,9 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 		display:none;
 	}
 
+
 	.header{
-		margin:0 auto 40px auto;
-		/*background:linear-gradient(180deg, #0071B9 60%, #4EB0ED 150%);*/
+		margin:20px auto;
 	}
 
 	.header .logo a{
@@ -1077,6 +1070,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 		max-width:80%;
 		margin:0 auto;
 	}
+	.header .logo a img.logo{
+		max-width: 60%;
+	}
+
 }
 body.mobile.unlog .center{
 	padding: 40px 0

@@ -55,23 +55,23 @@
 		    </div>
 		</div>
 	{% endifequal %}
-	<!-- I blame centre-aligning -->
-	<div class="center">
-		<div class="header">
-			<div class="logo">
-				{% if celebration_mode.Logo %}
-					<a href="/"><img src="{{ STATIC_URL}}img/{{ celebration_mode.Logo }}" title="{{ celebration_mode.TitleText }}" alt="{{ celebration_mode.TitleText }}"/></a>
-				{% else %}
-					<div class="logoLink">
-						<a href="/">
-							<img class="logo blue" alt="Hub by Decathlon" src="{{ STATIC_URL}}img/logo_hub_blue.svg"></img>
-							<img class="logo white" alt="Hub by Decathlon" src="{{ STATIC_URL}}img/logo_hub_white.svg"></img>
-						</a>
-					</div>
-				{% endif %}
-			</div>
-			<div class="logoPad"></div>
+<!-- I blame centre-aligning -->
+	<div class="header">
+		<div class="logo">
+			{% if celebration_mode.Logo %}
+				<a href="/"><img src="{{ STATIC_URL}}img/{{ celebration_mode.Logo }}" title="{{ celebration_mode.TitleText }}" alt="{{ celebration_mode.TitleText }}"/></a>
+			{% else %}
+				<div class="logoLink">
+					<a href="/">
+						<img class="logo blue" alt="Hub by Decathlon" src="{{ STATIC_URL}}img/logo_hub_blue.svg"></img>
+						<img class="logo white" alt="Hub by Decathlon" src="{{ STATIC_URL}}img/logo_hub_white.svg"></img>
+					</a>
+				</div>
+			{% endif %}
 		</div>
+		<div class="logoPad"></div>
+	</div>
+	<div class="center">
 		<div class="content contentMain">
 			<div class="contentWrap">
 				<div class="mainBlock">
