@@ -806,6 +806,13 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 
 @media (min-width: 0) {
 
+	.header .logo .logoLink img.logo.blue{
+		display:block;
+	}
+	.header .logo .logoLink img.logo.white{
+		display:none;
+	}
+
 	.col-xs-1 {
 		grid-column-end: span 1;
 	}
@@ -918,6 +925,12 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 		margin:0 auto;
 	}
 	
+	.header .logo .logoLink img.logo.blue{
+		display:none;
+	}
+	.header .logo .logoLink img.logo.white{
+		display:block;
+	}
 	.col-md-1 {
 		grid-column-end: span 1;
 	}
@@ -1056,7 +1069,7 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 
 	.header{
 		margin:0 auto 40px auto;
-		background:linear-gradient(180deg, #0071B9 60%, #4EB0ED 150%);
+		/*background:linear-gradient(180deg, #0071B9 60%, #4EB0ED 150%);*/
 	}
 
 	.header .logo a{
@@ -1074,6 +1087,12 @@ body.mobile.unlog .header {
 }
 body.mobile.unlog .header .logo a{
 	color:#fff;
+}
+body.mobile.unlog .header .logo a img.logo.blue{
+	display: none;
+}
+body.mobile.unlog .header .logo a img.logo.white{
+	display: block;
 }
 body.mobile.unlog .block .subtitle{
 	color:#fff;
