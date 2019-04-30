@@ -88,7 +88,7 @@ def sync_clear_errorgroup(req, service, group):
 
     _sync = Sync()
     if to_clear_count > 0:
-            db.connections.update_one({"_id": rec._id}, {"$pull":{"SyncErrors":{"UserException.ClearGroup": group}}})
+            db.connections.update_one({"_id": rec._id}, {"$pull":{"SyncErrors":{"UserException_ClearGroup": group}}})
             db.users.update_one({"_id": req.user["_id"]}, {'$inc':{"BlockingSyncErrorCount":-to_clear_count}}) # In the interests of data integrity, update the summary counts immediately as opposed to waiting for a sync to complete.
             _sync.ScheduleImmediateSync(req.user, True) # And schedule them for an immediate full resynchronization, so the now-unblocked services can be brought up to speed.            return HttpResponse()
             return HttpResponse()
