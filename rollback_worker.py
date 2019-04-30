@@ -1,5 +1,5 @@
 from tapiriik.database import db, close_connections
-from tapiriik.settings import RABBITMQ_BROKER_URL, MONGO_HOST, MONGO_FULL_WRITE_CONCERN
+from tapiriik.settings import RABBITMQ_BROKER_URL, MONGO_HOST_API, MONGO_FULL_WRITE_CONCERN
 from tapiriik import settings
 from datetime import datetime
 

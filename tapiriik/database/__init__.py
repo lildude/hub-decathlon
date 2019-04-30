@@ -1,5 +1,5 @@
 from pymongo import MongoClient, MongoReplicaSetClient
-from tapiriik.settings import MONGO_HOST, MONGO_REPLICA_SET, MONGO_CLIENT_OPTIONS, REDIS_HOST, REDIS_CLIENT_OPTIONS, MONGO_DB_PREFIX
+from tapiriik.settings import MONGO_HOST_API, MONGO_REPLICA_SET, MONGO_CLIENT_OPTIONS, REDIS_HOST, REDIS_CLIENT_OPTIONS, MONGO_DB_PREFIX
 
 # MongoDB
 
@@ -7,7 +7,7 @@ client_class = MongoClient if not MONGO_REPLICA_SET else MongoReplicaSetClient
 if MONGO_REPLICA_SET:
 	MONGO_CLIENT_OPTIONS["replicaSet"] = MONGO_REPLICA_SET
 
-_connection = client_class(host=MONGO_HOST, **MONGO_CLIENT_OPTIONS)
+_connection = client_class(host=MONGO_HOST_API, **MONGO_CLIENT_OPTIONS)
 
 db = _connection[MONGO_DB_PREFIX+"tapiriik"]
 cachedb = _connection[MONGO_DB_PREFIX+"tapiriik_cache"]
