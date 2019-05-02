@@ -234,6 +234,7 @@ LOGGING = {
             'class': 'logging.StreamHandler'
         },
         'logfile': {
+            'level': 'ERROR',
             'class': 'logging.handlers.WatchedFileHandler',
             'filename': '/tapiriik/logs/app.log'
         },
