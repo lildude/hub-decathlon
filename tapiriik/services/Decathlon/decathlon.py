@@ -34,7 +34,7 @@ class DecathlonService(ServiceBase):
     UserActivityURL = "http://www.decathloncoach.com/fr-fr/portal/activities/{1}"
     accountOauth = "https://account.geonaute.com/oauth"
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
-    PartialSyncRequiresTrigger = True
+    PartialSyncRequiresTrigger = False
     LastUpload = None
 
     GlobalRateLimits = DECATHLON_RATE_LIMITS
