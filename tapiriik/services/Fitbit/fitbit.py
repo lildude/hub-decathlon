@@ -220,6 +220,44 @@ class FitbitService(ServiceBase):
         exclusions = []
         before = earliestDate = None
 
+        print(svcRecord)
+        """{'_id': ObjectId('5ccc2cda4015dc02542ebb0e'), 'ExternalID': '7GY5LK', 'Service': 'fitbit',
+         'SynchronizedActivities': [], 'Authorization': {
+            'AccessToken': 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkRIWFoiLCJzdWIiOiI3R1k1TEsiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJ3cHJvIHdhY3Qgd2xvYyIsImV4cCI6MTU1NjkxMzQ5MiwiaWF0IjoxNTU2ODg0NjkyfQ.uhug9n45O8FsKSt31LfnETFvG03OkdhY2SiR1dyiVrE',
+            'AccessTokenRequestedAt': datetime.datetime(2019, 5, 3, 11, 58, 18, 277000),
+            'AccessTokenExpiresAt': datetime.datetime(2019, 5, 3, 19, 58, 18, 277000),
+            'RefreshToken': 'a0e5ab34c3e9405d3f3de6beb9e02e14b1429eb792fa6e787449f1bd734c2ad5', 'TokenType': 'Bearer'},
+         'ExtendedAuthorization': None}
+         """
+        def lambdaFunction() :
+            return True
+
+        limit = 1
+        offset = 0
+        sort = "desc"
+        afterDate = None
+        params = {
+            'limit':limit,
+            'offset':offset,
+            'sort':sort,
+            'afterDate':afterDate
+        }
+        activities_uri = 'https://api.fitbit.com/1/user/' + userExtId + '/activities/list.json'
+        while True:
+            resp = self._requestWithAuth(lambda session: session.get(activities_uri,
+                     data=params,
+                     headers={
+                         'Authorization': 'Bearer ' + svcRecord.Authorization.get('AccessToken'),
+                         'Content-Type': 'application/x-www-form-urlencoded'
+                     }), svcRecord)
+
+        # TODO:
+        # ATTENTION : toujours checker si le token doit etre refresh ou non
+        # 0) définition des params (limit, offset, date début, sort, user id, token
+        # 1) Executer la requete pour avoir la liste des activités
+        # 2) on recupere la liste des activités en résultat (s'il y en a) et on les prend une a une pour recup tcx
+        # 3) si pagination donne un "next", on prend la suite sinon fin de boucle
+
         while True:
             if before is not None and before < 0:
                 break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
@@ -285,6 +323,8 @@ class FitbitService(ServiceBase):
                 break
 
         return activities, exclusions
+
+
 
     def SubscribeToPartialSyncTrigger(self, serviceRecord):
         # There is no per-user webhook subscription with Strava.
