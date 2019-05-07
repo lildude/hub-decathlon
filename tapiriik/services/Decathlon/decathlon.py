@@ -92,7 +92,7 @@ class DecathlonService(ServiceBase):
         "367" : ActivityType.RollerSkiing,
         "99" : ActivityType.Other,
         "168": ActivityType.Walking,
-        "402": ActivityType.Walking,
+        #"402": ActivityType.Walking,
         "109":ActivityType.Gym,#pilates
         "174": ActivityType.DownhillSkiing,
         "264" : ActivityType.Other, #bodyboard
