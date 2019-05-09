@@ -21,10 +21,10 @@
 							<span class="label stationary" title="This activity has no sensor data." ng-show="activity.Stationary"><span class="default">{% trans "Stationary" %}</span></span>
 							<span class="label" title="You've marked this activity as private." ng-show="activity.Private"><span class="warning">{% trans "Private" %}</span></span>
 							<div class="sourceBlock">
-								Source: <span class="label source"> <span class="success">{[activity.Source]}</span></span>
+								<strong>Source:</strong> <span class="label source"> <span class="success">{[activity.Source]}</span></span>
 							</div>
 							<div class="destinationBlock">
-								<span class="label source" ng-repeat="destination in activity.Destinations"> <span class="success">{[ destination ]}</span></span>
+								<strong>Destination:</strong> <span class="label source" ng-repeat="destination in activity.Destinations"> <span class="success">{[ destination ]}</span></span>
 							</div>
 						</td>
 					</tr>

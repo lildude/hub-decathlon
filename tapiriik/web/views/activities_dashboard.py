@@ -44,7 +44,7 @@ def activities_fetch_json(req):
                 del activity["Prescence"][svc]
         del activity["Abscence"]
 
-        diff_date = round((activity['EndTime'] - activity["StartTime"]).total_seconds() / 60.0, 0)
+        diff_date = int((activity['EndTime'] - activity["StartTime"]).total_seconds() / 60.0)
         period = str(diff_date) + " minutes"
         activity['readable_date'] = activity["StartTime"].strftime("%Y-%m-%d")
         activity['period'] = period

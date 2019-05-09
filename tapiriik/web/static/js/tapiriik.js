@@ -256,7 +256,7 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	var form = $("<form/>")
 		.addClass('logout')
 		.append(
-			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Never mind'),
+			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Cancel'),
 			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
 			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
 		)
@@ -281,8 +281,9 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	});
 
 	$("#cancel", form).click(function(){
-		history.back();
-		//$().redirect("/");
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
 	});
 
 	tapiriik.CreateServiceDialog(svcId, form);

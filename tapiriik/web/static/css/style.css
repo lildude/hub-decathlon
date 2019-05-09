@@ -765,6 +765,9 @@ form .syncSettingsCloze .syncSettingsSaveButton{
     font-size: 15px;
     line-height: 20px;
 }
+.partnerOuter{
+	align-items: center;
+}
 
 .partnerOuter .partner{
 	text-align: center;

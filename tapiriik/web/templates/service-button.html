@@ -15,9 +15,13 @@
 							<div class="col-md-{% if not hideicon %}10{% else %}12{% endif %} col-xs-{% if not hideicon %}9{% else %}12{% endif %}">
 								<div class="text"><i><!--
 									-->{% if not user and device_support = 'mobile' %}<!--
-										-->OK<!--
+										-->{% trans "Login" %}<!--
 									-->{% else %}<!--
-										-->{{ provider.DisplayName }}<!--
+										-->{% if login %}<!--
+											-->{% trans "Login" %}<!--
+										-->{% else %}<!--
+											-->{{ provider.DisplayName }}<!--
+										-->{% endif %}<!--
 									-->{% endif %}<!--
 								--></i></div>
 							</div>

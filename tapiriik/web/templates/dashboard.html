@@ -112,7 +112,7 @@
 			<div class="serviceButtonWrap serviceButtonLogin row">
 				{% for provider in service_providers %}
 					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-						{% include "service-button.html" with provider=provider inactive=True hideicon=True size=4 centered=True %}
+						{% include "service-button.html" with login=True provider=provider inactive=True hideicon=True size=4 centered=True %}
 					{% endif %}
 				{% endfor %}
 			</div>
