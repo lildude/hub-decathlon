@@ -52,7 +52,7 @@ class FitbitService(ServiceBase):
         #ActivityType.Cycling: "Ride",
         #ActivityType.MountainBiking: "Ride",
         ActivityType.Hiking: 90012,
-        #ActivityType.Running: "Run",
+        ActivityType.Running: 8,
         ActivityType.Walking: 27,
         #ActivityType.Snowboarding: "Snowboard",
         ActivityType.Skating: 15580,
@@ -542,7 +542,7 @@ class FitbitService(ServiceBase):
                 next = data['pagination']['next']
                 offset = offset + 1
 
-            logging.info("\t\t total Fitbit activities downloaded : " + str(index_total))
+        logging.info("\t\t total Fitbit activities downloaded : " + str(index_total))
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
