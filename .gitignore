@@ -10,6 +10,7 @@ webpack-stats.json
 .vscode/
 environment
 venv/
+tapiriik/testing/data/*
 tapiriik/local_settings.py
 /static/
 logs/
