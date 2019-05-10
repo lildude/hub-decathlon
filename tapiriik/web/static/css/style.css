@@ -685,7 +685,7 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 .dialogWrap{
 	position: relative;
 	border: 1px solid #707070;
-	margin:50px auto;
+	margin:90px auto 50px auto;
 	padding:25px;
 
 	color:#0071b9;

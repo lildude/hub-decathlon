@@ -47,7 +47,8 @@ class Service:
             Setio,
             Singletracker,
             Decathlon,
-            PolarPersonalTrainer
+            PolarPersonalTrainer,
+            Fitbit,
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -76,7 +77,8 @@ class Service:
             Singletracker,
             Aerobia,
             Decathlon,
-            PolarPersonalTrainer
+            PolarPersonalTrainer,
+            Fitbit,
         ] + PRIVATE_SERVICES
 
     def WebInit():

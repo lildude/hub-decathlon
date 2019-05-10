@@ -45,6 +45,9 @@ Decathlon = DecathlonService()
 from tapiriik.services.PolarPersonalTrainer import PolarPersonalTrainerService
 PolarPersonalTrainer = PolarPersonalTrainerService()
 
+from tapiriik.services.Fitbit import FitbitService
+Fitbit = FitbitService()
+
 PRIVATE_SERVICES = []
 try:
     from private.tapiriik.services import *
