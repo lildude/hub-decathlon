@@ -231,6 +231,18 @@ span.label.warning{
 }
 
 
+.backHome{
+    /*background: linear-gradient(180deg, #4EB0ED 0%, #0F79B5 100%);*/
+    position: fixed;
+    z-index: 50;
+    max-width: 50px;
+    max-height: 50px;
+}
+.backHome a{
+	line-height: 100%;
+	
+}
+
 .backgroundWrap{
 	position: absolute;
 	display:block;
@@ -795,10 +807,13 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	background-color:#0071b9;
 }
 
-.dialogWrap form.logout{
+.dialogWrap form.logout,
+.dialogWrap div.logout{
 	text-align:center;
 }
 
+.dialogWrap div.logout a.button,
+.dialogWrap div.logout button,
 .dialogWrap form.logout a.button,
 .dialogWrap form.logout button{
 	display:inline-block;
@@ -962,6 +977,11 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 }
 @media (min-width: 992px) {
 	
+	.backHome{
+		left:10%;
+		top:25%;
+	}
+
 	.header .logo .logoLink img.logo.blue{
 		display:none;
 	}
@@ -1017,6 +1037,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	}
 }
 @media (min-width: 1200px) {
+	.backHome{
+		left:15%;
+		top:35%;
+	}
 
 	.backgroundWrap .background img.border{
 		display:block;

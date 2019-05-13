@@ -326,9 +326,18 @@ tapiriik.CreateDirectLoginForm = function(svcId){
 					.attr('for','persist')
 					.html('Save these details')
 			),
-		$('<button>')
-			.attr('type','submit')
-			.html('Login')
+		$('<div>')
+			.addClass('logout')
+			.append(
+				$('<button>')
+					.attr('type','submit')
+					.addClass('button button-primary')
+					.html('Login'),
+
+				$('<button/ id="cancel">')
+					.addClass('cancel button button-danger')
+					.html('Cancel'),
+			)
 	);
 
 
@@ -336,6 +345,14 @@ tapiriik.CreateDirectLoginForm = function(svcId){
 	if (!tapiriik.ServiceInfo[svcId].UsesExtendedAuth){
 		$(".persist-controls",form).hide();
 	}
+
+
+	$("#cancel", form).click(function(){
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
+	});
+
 	var loginPending = false;
 	form.bind("submit", function(){
 		if (loginPending) return false;
