@@ -34,6 +34,7 @@ class FitbitService(ServiceBase):
     header_line = FITBIT_CLIENT_ID + ":" + FITBIT_CLIENT_SECRET
     header_byte = header_line.encode("utf-8")
     header_encode = base64.b64encode(header_byte)
+    header_encode = header_encode.decode("utf-8")
 
     ID = "fitbit"
     DisplayName = "Fitbit"
@@ -292,7 +293,7 @@ class FitbitService(ServiceBase):
             response = requests.post(self.FITBIT_REFRESH_URI,
                                      data=params,
                                      headers={
-                                         'Authorization': 'Basic '+ self.header_encode,
+                                         'Authorization': 'Basic ' + self.header_encode,
                                          'Content-Type': 'application/x-www-form-urlencoded'
                                      })
 
