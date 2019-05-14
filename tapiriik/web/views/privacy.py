@@ -13,7 +13,8 @@ def privacy(request):
     services = dict([[x.ID, {"DisplayName": x.DisplayName, "ID": x.ID}] for x in Service.List() if x.ID not in WITHDRAWN_SERVICES])
 
     services["garminconnect"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["strava"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "strava" in services :
+        services["strava"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
     #services["sporttracks"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
     #services["dropbox"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":CACHED})
     #services["runkeeper"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
@@ -34,7 +35,8 @@ def privacy(request):
     #services["aerobia"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
     #services["polarflow"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
     services["decathlon"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO}),
-    services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
+    if "fitbit" in services :
+        services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
     #services["polarpersonaltrainer"].update({"email": YES, "password": YES, "tokens": NO, "metadata": YES, "data":NO})
 
     for svc_id in SOFT_LAUNCH_SERVICES:

@@ -22,13 +22,6 @@
 				<td>{{ service.metadata|safe }}</td>
 			</tr>
 			{% endfor %}
-			<tr class="{% if services|length|divisibleby:2 %}odd{% endif %}">
-				<td class="serviceCol" style="font-size:140%">Automatic Sync</td>
-				<td><span class="policy yes">Yes</span><sup>2</sup></td>
-				<td>N/A</td>
-				<td>N/A</td>
-				<td>N/A</td>
-			</tr>
 		</table>
 		<div class="titleBlock marginBottom0">{% trans "..until you disconnect your account or they are no longer needed, whichever is sooner" %}</div>
 
@@ -52,8 +45,6 @@
 	<div style="clear:both;"></div>
 
 	<div class="tooltip tooltipGrey"><p><sup>1</sup>{% trans " I've done a good deal to keep your password safe, but there has to be a way for exercisync to use it to sync your account. Therefore, anyone with enough access and resources to the exercisync database and servers could access it, too." %}</p></div>
-
-	<div class="tooltip tooltipGrey"><p><sup>2</sup> {% trans " The email address you used to pay is stored so that you can transfer or recover your payment." %}</p></div>
 
 	<div class="titleBlock marginBottom0">{% trans "All the juicy details" %}</div>
 
