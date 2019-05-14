@@ -194,7 +194,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.providers',
     'tapiriik.web.context_processors.celebration_mode',
     'tapiriik.web.context_processors.device_support',
+    'tapiriik.web.context_processors.background_use',
     'django.core.context_processors.static',
+    'django.core.context_processors.request',
     'django.template.context_processors.i18n')
 
 INSTALLED_APPS = (

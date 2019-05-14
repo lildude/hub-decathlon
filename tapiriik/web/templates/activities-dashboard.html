@@ -25,6 +25,7 @@
 							<span class="label stationary" title="This activity has no sensor data." ng-show="activity.Stationary"><span class="default">{% trans "Stationary" %}</span></span>
 							<span class="label" title="You've marked this activity as private." ng-show="activity.Private"><span class="warning">{% trans "Private" %}</span></span>
 							<div class="prescenceList">
+								<p><strong>{% trans "Synchronized : "%}</strong></p>
 								<span ng-repeat="svc in activity.Prescence|filter:{Present:true}" class="label"> <span class="success">{[DisplayNameByService(svc.Service)]}</span></span>
 							</div>
 							<div class="absenceList" ng-show="activity.ShowDetail && !activity.FullySynchronized">

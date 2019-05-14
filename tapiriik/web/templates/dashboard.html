@@ -7,33 +7,6 @@
 
 {% block content %}
 {% if user != none %}
-	{% if user.ConnectedServices|length > 1 %}
-
-		<div class="block">
-			<div class="syncButtonBlock">
-				<div class="syncButtonAttachment left">{% trans "Queueing to Synchronize" %}</div>
-				<div class="syncButtonWrap">
-					<a class="syncButton">{% trans "Synchronize now" %}<div class="syncButtonIcon"></div></a>
-					<!--<a href="#/settings" class="syncSettingsNubbin"><span class="sr">{% trans "Synchronization Settings" %}</span><div class="syncSettingsNubbinIcon"></div></a>-->
-				</div>
-				<div class="syncButtonAttachment right">{% trans "Attached info 10%" %}</div>
-			</div>
-		</div> 
-		<div class="block marginBottom10">
-			{% include "settings-block.html" %}
-		</div>
-		<div class="block">
-			{% include "recent-sync-activity-block.html" %}
-		</div> 
-		<div class="block text-center">
-			<a href="{% url 'activities_dashboard' %}" class="button buttonLarge"><strong>{% trans "All Activities" %}</strong></a>
-		</div>
-		<div class="block">
-			{% if user.NonblockingSyncErrorCount > 0 %}
-				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
-			{% endif %}
-		</div> 
-	{% endif %}
 	<div class="block">
 		<div class="titleBlock">{% trans "Manage your services" %}</div>
 		<div class="serviceButtonOuter">
@@ -53,6 +26,17 @@
 			</div>
 		</div>
 	</div>
+	{% if user.ConnectedServices|length > 1 %}
+
+		<div class="block manageSyncBlock">
+			{% include "manage-sync.html" %}
+		</div>
+		<div class="block">
+			{% if user.NonblockingSyncErrorCount > 0 %}
+				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
+			{% endif %}
+		</div> 
+	{% endif %}
 
 	<div class="block">
 		{% for connection in user.ConnectedServices|svc_populate_conns %}
@@ -97,12 +81,15 @@
 			<div class="col-md-3"></div>
 			<div class="col-md-2 col-xs-4">
 		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
+		    	<p class="text decathlonapp"><strong>DECATHLON Connect</strong></p>
 			</div>
 			<div class="col-md-2 col-xs-4">
 		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach-rounded.png">
+		    	<p class="text decathlonapp"><strong>DECATHLON Coach</strong></p>
 			</div>
 			<div class="col-md-2 col-xs-4">
 	    		<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
+		    	<p class="text decathlonapp"><strong>E-Connected</strong></p>
 			</div>
 		</div>
 	</dib>
@@ -112,7 +99,7 @@
 			<div class="serviceButtonWrap serviceButtonLogin row">
 				{% for provider in service_providers %}
 					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-						{% include "service-button.html" with provider=provider inactive=True hideicon=True size=4 centered=True %}
+						{% include "service-button.html" with login=True provider=provider inactive=True hideicon=True size=4 centered=True %}
 					{% endif %}
 				{% endfor %}
 			</div>

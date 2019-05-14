@@ -1,0 +1,78 @@
+{% load i18n %}
+
+<div class="titleBlock">{% trans "Manage sync" %}</div>
+
+<div class="row">
+	<div class="col-md-1">
+	</div>
+	<div class="col-md-10">
+		<div class="manageSync">
+			<div class="row syncButtonBlock">
+				<div class="col-md-9 col-xs-6">
+					<div class="syncButtonAttachment text-left">
+						<p class="text">{% trans "Push sync" %}</p>
+					</div>
+				</div>
+				<div class="col-md-3 col-xs-6">
+					<div class="syncButtonWrap">
+						<!--<p class="text syncButtonAttachment left"></p>-->
+						<!--<p class="text syncButtonAttachment right">{% trans "Attached info 10%" %}</p>-->
+						<a class="syncButton button ">
+							<div class="row">
+								<div class="col-md-10 col-xs-9">
+									<div class="text"><strong>{% trans "Sync now" %}</strong></div>
+								</div>
+								<div class="col-md-2 col-xs-3">
+									<div class="icon syncButtonIcon"><img src="{{ STATIC_URL }}img/decathlon/SVG/refreshwhite.svg"></div>
+								</div>
+							</div>
+						</a>
+					</div>
+				</div>
+
+			</div>
+			<div class="row syncSettingsBlock" ng-controller="SyncSettingsController">
+				<div class="col-md-9 col-xs-6 text-left">
+					<p class="text">{% trans "Sync date" %}</p>
+				</div>
+				<div class="col-md-3 col-xs-6 internalPopover">
+					<div class="text-right popoverOuterBorder">
+						
+						<div class="popoverInner">
+							<form>
+								<div class="syncSettingsCloze row">
+									<div class="col-md-12 col-xs-12">
+										<input type="text" placeholder="{% trans 'date start' %}" ng-model="sync_skip_before_entry" class="date js-datepicker" ng-change="save()"><!--<button class="syncSettingsSaveButton button button-primary" ng-click="save()">{% trans "Save" %}</button>-->
+										<div class="panel-block panel" ng-show="config_result"></div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row last">
+				<div class="col-md-9 col-xs-6">
+					<div class="text-left">
+						<p class="text">{% trans "Last sync activities" %}</p>
+					</div>
+				</div>
+				<div class="col-md-3 col-xs-6">
+					<a href="{% url 'activities_dashboard' %}" class="seeButton button">
+						<div class="row">
+							<div class="col-md-10 col-xs-9">
+								<div class="text"><strong>{% trans "See all" %}</strong></div>
+							</div>
+							<div class="col-md-2 col-xs-3">
+								<div class="icon seeButtonIcon"><img src="{{ STATIC_URL }}img/decathlon/SVG/viewwhite.svg"></div>
+							</div>
+						</div>
+					</a>
+				</div>
+				<div class="history col-md-12 col-xs-12">
+					{% include "recent-sync-activity-block.html" %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

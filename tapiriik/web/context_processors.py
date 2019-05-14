@@ -4,6 +4,7 @@ from tapiriik.sync import Sync
 from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
 from tapiriik.database import db
 from datetime import datetime
+from random import randint
 import json
 
 def providers(req):
@@ -101,3 +102,6 @@ def device_support(req):
             if req.GET['mobile'] is True or req.GET['mobile'] is 1 or req.GET['mobile'] is '1' or req.GET['mobile'] is 'true':
                 device_support = 'mobile'
     return {"device_support": device_support}
+
+def background_use(req):
+    return {'background_use': randint(1, 5)}

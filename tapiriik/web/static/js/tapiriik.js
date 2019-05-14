@@ -256,7 +256,7 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	var form = $("<form/>")
 		.addClass('logout')
 		.append(
-			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Never mind'),
+			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Cancel'),
 			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
 			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
 		)
@@ -281,8 +281,9 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	});
 
 	$("#cancel", form).click(function(){
-		history.back();
-		//$().redirect("/");
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
 	});
 
 	tapiriik.CreateServiceDialog(svcId, form);
@@ -325,9 +326,18 @@ tapiriik.CreateDirectLoginForm = function(svcId){
 					.attr('for','persist')
 					.html('Save these details')
 			),
-		$('<button>')
-			.attr('type','submit')
-			.html('Login')
+		$('<div>')
+			.addClass('logout')
+			.append(
+				$('<button>')
+					.attr('type','submit')
+					.addClass('button button-primary')
+					.html('Login'),
+
+				$('<button/ id="cancel">')
+					.addClass('cancel button button-danger')
+					.html('Cancel'),
+			)
 	);
 
 
@@ -335,6 +345,14 @@ tapiriik.CreateDirectLoginForm = function(svcId){
 	if (!tapiriik.ServiceInfo[svcId].UsesExtendedAuth){
 		$(".persist-controls",form).hide();
 	}
+
+
+	$("#cancel", form).click(function(){
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
+	});
+
 	var loginPending = false;
 	form.bind("submit", function(){
 		if (loginPending) return false;

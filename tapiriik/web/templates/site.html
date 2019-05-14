@@ -51,11 +51,24 @@
     	<div class="backgroundWrap">
 	    	<div class="background">
 	    		<img class="border" src="{{ STATIC_URL}}img/decathlon/border.png">
-	    		<img class="header" src="{{ STATIC_URL}}img/decathlon/main.png">
+	    		{% if background_use %}
+	    			<img class="header" src="{{ STATIC_URL}}img/decathlon/background_0{{background_use}}.png">
+	    		{% else %}
+	    			<img class="header" src="{{ STATIC_URL}}img/decathlon/main.png">
+	    		{% endif %}
 		    </div>
 		</div>
 	{% endifequal %}
 <!-- I blame centre-aligning -->
+{% if request.path != "/" %}
+	<div class="backHome">
+		<a href="/" class="backHomeLink">
+			<!--<img class="backHomePic web" alt="go back home" src="{{ STATIC_URL }}img/decathlon/SVG/backhomewhite.svg">-->
+			<img class="backHomePic mobile" alt="go back home" src="{{ STATIC_URL }}img/decathlon/SVG/backhomeblue.svg">
+		</a>
+	</div>
+{% endif %}
+	{% block backHome %}{% endblock %}
 	<div class="header">
 		<div class="logo">
 			{% if celebration_mode.Logo %}
