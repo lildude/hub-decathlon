@@ -843,7 +843,7 @@ class SynchronizationTask:
     def _pushRecentSyncActivity(self, activity, source, destinations):
         key = SynchronizationTask._syncActivityRedisKey(self.user)
 
-        diff_date = int((activity.EndTime - activity.StartTime).total_seconds() / 60.0)
+        diff_date = round((activity.EndTime - activity.StartTime).total_seconds() / 60.0,0)
         period = str(diff_date) + " minutes"
 
         redis.lpush(key, json.dumps({
