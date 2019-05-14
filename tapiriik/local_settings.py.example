@@ -78,7 +78,6 @@ DECATHLON_RATE_LIMITS = []
 
 FITBIT_CLIENT_ID = "############"
 FITBIT_CLIENT_SECRET = "##########"
-FITBIT_CALLBACK = "URI CALLBACK"
 FITBIT_DURATION = 28800# 8 hours in s
 
 # Service available for first connection

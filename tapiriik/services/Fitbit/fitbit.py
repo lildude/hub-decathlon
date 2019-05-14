@@ -1,4 +1,4 @@
-from tapiriik.settings import WEB_ROOT, FITBIT_CALLBACK, FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET, FITBIT_DURATION
+from tapiriik.settings import WEB_ROOT, FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET, FITBIT_DURATION
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb, db
@@ -21,6 +21,7 @@ import re
 import time
 import json
 import pprint
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ class FitbitService(ServiceBase):
     FITBIT_AUTH_URI = "https://www.fitbit.com/oauth2/authorize"
     FITBIT_REFRESH_URI = "https://api.fitbit.com/oauth2/token"
     FITBIT_REVOKE_URI = "https://api.fitbit.com/oauth2/revoke"
+
+
+    header_line = FITBIT_CLIENT_ID + ":" + FITBIT_CLIENT_SECRET
+    header_byte = header_line.encode("utf-8")
+    header_encode = base64.b64encode(header_byte)
 
     ID = "fitbit"
     DisplayName = "Fitbit"
@@ -44,10 +50,7 @@ class FitbitService(ServiceBase):
 
     GlobalRateLimits = None
 
-    #UserProfileURL = "http://www.strava.com/athletes/{0}"
-    #UserActivityURL = "http://app.strava.com/activities/{1}"
 
-    # For mapping common->Strava; no ambiguity in Strava activity type
     _activityTypeMappings = {
         #ActivityType.Cycling: "Ride",
         #ActivityType.MountainBiking: "Ride",
@@ -71,7 +74,6 @@ class FitbitService(ServiceBase):
         #ActivityType.StandUpPaddling: "StandUpPaddling",
     }
 
-    # For mapping Strava->common
     _reverseActivityTypeMappings = {
         90001: ActivityType.Cycling,
         0: ActivityType.Gym,
@@ -254,7 +256,7 @@ class FitbitService(ServiceBase):
 
 
     def UserUploadedActivityURL(self, uploadId):
-        return "https://www.strava.com/activities/%d" % uploadId
+        return "https://www.fitbit.com/activities"
 
     # Use this function to get Autorization URL
     def WebInit(self):
@@ -290,7 +292,7 @@ class FitbitService(ServiceBase):
             response = requests.post(self.FITBIT_REFRESH_URI,
                                      data=params,
                                      headers={
-                                         'Authorization': 'Basic MjJESFhaOjQzMWFhOTQxMTIzOTEwNGI3OWJkNzE4NmMyM2Y3NzAx',
+                                         'Authorization': 'Basic '+ self.header_encode,
                                          'Content-Type': 'application/x-www-form-urlencoded'
                                      })
 
@@ -325,7 +327,6 @@ class FitbitService(ServiceBase):
             "grant_type": "authorization_code",
             "code": code,
             "clientId": FITBIT_CLIENT_ID,
-            #"client_secret": FITBIT_CLIENT_SECRET,
             "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "fitbit"}),
             "expires_in": FITBIT_DURATION
         }
@@ -333,7 +334,7 @@ class FitbitService(ServiceBase):
         response = requests.post(self.FITBIT_REFRESH_URI,
                                  data=params,
                                  headers={
-                                    'Authorization': 'Basic MjJESFhaOjQzMWFhOTQxMTIzOTEwNGI3OWJkNzE4NmMyM2Y3NzAx',
+                                    'Authorization': 'Basic '+ self.header_encode,
                                     'Content-Type': 'application/x-www-form-urlencoded'
                                  })
 
@@ -363,7 +364,7 @@ class FitbitService(ServiceBase):
                                                                       "token": serviceRecord.Authorization.get('AccessToken')
                                                                   },
                                                                   headers={
-                                                                      'Authorization': 'Basic MjJESFhaOjQzMWFhOTQxMTIzOTEwNGI3OWJkNzE4NmMyM2Y3NzAx',
+                                                                      'Authorization': 'Basic '+ self.header_encode,
                                                                       'Content-Type': 'application/x-www-form-urlencoded'
                                                                   }), serviceRecord)
 
@@ -484,7 +485,6 @@ class FitbitService(ServiceBase):
                     #activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride[
                     #    "moving_time"] if "moving_time" in ride and ride[
                     #    "moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
-                    # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
                     # Todo: find fitbit data name
                     #if "average_watts" in ride:
                     #    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,
@@ -682,8 +682,3 @@ class FitbitService(ServiceBase):
         cachedb.fitbit_cache.remove({"Owner": serviceRecord.ExternalID})
         cachedb.fitbit_activity_cache.remove({"Owner": serviceRecord.ExternalID})
 
-    def DeleteActivity(self, serviceRecord, uploadId):
-        # TODO : update uri to delete fitbit activity (set user id and log id (activity) in uri)
-        # TODO : check code status result
-        del_res = self._requestWithAuth(lambda session: session.delete("https://www.strava.com/api/v3/activities/%d" % uploadId), serviceRecord)
-        del_res.raise_for_status()
