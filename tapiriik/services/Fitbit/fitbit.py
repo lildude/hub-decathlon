@@ -378,7 +378,7 @@ class FitbitService(ServiceBase):
         before = earliestDate = None
 
         # define low parameter
-        limit = 1
+        limit = 20
         offset = 0
         sort = "desc"
         # get user Fitbit ID
@@ -450,24 +450,17 @@ class FitbitService(ServiceBase):
                     index_total = index_total +1
                     activity = UploadedActivity()
 
-                    #activity.TZ = pytz.timezone(re.sub("^\([^\)]+\)\s*", "", ftbt_activity["startTime"]))  # Comes back as "(GMT -13:37) The Stuff/We Want""
-                    #activity.StartTime = pytz.utc.localize(datetime.strptime(ftbt_activity["startTime"][0:27], "%Y-%m-%dT%H:%M:%SZ"))
+                    #parse date start to get timezone and date
                     parsedDate = ftbt_activity["startTime"][0:19] + ftbt_activity["startTime"][23:]
                     activity.StartTime = datetime.strptime(parsedDate, "%Y-%m-%dT%H:%M:%S%z")
-                    activity.TZ = pytz.utc#activity.StartTime.tzinfo#.timezone.localize(activity.StartTime)
+                    activity.TZ = pytz.utc
 
                     logger.debug("\tActivity s/t %s: %s" % (activity.StartTime, ftbt_activity["activityName"]))
-
-                    # TODO : check use of before and earliestDate
-                    """
-                    if not earliestDate or activity.StartTime < earliestDate:
-                        earliestDate = activity.StartTime
-                        before = calendar.timegm(activity.StartTime.astimezone(pytz.utc).timetuple())
-                    """
 
                     activity.EndTime = activity.StartTime + timedelta(0, (ftbt_activity["duration"]/1000))
                     activity.ServiceData = {"ActivityID": ftbt_activity["logId"], "Manual": ftbt_activity["logType"]}
 
+                    # check if activity type ID exists
                     if ftbt_activity["activityTypeId"] not in self._reverseActivityTypeMappings:
                         exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ftbt_activity["activityTypeId"],
                                                              activity_id=ftbt_activity["logId"],
@@ -487,28 +480,28 @@ class FitbitService(ServiceBase):
                             max=ftbt_activity["speed"]
                         )
                     activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ftbt_activity["calories"])
-                    # Todo: a verifier
+                    # Todo: find fitbit data name
                     #activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride[
                     #    "moving_time"] if "moving_time" in ride and ride[
                     #    "moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
                     # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
-                    # Todo: a verifier
+                    # Todo: find fitbit data name
                     #if "average_watts" in ride:
                     #    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,
                     #                                             avg=ride["average_watts"])
-                    # Todo: a verifier
+
                     if "averageHeartRate" in ftbt_activity:
                         activity.Stats.HR.update(
                             ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=ftbt_activity["averageHeartRate"]))
-                    # Todo: a verifier
+                    # Todo: find fitbit data name
                     #if "max_heartrate" in ride:
                     #    activity.Stats.HR.update(
                     #        ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, max=ride["max_heartrate"]))
-                    # Todo: a verifier
+                    # Todo: find fitbit data name
                     #if "average_cadence" in ride:
                     #    activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.RevolutionsPerMinute,
                     #                                                    avg=ride["average_cadence"]))
-                    # Todo: a verifier
+                    # Todo: find fitbit data name
                     #if "average_temp" in ride:
                     #    activity.Stats.Temperature.update(
                     #        ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
@@ -517,23 +510,24 @@ class FitbitService(ServiceBase):
                         activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
                                                                   value=ftbt_activity["calories"])
                     activity.Name = ftbt_activity["activityName"]
-                    # Todo: a verifier
-                    activity.Private = False #ride["private"]
+
+
+                    activity.Private = False
                     if ftbt_activity['logType'] is 'manual':
                         activity.Stationary = True
                     else:
                         activity.Stationary = False
-                    #activity.Stationary = ftbt_activity['logType'].text
-                    # Todo: a verifier
+
+
+                    # Todo: find fitbit data
                     #activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
                     activity.AdjustTZ()
                     activity.CalculateUID()
                     activities.append(activity)
                     logging.info("\t\t Fitbit Activity ID : " + str(ftbt_activity["logId"]))
 
-                # TODO: check if we really use these var
-                #if not exhaustive or not earliestDate:
-                #    break
+                if not exhaustive:
+                    break
             # get next info for while condition and prepare offset for next request
             if 'next' not in data['pagination'] or not data['pagination']['next']:
                 next = None
