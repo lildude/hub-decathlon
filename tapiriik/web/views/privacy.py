@@ -12,29 +12,50 @@ def privacy(request):
 
     services = dict([[x.ID, {"DisplayName": x.DisplayName, "ID": x.ID}] for x in Service.List() if x.ID not in WITHDRAWN_SERVICES])
 
-    services["garminconnect"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "garminconnect" in services :
+        services["garminconnect"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
     if "strava" in services :
         services["strava"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["sporttracks"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["dropbox"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":CACHED})
-    #services["runkeeper"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["rwgps"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["trainingpeaks"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["endomondo"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["motivato"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["nikeplus"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["velohero"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["runsense"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["trainerroad"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["smashrun"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["beginnertriathlete"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data": NO})
-    #services["trainasone"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["pulsstory"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["setio"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["singletracker"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    #services["aerobia"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
-    #services["polarflow"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
-    services["decathlon"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO}),
+    if "sporttracks" in services :
+        services["sporttracks"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "dropbox" in services :
+        services["dropbox"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":CACHED})
+    if "runkeeper" in services :
+        services["runkeeper"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "rwgps" in services :
+        services["rwgps"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "trainingpeaks" in services :
+        services["trainingpeaks"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "endomondo" in services :
+        services["endomondo"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "motivato" in services :
+        services["motivato"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "nikeplus" in services :
+        services["nikeplus"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "velohero" in services :
+        services["velohero"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "runsense" in services :
+        services["runsense"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "trainerroad" in services :
+        services["trainerroad"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "smashrun" in services :
+        services["smashrun"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "beginnertriathlete" in services :
+        services["beginnertriathlete"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data": NO})
+    if "trainasone" in services :
+        services["trainasone"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "pulsstory" in services :
+        services["pulsstory"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "setio" in services :
+        services["setio"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "singletracker" in services :
+        services["singletracker"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "aerobia" in services :
+        services["aerobia"].update({"email": OPTIN, "password": OPTIN, "tokens": NO, "metadata": YES, "data":NO})
+    if "polarflow" in services :
+        services["polarflow"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "decathlon" in services :
+        services["decathlon"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO}),
     if "fitbit" in services :
         services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
     #services["polarpersonaltrainer"].update({"email": YES, "password": YES, "tokens": NO, "metadata": YES, "data":NO})

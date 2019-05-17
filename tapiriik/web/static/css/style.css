@@ -233,7 +233,7 @@ span.label.warning{
 
 .backHome{
     /*background: linear-gradient(180deg, #4EB0ED 0%, #0F79B5 100%);*/
-    position: fixed;
+    position: absolute;
     z-index: 50;
     max-width: 50px;
     max-height: 50px;
@@ -1039,7 +1039,7 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 @media (min-width: 1200px) {
 	.backHome{
 		left:15%;
-		top:35%;
+		top:40%;
 	}
 
 	.backgroundWrap .background img.border{
