@@ -3,7 +3,7 @@ from .totp import *
 from tapiriik.database import db
 from tapiriik.sync import Sync
 from tapiriik.services import ServiceRecord
-from tapiriik.settings import DIAG_AUTH_TOTP_SECRET, DIAG_AUTH_PASSWORD
+from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD
 from datetime import datetime, timedelta
 from pymongo.read_preferences import ReadPreference
 from bson.objectid import ObjectId
@@ -248,7 +248,7 @@ class User:
 
 class DiagnosticsUser:
     def IsAuthenticated(req):
-        return DIAG_AUTH_TOTP_SECRET is None or DIAG_AUTH_PASSWORD is None or ("diag_auth" in req.session and req.session["diag_auth"] is True)
+        return DIAG_AUTH_LOGIN_SECRET is None or DIAG_AUTH_PASSWORD is None or ("diag_auth" in req.session and req.session["diag_auth"] is True)
 
     def Authorize(req):
         req.session["diag_auth"] = True
