@@ -48,6 +48,9 @@ PolarPersonalTrainer = PolarPersonalTrainerService()
 from tapiriik.services.Fitbit import FitbitService
 Fitbit = FitbitService()
 
+from tapiriik.services.GarminHealth import GarminHealthService
+GarminHealth = GarminHealthService()
+
 PRIVATE_SERVICES = []
 try:
     from private.tapiriik.services import *
