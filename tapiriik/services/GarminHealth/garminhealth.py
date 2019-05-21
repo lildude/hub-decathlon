@@ -29,6 +29,8 @@ import string
 import urllib.parse
 from six.moves.urllib.parse import parse_qs
 import random
+from random import randint
+
 
 logger = logging.getLogger(__name__)
 
@@ -382,6 +384,7 @@ class GarminHealthService(ServiceBase):
         timestamp_now_encoded = urllib.parse.quote_plus(timestamp_now, safe='%')
 
         oauth_nonce = self._randomString(16)#"2950197265"
+        oauth_nonce = str("%10d" % randint(0,9999999999))
         oauth_nonce_encoded = urllib.parse.quote_plus(oauth_nonce, safe='%')
 
         garmin_key_encoded = urllib.parse.quote_plus(GARMIN_KEY, safe='%')
@@ -399,7 +402,6 @@ class GarminHealthService(ServiceBase):
         # 2) Path
         path = self.ACCESS_TOKEN  # "https://connectapi.garmin.com/oauth-service/oauth/access_token"
         path_encoded = urllib.parse.quote(path, safe="%")
-
 
         # 3) Parameter string
         parameter_string = "oauth_consumer_key=" + GARMIN_KEY \
@@ -463,18 +465,39 @@ class GarminHealthService(ServiceBase):
                               + '", oauth_version="' + version_encoded + '"'
 
         payload = ""
+        from_garmin = 'nonce="6407187735", oauth_signature="rFMgPFElM1PaP59us3%2FIXRkUhzE%3D", oauth_consumer_key="899561ca-4602-4ef7-936b-2ea447a10efe", oauth_token="d33825ca-3e25-418e-ac58-bddc191c0110", oauth_timestamp="1558450463", oauth_verifier="YbnikzbvKF", oauth_signature_method="HMAC-SHA1", oauth_version="1.0"'
         headers = {
-            'Authorization': 'OAuth ' + header_oauth_string
+            'Authorization': 'OAuth ' + from_garmin #+ header_oauth_string
         }
 
         print(' Headers ----------')
         print(header_oauth_string)
+        
         print(headers)
         print('----------')
 
         # Call request_token
         resp = requests.request("POST", self.REQUEST_TOKEN, data=payload, headers=headers)
         #resp = None
+        # FROM WEB TOOL GARMIN ( WORKING)
+        #OAuth oauth_nonce="4821830223",
+        # oauth_signature="TzOm%2BXYO2nj9CC0ArmqOt9Y60aM%3D",
+        # oauth_consumer_key="899561ca-4602-4ef7-936b-2ea447a10efe",
+        # oauth_token="87c7986c-90aa-41d7-8e0f-be5b5b9ded0f",
+        # oauth_timestamp="1558449344",
+        # oauth_verifier="KlaAgw7RYK",
+        # oauth_signature_method="HMAC-SHA1",
+        # oauth_version="1.0"
+
+        # FROM DEV ( NOT WORKING)
+        #OAuth oauth_nonce="7588745923",
+        # oauth_signature="l8EJ%2BR%2FsgUgejfOIhs8O%2BvUgbl4%3D",
+        # oauth_consumer_key="899561ca-4602-4ef7-936b-2ea447a10efe",
+        # oauth_token="3dddeaa3-ffd8-44ba-95a9-4da53169b381",
+        # oauth_timestamp="1558449097",
+        # oauth_verifier="c7MgS8MJXX",
+        # oauth_signature_method="HMAC-SHA1",
+        # oauth_version="1.0"
 
         print(resp)
         print('----------')
