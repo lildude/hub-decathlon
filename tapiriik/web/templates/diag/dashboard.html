@@ -3,106 +3,110 @@
 {% block title %}diagnostics{% endblock %}
 {% block content %}
 <div style="text-align:left">
-	<h3>Stats</h3>
-	<ul style="list-style:none;margin:0;padding:0;">
-		<li><b>Users:</b> {{ userCt }} ({{ autosyncCt }} automatically synchronizing, {{ scheduledCt }} scheduled)</li>
-		<li><b>Aggregated distance:</b> {{ stats.TotalDistanceSynced|format_meters }} km</li>
-		<li><b>Sync distance rate (24hr):</b> {{ stats.LastDayDistanceSynced|format_daily_meters_hourly_rate }} km/h</li>
-		<li><b>Sync distance rate (1hr):</b> {{ stats.LastHourDistanceSynced|format_meters }} km/h</li>
-		<li><b>Sync queue head wait:</b> {{ stats.QueueHeadTime|format_seconds_minutes }} min</li>
-		<li><b>Sync enqueue wait:</b> {{ stats.EnqueueTime|format_seconds_minutes }} min</li>
-		<li><b>Sync time used:</b> {{ stats.TotalSyncTimeUsed|format_seconds_minutes }} min ({{ loadFactor|format_fractional_percentage }} load)</li>
-		<li><b>Sync ops:</b> {{ stats.LastHourSynchronizationCount }}</li>
-		<li><b>Avg time/sync (1hr):</b> {{ stats.AverageSyncDuration|format_seconds_minutes }} min</li>
-		<li><b>Stats update:</b> {{ stats.Updated|utctimesince }} ({{ stats.Updated }} UTC)</li>
-		<li><b>Worker States:</b> {% for state, count in workerStates.items %}<tt>{{ state }}</tt>: {{ count }} | {% endfor %}<b>TOTAL</b>: {{ allWorkers|length }}</li>
-		<li><b>Host Workers:</b> {% for host, count in hostWorkerCount.items %}<tt>{{ host }}</tt>: {{ count }} {% endfor %}</li>
-		<li><b>Active Workers:</b> {% for worker in activeWorkers %}<tt{% if worker.Version != config.siteVer %} style="color:#aaa"{% endif %}>{{ worker.Process }}@{{ worker.Host }}</tt>{% if not forloop.last %}, {% endif %}{% endfor %}</li>
-		<li>
-			<b>Stalled Workers:</b>
-			<table>
-				<tr>
-					<th>Worker</th>
-					<th>Host</th>
-					<th>Local Index</th>
-					<th>Last Heartbeat</th>
-					<th>HB State</th>
-					<th>User</th>
-					<th>Forget</th>
-				</tr>
-				{% for worker in stalledWorkers %}
+	<div class="block">
+		<h3>Stats</h3>
+		<ul>
+			<li><b>Users:</b> {{ userCt }} ({{ autosyncCt }} automatically synchronizing, {{ scheduledCt }} scheduled)</li>
+			<li><b>Aggregated distance:</b> {{ stats.TotalDistanceSynced|format_meters }} km</li>
+			<li><b>Sync distance rate (24hr):</b> {{ stats.LastDayDistanceSynced|format_daily_meters_hourly_rate }} km/h</li>
+			<li><b>Sync distance rate (1hr):</b> {{ stats.LastHourDistanceSynced|format_meters }} km/h</li>
+			<li><b>Sync queue head wait:</b> {{ stats.QueueHeadTime|format_seconds_minutes }} min</li>
+			<li><b>Sync enqueue wait:</b> {{ stats.EnqueueTime|format_seconds_minutes }} min</li>
+			<li><b>Sync time used:</b> {{ stats.TotalSyncTimeUsed|format_seconds_minutes }} min ({{ loadFactor|format_fractional_percentage }} load)</li>
+			<li><b>Sync ops:</b> {{ stats.LastHourSynchronizationCount }}</li>
+			<li><b>Avg time/sync (1hr):</b> {{ stats.AverageSyncDuration|format_seconds_minutes }} min</li>
+			<li><b>Stats update:</b> {{ stats.Updated|utctimesince }} ({{ stats.Updated }} UTC)</li>
+			<li><b>Worker States:</b> {% for state, count in workerStates.items %}<tt>{{ state }}</tt>: {{ count }} | {% endfor %}<b>TOTAL</b>: {{ allWorkers|length }}</li>
+			<li><b>Host Workers:</b> {% for host, count in hostWorkerCount.items %}<tt>{{ host }}</tt>: {{ count }} {% endfor %}</li>
+			<li><b>Active Workers:</b> {% for worker in activeWorkers %}<tt{% if worker.Version != config.siteVer %} style="color:#aaa"{% endif %}>{{ worker.Process }}@{{ worker.Host }}</tt>{% if not forloop.last %}, {% endif %}{% endfor %}</li>
+			<li>
+				<b>Stalled Workers:</b>
+				<table>
 					<tr>
-						<td>{{ worker.Process }}</td>
-						<td>{{ worker.Host }}</td>
-						<td>{{ worker.Index }}</td>
-						<td>{{ worker.Heartbeat|utctimesince }}</td>
-						<td><tt>{{ worker.State }}</tt></td>
-						<td><tt>{{ worker.User }}</tt></td>
-						<td>
-							<form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="hidden" name="pid" value="{{ worker.Process }}"><input type="submit" name="deleteStalledWorker" value="x"/></form>
-						</td>
+						<th>Worker</th>
+						<th>Host</th>
+						<th>Local Index</th>
+						<th>Last Heartbeat</th>
+						<th>HB State</th>
+						<th>User</th>
+						<th>Forget</th>
 					</tr>
-				{% endfor %}
-			</table>
-		</li>
-	</ul>
-	<h3>Sync</h3>
-	<ul style="list-style:none;margin:0;padding:0;">
-		<li><b>Pending synchronizations:</b> {{ pendingSynchronizations }} ({{ pendingSynchronizationsLocked }} locked, {{ pendingSynchronizationsQueued }} double-scheduled, {{ pendingSynchronizationsLockedQueued }} double-scheduled and locked)</li>
-		<li><b>Queued synchronizations:</b> {{ queuedSynchronizations }} ({{ queuedSynchronizationsLocked }} locked)</li>
-		<li><b>Duped users:</b> {{ duplicatedUserSynchronizations }}</li>
-		<li><form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="submit" name="requeueQueued" value="Requeue not-locked"/></form></li>
-		<li><b>Users with errors:</b> <a href="{% url 'diagnostics_errors' %}">{{ errorUsersCt }} &raquo;</a></li>
-		<li><b>Locked records:</b> {{ lockedSyncRecords }}
-			{% if lockedSyncRecords > 0 %}
-			<table>
-				<tr>
-					<th>Worker</th>
-					<th>Host</th>
-					<th>User</th>
-					<th>ID</th>
-					<th>Prog</th>
-					<th>State</th>
-				</tr>
-				{% for lockedUser in lockedSyncUsers %}
-					{% with userId=lockedUser|dict_get:'_id' %}
+					{% for worker in stalledWorkers %}
 						<tr>
-							<td>{{ lockedUser.SynchronizationWorker }}</td>
-							<td>{{ lockedUser.SynchronizationHost }}</td>
-							<td><a href="{% url 'diagnostics_user' user=userId %}">{{ userId|slice:":7" }}</a></td>
-							<td>{{ userId }}</td>
-							<td>{{ lockedUser.SynchronizationProgress|percentage }}</td>
-							<td>{% if lockedUser.SynchronizationWorker not in allWorkerPIDs and lockedUser.SynchronizationWorker not in allWorkerPIDsPre %} <span style="color:red">(orphaned)</span>{% endif %}{% if lockedUser.SynchronizationWorker in stalledWorkerPIDs %} <span style="color:orange;">(stalled)</span>{% endif %}</td>
+							<td>{{ worker.Process }}</td>
+							<td>{{ worker.Host }}</td>
+							<td>{{ worker.Index }}</td>
+							<td>{{ worker.Heartbeat|utctimesince }}</td>
+							<td><tt>{{ worker.State }}</tt></td>
+							<td><tt>{{ worker.User }}</tt></td>
+							<td>
+								<form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="hidden" name="pid" value="{{ worker.Process }}"><input type="submit" name="deleteStalledWorker" value="x"/></form>
+							</td>
 						</tr>
-					{% endwith %}
-				{% endfor %}
-			</table>
-			{% endif %}
-			<form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="submit" name="unlockOrphaned" value="Unlock orphaned"></form>
-		</li>
-		<li><b>Queued but unlocked records:</b>
-			<table>
-				<tr>
-					<th>Host</th>
-					<th>User</th>
-					<th>ID</th>
-					<th>Prog</th>
-					<th>Queued Ago</th>
-				</tr>
-				{% for unlockedUser in queuedUnlockedUsers %}
-					{% with userId=unlockedUser|dict_get:'_id' %}
-						<tr>
-							<td>{{ unlockedUser.SynchronizationHost }}</td>
-							<td><a href="{% url 'diagnostics_user' user=userId %}">{{ userId|slice:":7" }}</a></td>
-							<td>{{ userId }}</td>
-							<td>{{ unlockedUser.SynchronizationProgress|percentage }}</td>
-							<td>{{ unlockedUser.QueuedAt|utctimesince }}</td>
-						</tr>
-					{% endwith %}
-				{% endfor %}
-			</table>
-		</li>
-	</ul>
+					{% endfor %}
+				</table>
+			</li>
+		</ul>
+	</div>
+	<div class="block">
+		<h3>Sync</h3>
+		<ul>
+			<li><b>Pending synchronizations:</b> {{ pendingSynchronizations }} ({{ pendingSynchronizationsLocked }} locked, {{ pendingSynchronizationsQueued }} double-scheduled, {{ pendingSynchronizationsLockedQueued }} double-scheduled and locked)</li>
+			<li><b>Queued synchronizations:</b> {{ queuedSynchronizations }} ({{ queuedSynchronizationsLocked }} locked)</li>
+			<li><b>Duped users:</b> {{ duplicatedUserSynchronizations }}</li>
+			<li><form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="submit" name="requeueQueued" value="Requeue not-locked"/></form></li>
+			<li><b>Users with errors:</b> <a href="{% url 'diagnostics_errors' %}">{{ errorUsersCt }} &raquo;</a></li>
+			<li><b>Locked records:</b> {{ lockedSyncRecords }}
+				{% if lockedSyncRecords > 0 %}
+				<table>
+					<tr>
+						<th>Worker</th>
+						<th>Host</th>
+						<th>User</th>
+						<th>ID</th>
+						<th>Prog</th>
+						<th>State</th>
+					</tr>
+					{% for lockedUser in lockedSyncUsers %}
+						{% with userId=lockedUser|dict_get:'_id' %}
+							<tr>
+								<td>{{ lockedUser.SynchronizationWorker }}</td>
+								<td>{{ lockedUser.SynchronizationHost }}</td>
+								<td><a href="{% url 'diagnostics_user' user=userId %}">{{ userId|slice:":7" }}</a></td>
+								<td>{{ userId }}</td>
+								<td>{{ lockedUser.SynchronizationProgress|percentage }}</td>
+								<td>{% if lockedUser.SynchronizationWorker not in allWorkerPIDs and lockedUser.SynchronizationWorker not in allWorkerPIDsPre %} <span style="color:red">(orphaned)</span>{% endif %}{% if lockedUser.SynchronizationWorker in stalledWorkerPIDs %} <span style="color:orange;">(stalled)</span>{% endif %}</td>
+							</tr>
+						{% endwith %}
+					{% endfor %}
+				</table>
+				{% endif %}
+				<form action="{% url 'diagnostics_queue_dashboard' %}" method="POST">{% csrf_token %}<input type="submit" name="unlockOrphaned" value="Unlock orphaned"></form>
+			</li>
+			<li><b>Queued but unlocked records:</b>
+				<table>
+					<tr>
+						<th>Host</th>
+						<th>User</th>
+						<th>ID</th>
+						<th>Prog</th>
+						<th>Queued Ago</th>
+					</tr>
+					{% for unlockedUser in queuedUnlockedUsers %}
+						{% with userId=unlockedUser|dict_get:'_id' %}
+							<tr>
+								<td>{{ unlockedUser.SynchronizationHost }}</td>
+								<td><a href="{% url 'diagnostics_user' user=userId %}">{{ userId|slice:":7" }}</a></td>
+								<td>{{ userId }}</td>
+								<td>{{ unlockedUser.SynchronizationProgress|percentage }}</td>
+								<td>{{ unlockedUser.QueuedAt|utctimesince }}</td>
+							</tr>
+						{% endwith %}
+					{% endfor %}
+				</table>
+			</li>
+		</ul>
+	</div>
 </div>
 
 

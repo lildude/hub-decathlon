@@ -14,8 +14,8 @@ print("Global sync watchdog run at %s" % datetime.now())
 for host_record in db.sync_watchdogs.find():
     if datetime.utcnow() - host_record["Timestamp"] > SERVER_WATCHDOG_TIMEOUT:
         print("Releasing users held by %s (last check-in %s)" % (host_record["Host"], host_record["Timestamp"]))
-        db.users.update({"SynchronizationHost": host_record["Host"]}, {"$unset": {"SynchronizationWorker": True}}, multi=True)
-        db.sync_workers.remove({"Host": host_record["Host"]}, multi=True)
-        db.sync_watchdogs.remove({"_id": host_record["_id"]})
+        db.users.update_many({"SynchronizationHost": host_record["Host"]}, {"$unset": {"SynchronizationWorker": True}})
+        db.sync_workers.delete_many({"Host": host_record["Host"]})
+        db.sync_watchdogs.delete_one({"_id": host_record["_id"]})
 
 close_connections()

@@ -43,9 +43,13 @@ def activities_fetch_json(req):
             if svc in activity["Prescence"]:
                 del activity["Prescence"][svc]
         del activity["Abscence"]
+
+        diff_date = int((activity['EndTime'] - activity["StartTime"]).total_seconds() / 60.0)
+        period = str(diff_date) + " minutes"
+        activity['readable_date'] = activity["StartTime"].strftime("%Y-%m-%d")
+        activity['period'] = period
         cleanedRecords.append(activity)
 
-
-    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime.datetime)  or isinstance(obj, datetime.date) else None
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date) else None
 
     return HttpResponse(json.dumps(cleanedRecords, default=dthandler), content_type="application/json")

@@ -56,6 +56,10 @@ STRAVA_CLIENT_SECRET = "####"
 STRAVA_CLIENT_ID = "####"
 STRAVA_RATE_LIMITS = []
 
+POLAR_CLIENT_SECRET = "####"
+POLAR_CLIENT_ID = "####"
+POLAR_RATE_LIMITS = []
+
 TRAINASONE_SERVER_URL = "https://beta.trainasone.com"
 TRAINASONE_CLIENT_SECRET = "####"
 TRAINASONE_CLIENT_ID = "####"
@@ -65,3 +69,25 @@ TRAININGPEAKS_CLIENT_SECRET = "####"
 TRAININGPEAKS_CLIENT_SCOPE = "cats:cuddle dogs:throw-frisbee"
 TRAININGPEAKS_API_BASE_URL = "https://api.trainingpeaks.com"
 TRAININGPEAKS_OAUTH_BASE_URL = "https://oauth.trainingpeaks.com"
+
+DECATHLON_CLIENT_SECRET = "####"
+DECATHLON_CLIENT_ID = "####"
+DECATHLON_API_KEY = "####"
+DECATHLON_API_BASE_URL = "####"
+DECATHLON_RATE_LIMITS = []
+
+FITBIT_CLIENT_ID = "############"
+FITBIT_CLIENT_SECRET = "##########"
+FITBIT_DURATION = 28800# 8 hours in s
+
+# Service available for first connection
+CONNECTION_SERVICES = [
+    "serviceid#1",
+    "serviceid#2"
+]
+
+AWS_REGION = "###"
+AWS_SQS_QUEUE_NAME="###"
+
+MONGO_DB_PREFIX="###"
+MONGO_HOST_API = "mongodb://root:dev@mongo_1:27017"

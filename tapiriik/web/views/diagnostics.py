@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from tapiriik.settings import DIAG_AUTH_TOTP_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
-from tapiriik.database import db
+from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
+from tapiriik.database import *
 from tapiriik.sync import Sync
 from tapiriik.auth import TOTP, DiagnosticsUser, User
 from bson.objectid import ObjectId
+from tapiriik.helper.common_use import *
 import hashlib
 import json
 import urllib.parse
 from datetime import datetime, timedelta
+import shutil
+
+import os
 
 def diag_requireAuth(view):
     def authWrapper(req, *args, **kwargs):
@@ -70,19 +74,59 @@ def diag_queue_dashboard(req):
 
     delta = False
     if "deleteStalledWorker" in req.POST:
-        db.sync_workers.remove({"Process": int(req.POST["pid"])})
+        db.sync_workers.delete_many({"Process": int(req.POST["pid"])})
         delta = True
     if "unlockOrphaned" in req.POST:
         orphanedUserIDs = [x["_id"] for x in context["lockedSyncUsers"] if x["SynchronizationWorker"] not in context["allWorkerPIDs"]]
-        db.users.update({"_id":{"$in":orphanedUserIDs}}, {"$unset": {"SynchronizationWorker": None}}, multi=True)
+        db.users.update_many({"_id":{"$in":orphanedUserIDs}}, {"$unset": {"SynchronizationWorker": None}})
         delta = True
     if "requeueQueued" in req.POST:
-        db.users.update({"QueuedAt": {"$lt": datetime.utcnow()}, "$or": [{"SynchronizationWorker": {"$exists": False}}, {"SynchronizationWorker": None}]}, {"$set": {"NextSynchronization": datetime.utcnow(), "QueuedGeneration": "manual"}, "$unset": {"QueuedAt": True}}, multi=True)
+        db.users.update_many({"QueuedAt": {"$lt": datetime.utcnow()}, "$or": [{"SynchronizationWorker": {"$exists": False}}, {"SynchronizationWorker": None}]}, {"$set": {"NextSynchronization": datetime.utcnow(), "QueuedGeneration": "manual"}, "$unset": {"QueuedAt": True}})
 
     if delta:
         return redirect("diagnostics_queue_dashboard")
 
     return render(req, "diag/dashboard.html", context)
+
+@diag_requireAuth
+def server_status(req):
+
+    context = {}
+    # Add REDIS ping info
+    redis_response = redis.ping()
+    context['redis_status'] = redis_response
+
+
+    # Add db connection info
+    context['db'] = {
+        'tapiriik': False,
+        'tapiriik_cache': False,
+        'tapiriik_tz': False,
+        'tapiriik_ratelimit': False
+    }
+    if db:
+        context['db']['tapiriik'] = True
+    if cachedb:
+        context['db']['tapiriik_cache'] = True
+    if tzdb:
+        context['db']['tapiriik_tz'] = True
+    if ratelimit:
+        context['db']['tapiriik_ratelimit'] = True
+
+    # Add disk space info
+    disk_info = shutil.disk_usage("/")
+    disk = {}
+    disk['total'] = readable_byte(disk_info.total)
+    disk['used'] = readable_byte(disk_info.used)
+    disk['free'] = readable_byte(disk_info.free)
+
+    context['disk'] = disk
+
+    return render(req, "server_status.html", context)
+
+
+def server_status_elb(req):
+    return HttpResponse(status=200)
 
 @diag_requireAuth
 def diag_errors(req):
@@ -146,26 +190,27 @@ def diag_user(req, user):
         return render(req, "diag/error_user_not_found.html")
     delta = True # Easier to set this to false in the one no-change case.
     if "sync" in req.POST:
-        Sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
+        _sync = Sync()
+        _sync.ScheduleImmediateSync(userRec, req.POST["sync"] == "Full")
     elif "unlock" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$unset": {"SynchronizationWorker": None}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"SynchronizationWorker": None}})
     elif "lock" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$set": {"SynchronizationWorker": 1}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$set": {"SynchronizationWorker": 1}})
     elif "requeue" in req.POST:
-        db.users.update({"_id": ObjectId(user)}, {"$unset": {"QueuedAt": None}})
+        db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"QueuedAt": None}})
     elif "hostrestrict" in req.POST:
         host = req.POST["host"]
         if host:
-            db.users.update({"_id": ObjectId(user)}, {"$set": {"SynchronizationHostRestriction": host}})
+            db.users.update_one({"_id": ObjectId(user)}, {"$set": {"SynchronizationHostRestriction": host}})
         else:
-            db.users.update({"_id": ObjectId(user)}, {"$unset": {"SynchronizationHostRestriction": None}})
+            db.users.update_one({"_id": ObjectId(user)}, {"$unset": {"SynchronizationHostRestriction": None}})
     elif "substitute" in req.POST:
         req.session["substituteUserid"] = user
         return redirect("dashboard")
     elif "svc_setauth" in req.POST and len(req.POST["authdetails"]):
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set":{"Authorization": json.loads(req.POST["authdetails"])}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set":{"Authorization": json.loads(req.POST["authdetails"])}})
     elif "svc_setconfig" in req.POST and len(req.POST["config"]):
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set":{"Config": json.loads(req.POST["config"])}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set":{"Config": json.loads(req.POST["config"])}})
     elif "svc_unlink" in req.POST:
         from tapiriik.services import Service
         from tapiriik.auth import User
@@ -179,14 +224,16 @@ def diag_user(req, user):
         except:
             pass
     elif "svc_marksync" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])},
-                              {"$addToSet": {"SynchronizedActivities": req.POST["uid"]}},
-                              multi=False)
+        db.connections.update_one(
+            {"_id": ObjectId(req.POST["id"])},
+            {"$addToSet": {"SynchronizedActivities": req.POST["uid"]}}
+        )
     elif "svc_clearexc" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$unset": {"ExcludedActivities": 1}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"ExcludedActivities": 1}})
     elif "svc_clearacts" in req.POST:
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$unset": {"SynchronizedActivities": 1}})
-        Sync.SetNextSyncIsExhaustive(userRec, True)
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$unset": {"SynchronizedActivities": 1}})
+        _sync = Sync()
+        _sync.SetNextSyncIsExhaustive(userRec, True)
     elif "svc_toggle_poll_sub" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
@@ -194,11 +241,11 @@ def diag_user(req, user):
     elif "svc_toggle_poll_trigger" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$set": {"TriggerPartialSync": not svcRec.TriggerPartialSync}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$set": {"TriggerPartialSync": not svcRec.TriggerPartialSync}})
     elif "svc_tryagain" in req.POST:
         from tapiriik.services import Service
         svcRec = Service.GetServiceRecordByID(req.POST["id"])
-        db.connections.update({"_id": ObjectId(req.POST["id"])}, {"$pull": {"SyncErrors": {"Scope": "activity"}}})
+        db.connections.update_one({"_id": ObjectId(req.POST["id"])}, {"$pull": {"SyncErrors": {"Scope": "activity"}}})
         act_recs = db.activity_records.find_one({"UserID": ObjectId(user)})
         for act in act_recs["Activities"]:
             if "FailureCounts" in act and svcRec.Service.ID in act["FailureCounts"]:
@@ -235,7 +282,7 @@ def diag_ip(req):
 
 def diag_login(req):
     if "password" in req.POST:
-        if hashlib.sha512(req.POST["password"].encode("utf-8")).hexdigest().upper() == DIAG_AUTH_PASSWORD and TOTP.Get(DIAG_AUTH_TOTP_SECRET) == int(req.POST["totp"]):
+        if hashlib.sha512(req.POST["password"].encode("utf-8")).hexdigest().upper() == DIAG_AUTH_PASSWORD and (DIAG_AUTH_LOGIN_SECRET) == str(req.POST["login"]):
             DiagnosticsUser.Authorize(req)
             return redirect("diagnostics_dashboard")
     return render(req, "diag/login.html")

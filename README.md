@@ -1,18 +1,26 @@
-tapiriik keeps your fitness in sync
-========
 
-[![Build Status](https://travis-ci.org/cpfair/tapiriik.svg?branch=master)](https://travis-ci.org/cpfair/tapiriik)
-
-## Looking to run tapiriik locally?
-
-Check out the [setup guide on the wiki](https://github.com/cpfair/tapiriik/wiki/Running-tapiriik-locally). It's a bit more than `pip install tapiriik`, but I'm sure you can handle it.
-
-## Want to help with development?
-
-**Great!** If you're looking for a quick primer on how tapiriik functions under the hood, head on over to the [technical introduction wiki article](https://github.com/cpfair/tapiriik/wiki/tapiriik-internals). Once you're ready, send in a pull request and I'll work with you to get it merged.
-
-## Just want to synchronize your fitness activities?
-Visit [tapiriik.com](https://tapiriik.com) - everything's already set up for you.
+## Credits
+This project is based on https://github.com/cpfair/tapiriik code by Collin Fair.
+Forked from https://github.com/Antash/exercisync by Anton Ashmarin
 
 ## Licensing
-tapiriik is an Apache 2.0 Licensed open-source project. If you'd like to use the tapiriik name or logo, please drop me a line.
+hub-decathlon is an Apache 2.0 Licensed open-source project.
+
+## Translation
+To use locale translation, it requires the package gettext.
+
+To launch a new language, you have to generate the locale with : python3 manage.py makemessages -l 'fr'
+
+
+Secondly, after translation (edition of po files), compile the files : python manage.py compilemessages
+
+## Docker 
+
+* First of all initiate the file tapiriik/local_settings.py
+* Then build the docker to get all the requierements.
+* Finaly launch the docker-compose to get all the containers (redis, mongo, web, RMQ)
+
+```
+docker build --no-cache -t my-hub-decathlon .
+docker-compose up
+```

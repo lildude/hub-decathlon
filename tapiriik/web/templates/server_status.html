@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<meta http-equiv="Content-Type" value="text/html; charset=UTF-8">
+		<meta name="Description" content="Automatically synchronize your fitness activities between Garmin Connect, Runkeeper, Strava and more.">
+		<meta name="Keywords" content="automatic, synchronize, sync, update, copy, transfer, download, back up, export, fitness, garmin, garmin connect, runkeeper, strava, endomondo, sporttracks, trainingpeaks, ridewithgps, ride with gps, training peaks, dropbox, trainerroad, motivato, velohero, epson, runsense, path, track, heart rate, free, service, gpx, tcx, health, data, service, cycling, running, swimming, walking, what other activities can I put here?, underwater basket weaving, why are you reading the SEO keywords anyways, move along, nothing to see here">
+	    <title>Decathlon Hub Server Status</title>
+
+	    <meta name="viewport" content="width=device-width">
+
+		<link rel="apple-touch-icon" sizes="180x180" href="{{ STATIC_URL }}img/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="{{ STATIC_URL }}img/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="{{ STATIC_URL }}img/favicon-16x16.png">
+		<link rel="manifest" href="{{ STATIC_URL }}site.webmanifest">
+		<link rel="mask-icon" href="{{ STATIC_URL }}img/safari-pinned-tab.svg" color="#5bbad5">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	</head>
+
+	<body>
+		<h1><a href="/">Decathlon Hub</a></h1>
+		<h3>Server info :</h3>
+		<ul>
+			<li>
+				<strong>Disk used : </strong><br>
+				<ul>
+					<li><strong> Total space :</strong> {{disk.total}}</li>
+					<li><strong> Total used :</strong> {{disk.used}}</li>
+					<li><strong> Total free :</strong> {{disk.free}}</li>
+				</ul>
+			</li>
+			<li>
+				<strong>Mongo :</strong><br>
+				<ul>
+					<li>
+						<strong> Tapiriik :</strong> 
+						{% if db.tapiriik %}
+							<span class="label success">OK</span>
+						{% else%}
+							<span class="label danger">KO</span>
+						{% endif %}
+					</li>
+					<li>
+						<strong> Tapiriik cache :</strong> 
+						{% if db.tapiriik_cache %}
+							<span class="label success">OK</span>
+						{% else%}
+							<span class="label danger">KO</span>
+						{% endif %}
+					</li>
+					<li>
+						<strong> Tapiriik tz :</strong> 
+						{% if db.tapiriik_tz %}
+							<span class="label success">OK</span>
+						{% else%}
+							<span class="label danger">KO</span>
+						{% endif %}
+					</li>
+					<li>
+						<strong> Tapiriik ratelimit :</strong> 
+						{% if db.tapiriik_ratelimit %}
+							<span class="label success">OK</span>
+						{% else%}
+							<span class="label danger">KO</span>
+						{% endif %}
+					</li>
+				</ul>
+			</li>
+			<li>
+				<strong>Redis :</strong> 
+				{% if redis_status %}
+					<span class="label success">OK</span>
+				{% else%}
+					<span class="label danger">KO</span>
+				{% endif %}
+			</li>
+		</ul>
+	</body>
+</html>

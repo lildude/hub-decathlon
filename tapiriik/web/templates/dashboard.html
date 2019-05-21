@@ -1,23 +1,16 @@
 {% extends "site.html" %}
+{% load i18n %}
 {% load services %}
 {% load users %}
 {% load displayutils %}
-{% block title %}{% if user != none %}dashboard{% else %}sync your runs, rides & more{% endif %}{% endblock %}
+{% block title %}{% if user != none %}{% trans "dashboard" %}{% else %}{% trans "sync your runs, rides & more" %}{% endif %}{% endblock %}
 
 {% block content %}
 {% if user != none %}
-		{% if user.Substitute %}
-		<h1>Substituting user</h1>
-		<a href="{% url 'diagnostics_unsu' %}">Return</a>
-		<hr/>
-		{% endif %}
-		{% if user.ConnectedServices|length > 1 %}
-			{% infotip connectedWillSync %}Connected services will be synchronized {% if user|has_active_payment %}automatically{% else %}when you click Synchronize now{% endif %}{% endinfotip %}
-		{% else %}
-			{% infotip connectOneMore %}Connect a second service to synchronize your activities to &amp; from{% endinfotip %}
-		{% endif %}
+	<div class="block">
+		<div class="titleBlock">{% trans "Manage your services" %}</div>
 		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap">
+			<div class="serviceButtonWrap row">
 			{% for connection in user.ConnectedServices|svc_populate_conns %}
 				{% with svc=connection.Service %}
 					{% if svc.ID not in config.withdrawn_services %}
@@ -25,23 +18,27 @@
 					{% endif %}
 				{% endwith %}
 			{% endfor %}
+			{% for provider in user.ConnectedServices|svc_providers_except %}
+				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
+					{% include "service-button.html" with provider=provider inactive=True %}
+				{% endif %}
+			{% endfor %}
 			</div>
 		</div>
+	</div>
 	{% if user.ConnectedServices|length > 1 %}
-		<div class="syncButtonBlock">
-			<div class="syncButtonAttachment left">Queueing to Synchronize</div><div class="syncButtonWrap"><a class="syncButton">Synchronize Now<div class="syncButtonIcon"></div></a><a href="#/settings" class="syncSettingsNubbin"><span class="sr">Synchronization Settings</span><div class="syncSettingsNubbinIcon"></div></a></div><div class="syncButtonAttachment right">Attached info 10%</div>
+
+		<div class="block manageSyncBlock">
+			{% include "manage-sync.html" %}
 		</div>
-		{% include "settings-block.html" %}
+		<div class="block">
+			{% if user.NonblockingSyncErrorCount > 0 %}
+				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
+			{% endif %}
+		</div> 
+	{% endif %}
 
-		{% if user.NonblockingSyncErrorCount > 0 %}
-			<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">Some activities could not be synchronized.</a><br/>
-		{% endif %}
-
-		{% if user|has_active_payment %}
-		{% else %}
-			{% include "payment.html" %}
-		{% endif %}
-
+	<div class="block">
 		{% for connection in user.ConnectedServices|svc_populate_conns %}
 			{% with svc=connection.Service %}
 				{% for error in connection.SyncErrors %}
@@ -51,25 +48,97 @@
 				{% endfor %}
 			{% endwith %}
 		{% endfor %}
+	</div>
 
-		{% include "recent-sync-activity-block.html" %}
+	<!-- tooltip blocks -->
+	{% if user.ConnectedServices|length > 1 %}
+		<!--{% infotip connectedWillSync %}-->
+			<div class="block">
+				<div class="tooltip">{% trans "Connected services will be synchronized automatically" %}</div>
+			</div>
+		<!--{% endinfotip %}-->
+	{% else %}
+		<!--{% infotip connectOneMore %}-->
+			<div class="block">
+				<div class="tooltip">{% trans "Connect a second service to synchronize your activities to &amp; from" %}</div>
+			</div>
+		<!--{% endinfotip %}-->
+	{% endif %}	
+		
+	{% if user.Substitute %}
+		<h1>{% trans "Substituting user" %}</h1>
+		<a href="{% url 'diagnostics_unsu' %}">{% trans "Return" %}</a>
+		<hr/>
 	{% endif %}
 
-	{% for provider in user.ConnectedServices|svc_providers_except %}
-		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
-			{% if forloop.first %}<hr>{% infotip connectMore %}You can synchronize more services by connecting them below{% endinfotip %}{% endif %}
-			{% include "service-button.html" with provider=provider inactive=True %}
-		{% endif %}
-	{% endfor %}
-
 {% else %}
-<p class="splashPreamble">tapiriik synchronizes your fitness activities between Garmin Connect, Runkeeper, Strava, TrainingPeaks, SportTracks.mobi, Endomondo, RideWithGPS, TrainAsONE, TrainerRoad, Motivato, Velo Hero, Epson RUNSENSE, Dropbox, Smashrun, BeginnerTriathlete, Pulsstory, Singletracker, and SETIO<br/>
-(your heart rate, cadence, power, and temperature data syncs too)</p>
-	{% for provider in service_providers %}
-		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
-			{% include "service-button.html" with provider=provider %}
-		{% endif %}
-	{% endfor %}
-<p class="splashPreamble">Your email, password, and fitness data are kept safe - full details on the <a href="{% url "privacy" %}">privacy page</a>.</p>
+	{% ifequal device_support 'web' %}
+	<div class="block">
+		<p class="info">{% trans "Decathlon HUB synchronizes your activities between Garmin Connect, Polar Flow and Strava<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
+	</div>
+	<dib class="block">
+		<div class="row">
+			<div class="col-md-3"></div>
+			<div class="col-md-2 col-xs-4">
+		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
+		    	<p class="text decathlonapp"><strong>DECATHLON Connect</strong></p>
+			</div>
+			<div class="col-md-2 col-xs-4">
+		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach-rounded.png">
+		    	<p class="text decathlonapp"><strong>DECATHLON Coach</strong></p>
+			</div>
+			<div class="col-md-2 col-xs-4">
+	    		<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
+		    	<p class="text decathlonapp"><strong>E-Connected</strong></p>
+			</div>
+		</div>
+	</dib>
+	<div class="block">
+		<div class="titleBlock">{% trans "Connect to your Decathlon services" %}</div>
+		<div class="serviceButtonOuter">
+			<div class="serviceButtonWrap serviceButtonLogin row">
+				{% for provider in service_providers %}
+					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
+						{% include "service-button.html" with login=True provider=provider inactive=True hideicon=True size=4 centered=True %}
+					{% endif %}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+	<div class="block logoPartners">
+		<div class="titleBlock">{% trans "Available services" %}</div>
+		<div class="partnerOuter row">
+			{% with localservices="decathlon decathlonpreprod" %}
+  			{% for provider in service_providers %}
+				{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+					{% include "service-logos.html" with provider=provider %}
+				{% endif %}
+			{% endfor %}
+			{% endwith %}
+		</div>
+	</div>
+	<div class="block">
+		<!--<p class="info">{% trans "Did not find your service?" %} - {% trans "Try here" %}: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a></p>-->
+		<p class="info">{% trans "Your email, password, and fitness data are kept safe - full details on the" %} <a href="{% url "privacy" %}">{% trans "privacy page" %}</a>.</p>
+	</div>
+	{% else %}
+
+		<div class="block">
+			<p class="info">{% trans "Welcome !" %}</p>
+			<p class="info">{% trans "Decathlon HUB synchronizes your activities between Garmin Connect, Polar Flow and Strava" %}</p>
+		</div>
+
+		<div class="block">
+			<div class="serviceButtonOuter">
+				<div class="serviceButtonWrap serviceButtonLogin row">
+					{% for provider in service_providers %}
+						{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
+							{% include "service-button.html" with provider=provider inactive=True hideicon=True size=12 %}
+						{% endif %}
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	{% endifequal%}
 {% endif %}
 {% endblock %}

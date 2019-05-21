@@ -1,18 +1,34 @@
 from tapiriik.services import Service
 from tapiriik.auth import User
 from tapiriik.sync import Sync
-from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
+from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
 from tapiriik.database import db
 from datetime import datetime
+from random import randint
 import json
-
 
 def providers(req):
     return {"service_providers": Service.List()}
 
 def config(req):
     in_diagnostics = "diagnostics" in req.path
-    return {"config": {"minimumSyncInterval": Sync.MinimumSyncInterval.seconds, "siteVer": SITE_VER, "pp": {"url": PP_WEBSCR, "buttonId": PP_BUTTON_ID}, "soft_launch": SOFT_LAUNCH_SERVICES, "disabled_services": DISABLED_SERVICES, "withdrawn_services": WITHDRAWN_SERVICES, "in_diagnostics": in_diagnostics}, "hidden_infotips": req.COOKIES.get("infotip_hide", None)}
+    _sync = Sync()
+    return {
+        "config": {
+            "minimumSyncInterval": _sync.MinimumSyncInterval.seconds,
+            "siteVer": SITE_VER,
+            "pp": {
+                "url": PP_WEBSCR,
+                "buttonId": PP_BUTTON_ID
+            },
+            "connection_services": CONNECTION_SERVICES,
+            "soft_launch": SOFT_LAUNCH_SERVICES,
+            "disabled_services": DISABLED_SERVICES,
+            "withdrawn_services": WITHDRAWN_SERVICES,
+            "in_diagnostics": in_diagnostics
+        },
+        "hidden_infotips": req.COOKIES.get("infotip_hide", None)
+    }
 
 def user(req):
     return {"user":req.user}
@@ -66,6 +82,7 @@ def js_bridge(req):
 def stats(req):
     return {"stats": db.stats.find_one()}
 
+
 def celebration_mode(req):
     active_config = None
     now = datetime.now()
@@ -74,3 +91,17 @@ def celebration_mode(req):
             active_config = config
             break
     return {"celebration_mode": active_config}
+
+
+def device_support(req):
+    device_support = "web"
+    if 'device_support' in req.COOKIES:
+        device_support = req.COOKIES.get('device_support')
+    else:
+        if 'mobile' in req.GET:
+            if req.GET['mobile'] is True or req.GET['mobile'] is 1 or req.GET['mobile'] is '1' or req.GET['mobile'] is 'true':
+                device_support = 'mobile'
+    return {"device_support": device_support}
+
+def background_use(req):
+    return {'background_use': randint(1, 5)}

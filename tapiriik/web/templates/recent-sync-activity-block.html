@@ -1,22 +1,24 @@
+{% load i18n %}
 <div class="syncActivityBlock" ng-controller="RecentSyncActivityController">
-<table class="activitiesTable recentActivitiesTable fancyTable" ng-show="recent_activities.length > 0">
-	<tr class="headers">
-		<th colspan="2">
-			Recently Synchronized Activities
-		</th>
-	</tr>
-	<tr ng-repeat="activity in recent_activities" class="activity">
-		<td class="activityHeader">
-			<span class="date" title="{[ activity.StartTime ]}">{[ activity.StartTime|date ]}</span> {[ activity.Name ]}
-		</td>
-		<td class="activityHeader">
-			<span class="tag float type">{[ activity.Type ]}</span>
-		</td>
-	</tr>
-	<tr class="footers">
-		<th colspan="2">
-			<a href="{% url 'activities_dashboard' %}">All Activities &raquo;</a>
-		</th>
-	</tr>
-</table>
+	<div class="row">
+		<div class="col-md-12">
+			<table class="activitiesTable recentActivitiesTable" ng-show="recent_activities.length > 0">
+				<tr class="activity" ng-repeat="activity in recent_activities">
+					<td class="dateCell text-center">{[ activity.Readable_date ]}<br>{[activity.Period]}</td>
+					<td class="infoCell text-left">
+						<strong>{[ activity.Type ]}</strong><br>
+						{[ activity.Name ]}<br>
+						<span class="label stationary" title="This activity has no sensor data." ng-show="activity.Stationary"><span class="default">{% trans "Stationary" %}</span></span>
+						<span class="label" title="You've marked this activity as private." ng-show="activity.Private"><span class="warning">{% trans "Private" %}</span></span>
+						<div class="sourceBlock">
+							<strong>Source:</strong> <span class="label source"> <span class="success">{[activity.Source]}</span></span>
+						</div>
+						<div class="destinationBlock">
+							<strong>Destination:</strong> <span class="label source" ng-repeat="destination in activity.Destinations"> <span class="success">{[ destination ]}</span></span>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
 </div>

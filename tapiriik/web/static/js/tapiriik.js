@@ -4,16 +4,16 @@
 var csrftoken = $.cookie('csrftoken');
 
 function csrfSafeMethod(method) {
-    // these HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+	// these HTTP methods do not require CSRF protection
+	return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 $.ajaxSetup({
-    crossDomain: false, // obviates need for sameOrigin test
-    beforeSend: function(xhr, settings) {
-        if (!csrfSafeMethod(settings.type)) {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-        }
-    }
+	crossDomain: false, // obviates need for sameOrigin test
+	beforeSend: function(xhr, settings) {
+		if (!csrfSafeMethod(settings.type)) {
+			xhr.setRequestHeader("X-CSRFToken", csrftoken);
+		}
+	}
 });
 
 tapiriik = typeof(tapiriik) == "undefined" ? {} : tapiriik;
@@ -41,6 +41,14 @@ tapiriik.Init = function(){
 			tapiriik.ShowDebugInfo();
 			return false;
 		}
+	});
+
+	$(".donateForm").hide();
+	$(".donateButton").show();
+	$(".donateButton").click(function(){
+		$(".donateButton").slideUp();
+		$(".donateForm").slideDown();
+		return false;
 	});
 
 	$(".paymentForm").hide();
@@ -92,7 +100,7 @@ tapiriik.Init = function(){
 		});
 	});
 
-	setInterval(tapiriik.CycleLogo, 60 * 1000);
+	//setInterval(tapiriik.CycleLogo, 60 * 1000);
 };
 
 tapiriik.AddressChanged=function(){
@@ -139,6 +147,12 @@ tapiriik.AddressChanged=function(){
 			}
 			return;
 		}
+		if (components[1]=="aerobia" && components[2]=="setup"){
+			//TODO dirty hack
+			//going to separate view to make react work
+			document.location = "../../aerobiaConfig"
+			return;
+		}
 		tapiriik.DoDismissServiceDialog();
 		tapiriik.OpenServiceConfigPanel(components[1]);
 		return;
@@ -147,12 +161,10 @@ tapiriik.AddressChanged=function(){
 			tapiriik.OpenDropboxInfoDialog();
 			return;
 		}
-	} else if (components[0] == "settings") {
-		tapiriik.OpenSyncSettingsDialog();
-	} else {
-		tapiriik.CloseSyncSettingsDialog();
 	}
-	tapiriik.DoDismissServiceDialog();
+	tapiriik.OpenSyncSettingsDialog();
+	
+	//tapiriik.DoDismissServiceDialog();
 	tapiriik.DoDismissConfigPanel();
 };
 
@@ -238,7 +250,17 @@ tapiriik.ActivateRememberDetailsDialog = function(svcId){
 };
 
 tapiriik.OpenDeauthDialog = function(svcId){
-	var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
+
+	// TODO : MODIFIER CE SCRIPT POUR QUE LE VISUEL CORRESPONDE A LA MAQUETTE
+
+	var form = $("<form/>")
+		.addClass('logout')
+		.append(
+			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Cancel'),
+			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
+			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
+		)
+	//var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
 	form.bind("submit", function() {return false;});
 	$("#disconnect", form).click(function(){
 		if (tapiriik.DeauthPending !== undefined) return false;
@@ -259,17 +281,78 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	});
 
 	$("#cancel", form).click(function(){
-		history.back();
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
 	});
 
 	tapiriik.CreateServiceDialog(svcId, form);
 };
 
 tapiriik.CreateDirectLoginForm = function(svcId){
-	var form = $("<form novalidate><div class=\"error\" id=\"login-fail\">There was a problem logging you in</div><div class=\"error\" id=\"login-error\">There was a system error :(</div><label for=\"email\">Email/Username</label><input autofocus type=\"email\" id=\"email\"/><label for=\"password\">Password</label><input type=\"password\" id=\"password\"><br/><span class=\"persist-controls\"><input type=\"checkbox\" id=\"persist\"/><label for=\"persist\">Save these details</label><br/></span><center><button type=\"submit\" >Log in</button></center></form>");
+	/*
+	il faut réécrire proprement ce formulaire, en insérant correctement les variables.
+	
+	*/
+	console.log(svcId);
+
+	// TODO il faut ensuite adapter cet html pour le rendre présentable  et PROPRE, ajouter des classes 
+	// Puis enfin faire le css qui en découle
+	var form = $("<form novalidate>").append(
+		$("<div>")
+			.addClass('panel panel-danger error')
+			.attr('id','login-fail')
+			.html("There was a problem logging you in"),
+		$("<div>")
+			.addClass('panel panel-danger error')
+			.attr('id','login-error')
+			.html("There was a logging error"),
+		$('<label>')
+			.attr('for', 'email')
+			.html('Email/Username'),
+		$('<input autofocus type="email">')
+			.attr('id','email'),
+		$('<label>')
+			.attr('for', 'password')
+			.html('Password'),
+		$('<input type="password">')
+			.attr('id','password'),
+		$('<span>')
+			.addClass('persist-controls')
+			.append(
+				$('<input type="checkbox">')
+					.attr('id','persist'),
+				$('<label>')
+					.attr('for','persist')
+					.html('Save these details')
+			),
+		$('<div>')
+			.addClass('logout')
+			.append(
+				$('<button>')
+					.attr('type','submit')
+					.addClass('button button-primary')
+					.html('Login'),
+
+				$('<button/ id="cancel">')
+					.addClass('cancel button button-danger')
+					.html('Cancel'),
+			)
+	);
+
+
+	//var form = $("<form novalidate><div class=\"error\" id=\"login-fail\">There was a problem logging you in</div><div class=\"error\" id=\"login-error\">There was a system error :(</div><label for=\"email\">Email/Username</label><input autofocus type=\"email\" id=\"email\"/><label for=\"password\">Password</label><input type=\"password\" id=\"password\"><br/><span class=\"persist-controls\"><input type=\"checkbox\" id=\"persist\"/><label for=\"persist\">Save these details</label><br/></span><center><button type=\"submit\" >Log in</button></center></form>");
 	if (!tapiriik.ServiceInfo[svcId].UsesExtendedAuth){
 		$(".persist-controls",form).hide();
 	}
+
+
+	$("#cancel", form).click(function(){
+		//history.back();
+		//$().redirect(location.host);
+		window.location.href = "/";
+	});
+
 	var loginPending = false;
 	form.bind("submit", function(){
 		if (loginPending) return false;
@@ -383,8 +466,6 @@ tapiriik.OpenServiceConfigPanel = function(svcId){
 
 	tapiriik.CreateConfigPanel(svcId, configPanel);
 };
-
-
 
 tapiriik.OpenDropboxConfigDialog = function(){
 	var configPanel = $("<form class=\"dropboxConfig\"><h1>Set Up Dropbox Sync</h1>\
@@ -590,7 +671,11 @@ tapiriik.PopulateDropboxBrowser = function(){
 	$("#folderList ul").animate({"margin-left":(tapiriik.DropboxNavigatingUp?1:-1)*$("#folderList").width()});
 
 	if (tapiriik.OutstandingDropboxNavigate !== undefined) tapiriik.OutstandingDropboxNavigate.abort();
-	tapiriik.OutstandingDropboxNavigate = $.ajax("/dropbox/browse-ajax/" + tapiriik.DropboxBrowserPath).success(tapiriik.PopulateDropboxBrowserCallback);
+	tapiriik.OutstandingDropboxNavigate = $.ajax({
+		url: "/dropbox/browse-ajax/",
+		data: {path: tapiriik.DropboxBrowserPath},
+		success: tapiriik.PopulateDropboxBrowserCallback
+	});
 	tapiriik.CurrentDropboxBrowserPath = tapiriik.DropboxBrowserPath;
 };
 
@@ -706,11 +791,11 @@ tapiriik.OpenPaymentPromoClaimCompletedDialog = function(){
 };
 
 tapiriik.OpenSyncSettingsDialog = function(){
-	$(".syncSettingsBlock").slideDown(250);
-};
+	//$(".syncSettingsBlock").slideDown(250);
 
-tapiriik.CloseSyncSettingsDialog = function(){
-	$(".syncSettingsBlock").slideUp(250);
+	// Apply datepicker here,
+	// because it is associated with an HTML element.
+	tapiriik.ApplyDatepicker();
 };
 
 tapiriik.CreateConfigPanel = function(serviceID, contents){
@@ -744,16 +829,21 @@ tapiriik.CreateServiceDialog = function(serviceID, contents) {
 		return;
 	}
 
+	// TODO : Changer l'image de sorte a ce que cela ne prenne pas TOUTE la place + la centrer
 	var icon;
 	if (serviceID != "tapiriik"){
-		icon = $("<img>").attr("src", tapiriik.StaticURL + "img/services/" + serviceID + "_l.png"); // Magic URL :\
+		icon = $("<img>").addClass('pic-dialog logo').attr("src", tapiriik.StaticURL + "img/decathlon/logos/" + serviceID + ".png"); // Magic URL :\
 	} else {
 		icon = $("<div>").addClass("logo inline").text("tapiriik");
 	}
-	popover = $("<div>").addClass("dialogPopoverWrap").append(tapiriik.CreatePopover(contents).css({"position":"relative"}));
-	popover.css({"position":"relative", "width":"100%"});
+
+	// TODO : Virer ce css en dur tout pas beau
+	popover = $("<div>").addClass("dialogPopoverWrap").append(tapiriik.CreatePopover(contents));
+	popover.css({"position":"relative"});
+
 	var dialogWrap = $("<div>").addClass("dialogWrap").append(icon).append(popover).hide();
-	$(".contentWrap").append(dialogWrap);
+
+	$(".contentMain .contentWrap").append(dialogWrap);
 	$(".mainBlock").fadeOut(250 * animationMultiplier, function(){
 		$(dialogWrap).fadeIn(250 * animationMultiplier);
 	});
@@ -815,17 +905,17 @@ tapiriik.UpdateSyncCountdown = function(){
 	$.ajax({"url":"/sync/status", success:function(data){
 		tapiriik.PendingSyncStatusUpdate = false;
 		$rootScope.$apply(function(){ // Tie us into Angularland
-		tapiriik.NextSync = data.NextSync !== null ? new Date(data.NextSync) : null;
-		tapiriik.LastSync = data.LastSync !== null ? new Date(data.LastSync) : null;
-		if (tapiriik.SyncHash !== undefined && tapiriik.SyncHash != data.Hash){
-			window.location.reload(); // show them the whatever's new
-		}
-		tapiriik.SyncHash = data.Hash;
-		tapiriik.SyncErrors = data.Errors;
-		tapiriik.Synchronizing = data.Synchronizing;
-		tapiriik.SynchronizationProgress = data.SynchronizationProgress;
-		tapiriik.SynchronizationStep = data.SynchronizationStep;
-		tapiriik.SynchronizationWaitTime = data.SynchronizationWaitTime;
+			tapiriik.NextSync = data.NextSync !== null ? new Date(data.NextSync) : null;
+			tapiriik.LastSync = data.LastSync !== null ? new Date(data.LastSync) : null;
+			if (tapiriik.SyncHash !== undefined && tapiriik.SyncHash != data.Hash){
+				window.location.reload(); // show them the whatever's new
+			}
+			tapiriik.SyncHash = data.Hash;
+			tapiriik.SyncErrors = data.Errors;
+			tapiriik.Synchronizing = data.Synchronizing;
+			tapiriik.SynchronizationProgress = data.SynchronizationProgress;
+			tapiriik.SynchronizationStep = data.SynchronizationStep;
+			tapiriik.SynchronizationWaitTime = data.SynchronizationWaitTime;
 		});
 		tapiriik.RefreshSyncCountdown();
 	}, error:function(req, opts, error){
@@ -909,14 +999,16 @@ tapiriik.RefreshSyncCountdown = function(){
 		if (sync_state_text != $(".syncButtonAttachment.left").text()){
 			var currentWidth = $(".syncButtonAttachment.left").width();
 			var newWidth = measureText(sync_state_text);
-			if (currentWidth >= newWidth) {
+			var newWidth = currentWidth;
+			$(".syncButtonAttachment.left").text(sync_state_text);
+			/*if (currentWidth >= newWidth) {
 				$(".syncButtonAttachment.left").text(sync_state_text);
 			}
 			$(".syncButtonAttachment.left").animate({"width": newWidth + "px"}, 150, function(){
 				if (currentWidth < newWidth) {
 					$(".syncButtonAttachment.left").text(sync_state_text);
 				}
-			});
+			});*/
 		}
 		$(".syncButtonAttachment.right").text(sync_post_text);
 		if (sync_state_text) {
@@ -946,6 +1038,7 @@ tapiriik.ShowDebugInfo = function(){
 	infoPane.slideDown();
 };
 
+/*
 var logo_variant;
 tapiriik.CycleLogo = function(){
 	var variants = ["arabic", "hebrew", "hindi", "inuktitut", "punjabi"];
@@ -958,7 +1051,7 @@ tapiriik.CycleLogo = function(){
 		$(this).remove();
 		img.appendTo($("<a>").attr("href", "/").prependTo($(".logo")).hide().fadeIn());
 	});
-};
+};*/
 
 tapiriik.Logout = function(){
 	$().redirect("/auth/logout", {csrfmiddlewaretoken: csrftoken});
@@ -966,6 +1059,99 @@ tapiriik.Logout = function(){
 
 tapiriik.AB_Begin = function(key){
 	$.post("/ab/begin/" + key);
+};
+
+tapiriik.LoadStyle = function(url) {
+	var first, head, link;
+
+	link = document.createElement("link");
+	link.href = url;
+	link.rel = "stylesheet";
+	link.type = "text/css";
+	head = document.head;
+	first = head.firstChild;
+
+	// Prepend styles in 'head' section
+	head.insertBefore(link, first);
+};
+
+tapiriik.LoadScript = function(url, callback, error) {
+	var script = document.createElement("script");
+
+	// If "fallback" url passed as second argument
+	var args = Array.prototype.slice.call(arguments);
+	if (typeof callback === "string") {
+		var fallbackUrl = callback;
+		callback = error;
+		var errorOri = args[3];
+		error = function() {
+			tapiriik.LoadScript(fallbackUrl, callback, errorOri);
+		};
+	}
+
+	var cb = function() {
+		if (typeof callback === "function") {
+			callback();
+		}
+	};
+
+	// IE
+	if (script.readyState) {
+		script.onreadystatechange = function() {
+			if (script.readyState === "loaded" || script.readyState === "complete") {
+				script.onreadystatechange = null;
+				cb();
+			}
+		};
+
+	// Normal browsers
+	} else {
+		if (typeof error === "function") {
+			script.onerror = error;
+		}
+		script.onload = cb;
+	}
+
+	script.src = url;
+	script.async = true;
+	(document.body || document.head).appendChild(script);
+};
+
+tapiriik.ApplyDatepicker = function() {
+	var element = document.querySelector(".js-datepicker");
+	if (!element || this.ApplyDatepicker._loaded === true) {
+		return;
+	}
+	this.ApplyDatepicker._loaded = true;
+
+	var doneFunc = function() {
+		if (typeof Pikaday === "undefined") {
+			return;
+		}
+
+		function dateFormat(date) {
+			var strArray = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+			var d = date.getDate();
+			var m = strArray[date.getMonth()];
+			var y = date.getFullYear();
+			return [d, m, y].join(" ");
+		}
+
+		var picker = new Pikaday({
+			field: element,
+			firstDay: 1,
+			format: 'D MMM YYYY',
+			toString: dateFormat
+		});
+	};
+
+	var errorFunc = function() {
+		tapiriik.LoadStyle("/static/js/datepicker/pikaday-1.6.1.min.css");
+		tapiriik.LoadScript("/static/js/datepicker/pikaday-1.6.1.min.js", doneFunc);
+	};
+
+	tapiriik.LoadStyle("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/css/pikaday.min.css");
+	tapiriik.LoadScript("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/pikaday.min.js", doneFunc, errorFunc);
 };
 
 $(window).load(tapiriik.Init);

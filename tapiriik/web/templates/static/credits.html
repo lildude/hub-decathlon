@@ -1,14 +1,15 @@
 {% extends "site.html" %}
+{% load i18n %}
 {% block title %}credits{% endblock %}
 {% block content %}
-<h1>Credits</h1>
+<h1>{% trans "Credits" %}</h1>
 <ul style="list-style:none" class="credits">
-
-	<li><b><a href="https://github.com/ppkowalski">Piotr Kowalski</a></b> for connecting tapiriik with <a href="http://motivato.pl">Motivato</a></li>
-	<li><b><a href="https://twitter.com/hozn">Hans Lellelid</a></b> and <b><a href="http://ridewithgps.com">Cullen King</a></b> for bringing us <a href="http://ridewithgps.com">RideWithGPS</a> support</li>
-	<li><b>Todd Mosier</b> at <a href="http://zonefivesoftware.com">Zone Five Software</a> for his help with SportTracks.mobi integration</li>
-	<li><b>Cosmo Catalano</b> for his work with the Strava API</li>
-	<li><b>Strava, Runkeeper et al.</b> for creating and supporting the APIs that make this site possible</li>
-	<li>and finally, <b>all the beta testers</b>. You know who you are.</li>
+	<li>{% trans "Exercisync is based on the" %} <a href="https://github.com/cpfair/tapiriik">tapiriik</a> {% trans "open source project by" %} <b><a href="https://github.com/cpfair">Collin Fair</a></b></li>
+	<li><a href="http://aerobia.ru/clubs/425" target="_blank">exercisync</a> {% trans "is an" %} <a href="https://github.com/antash/exercisync" target="_blank">{% trans "open source project" %}</a> {% trans "by" %} <a href="{% url 'contact' %}">{% trans "Anton Ashmarin" %}</a></li>
+	<li><b><a href="https://github.com/canssens">{% trans "Charles Anssens" %}</a></b> {% trans "for localization/internationalization and integration with DecathlonCoach" %}</li>
+	<li><b><a href="https://github.com/timbilalov">{% trans "Timur Bilalov" %}</a></b> {% trans "for frontend contributions" %}</li>
+	<li><b>{% trans "Aerobia, Polar, Strava et al.</b> for creating and supporting the APIs that make this site possible" %}</li>
+	<li><div>{% trans "Some icons made by" %} <a href="https://www.flaticon.com/authors/freepik" title="Plus">Plus</a> {% trans "from" %} <a href="https://www.flaticon.com/"     title="Flaticon">www.flaticon.com</a> {% trans "is licensed by" %} <a href="http://creativecommons.org/licenses/by/3.0/"     title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div></li>
+	<li>{% trans "and finally, <b>all the beta testers</b>. You know who you are." %}</li>
 </ul>
 {% endblock %}

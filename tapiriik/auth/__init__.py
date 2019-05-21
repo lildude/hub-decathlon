@@ -3,19 +3,23 @@ from .totp import *
 from tapiriik.database import db
 from tapiriik.sync import Sync
 from tapiriik.services import ServiceRecord
-from tapiriik.settings import DIAG_AUTH_TOTP_SECRET, DIAG_AUTH_PASSWORD
+from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD
 from datetime import datetime, timedelta
 from pymongo.read_preferences import ReadPreference
 from bson.objectid import ObjectId
 
 import copy
 
+
 class User:
+
     ConfigurationDefaults = {
         "suppress_auto_sync": False,
         "sync_upload_delay": 0,
-        "sync_skip_before": None
+        "sync_skip_before": datetime.utcnow(),#None,
+        "historical_sync": False
     }
+    
     def Get(id):
         return db.users.find_one({"_id": ObjectId(id)})
 
@@ -49,20 +53,21 @@ class User:
         return ServiceRecord(rec) if rec else None
 
     def SetEmail(user, email):
-        db.users.update({"_id": ObjectId(user["_id"])}, {"$set": {"Email": email}})
+        db.users.update_one({"_id": ObjectId(user["_id"])}, {"$set": {"Email": email}})
 
     def SetTimezone(user, tz):
-        db.users.update({"_id": ObjectId(user["_id"])}, {"$set": {"Timezone": tz}})
+        db.users.update_one({"_id": ObjectId(user["_id"])}, {"$set": {"Timezone": tz}})
 
     def _assocPaymentLikeObject(user, collection, payment_like_object, schedule_now, skip_deassoc=False):
         # Since I seem to have taken this duck-typing quite far
         # First, deassociate payment ids from other accounts that may be using them
         if "_id" in payment_like_object and not skip_deassoc:
-            db.users.update({}, {"$pull": {collection: {"_id": payment_like_object["_id"]}}}, multi=True)
+            db.users.update_many({}, {"$pull": {collection: {"_id": payment_like_object["_id"]}}})
         # Then, attach to us
-        db.users.update({"_id": ObjectId(user["_id"])}, {"$addToSet": {collection: payment_like_object}})
+        db.users.update_one({"_id": ObjectId(user["_id"])}, {"$addToSet": {collection: payment_like_object}})
         if schedule_now:
-            Sync.ScheduleImmediateSync(user)
+            _sync = Sync()
+            _sync.ScheduleImmediateSync(user)
 
     def AssociatePayment(user, payment, schedule_now=True):
         User._assocPaymentLikeObject(user, "Payments", payment, schedule_now)
@@ -74,6 +79,8 @@ class User:
         User._assocPaymentLikeObject(user, "Promos", promo, schedule_now)
 
     def HasActivePayment(user):
+        #for now every body is premium
+        return True 
         # Payments and Promos share the essential data field - Expiry
         # We don't really care if the payment has yet to take place yet - why would it be in the system then?
         # (Timestamp too, but the fact we rely on it here is only for backwards compatability with some old payment records)
@@ -149,7 +156,7 @@ class User:
             existing_config.update(user["Config"] if "Config" in user else {})
             user["Config"] = existing_config
             delta = True
-            db.users.remove({"_id": existingUser["_id"]})
+            db.users.delete_one({"_id": existingUser["_id"]})
         else:
             if serviceRecord._id not in [x["ID"] for x in user["ConnectedServices"]]:
                 # we might be connecting a second account for the same service
@@ -162,25 +169,27 @@ class User:
                 user["ConnectedServices"].append({"Service": serviceRecord.Service.ID, "ID": serviceRecord._id})
                 delta = True
 
-        db.users.update({"_id": user["_id"]}, user)
+        _sync = Sync()
+        db.users.update_one({"_id": user["_id"]}, {'$set':user})
         if delta or (hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0):  # also schedule an immediate sync if there is an outstanding error (i.e. user reconnected)
-            db.connections.update({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException.Type": UserExceptionType.Authorization}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
-            db.connections.update({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException.Type": UserExceptionType.RenewPassword}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
-            Sync.SetNextSyncIsExhaustive(user, True)  # exhaustive, so it'll pick up activities from newly added services / ones lost during an error
+            db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException_Type": UserExceptionType.Authorization}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
+            db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException_Type": UserExceptionType.RenewPassword}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
+            _sync.SetNextSyncIsExhaustive(user, True)  # exhaustive, so it'll pick up activities from newly added services / ones lost during an error
             if hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0:
-                Sync.ScheduleImmediateSync(user)
+                _sync.ScheduleImmediateSync(user)
 
     def DisconnectService(serviceRecord, preserveUser=False):
         # not that >1 user should have this connection
         activeUsers = list(db.users.find({"ConnectedServices.ID": serviceRecord._id}))
         if len(activeUsers) == 0:
             raise Exception("No users found with service " + serviceRecord._id)
-        db.users.update({}, {"$pull": {"ConnectedServices": {"ID": serviceRecord._id}}}, multi=True)
+        db.users.update_many({}, {"$pull": {"ConnectedServices": {"ID": serviceRecord._id}}})
         if not preserveUser:
             for user in activeUsers:
                 if len(user["ConnectedServices"]) - 1 == 0:
                     # I guess we're done here?
-                    db.users.remove({"_id": user["_id"]})
+                    db.activity_records.delete_one({"UserID": user["_id"]})
+                    db.users.delete_one({"_id": user["_id"]})
 
     def AuthByService(serviceRecord):
         return db.users.find_one({"ConnectedServices.ID": serviceRecord._id})
@@ -202,7 +211,7 @@ class User:
                 user["FlowExceptions"][:] = [x for x in user["FlowExceptions"] if x != backwardsException]
             elif not flowToSource and backwardsException not in user["FlowExceptions"]:
                 user["FlowExceptions"].append(backwardsException)
-        db.users.update({"_id": user["_id"]}, {"$set": {"FlowExceptions": user["FlowExceptions"]}})
+        db.users.update_one({"_id": user["_id"]}, {"$set": {"FlowExceptions": user["FlowExceptions"]}})
 
     def GetFlowExceptions(user):
         if "FlowExceptions" not in user:
@@ -234,12 +243,12 @@ class User:
             del sparseConfig[k]
         user["Config"] = sparseConfig
         if not no_save:
-            db.users.update({"_id": user["_id"]}, {"$set": {"Config": sparseConfig}})
+            db.users.update_one({"_id": user["_id"]}, {"$set": {"Config": sparseConfig}})
 
 
 class DiagnosticsUser:
     def IsAuthenticated(req):
-        return DIAG_AUTH_TOTP_SECRET is None or DIAG_AUTH_PASSWORD is None or ("diag_auth" in req.session and req.session["diag_auth"] is True)
+        return DIAG_AUTH_LOGIN_SECRET is None or DIAG_AUTH_PASSWORD is None or ("diag_auth" in req.session and req.session["diag_auth"] is True)
 
     def Authorize(req):
         req.session["diag_auth"] = True

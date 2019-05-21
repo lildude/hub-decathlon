@@ -36,6 +36,17 @@ from tapiriik.services.Setio import SetioService
 Setio = SetioService()
 from tapiriik.services.Singletracker import SingletrackerService
 Singletracker = SingletrackerService()
+from tapiriik.services.Aerobia import AerobiaService
+Aerobia = AerobiaService()
+from tapiriik.services.PolarFlow import PolarFlowService
+PolarFlow = PolarFlowService()
+from tapiriik.services.Decathlon import DecathlonService
+Decathlon = DecathlonService()
+from tapiriik.services.PolarPersonalTrainer import PolarPersonalTrainerService
+PolarPersonalTrainer = PolarPersonalTrainerService()
+
+from tapiriik.services.Fitbit import FitbitService
+Fitbit = FitbitService()
 
 PRIVATE_SERVICES = []
 try:

@@ -53,23 +53,26 @@ def sync_status(req):
 def sync_recent_activity(req):
     if not req.user:
         return HttpResponse(status=403)
-    res = SynchronizationTask.RecentSyncActivity(req.user)
+    _synchronization_task = SynchronizationTask(req.user)
+    res = _synchronization_task.RecentSyncActivity(req.user)
     return HttpResponse(json.dumps(res), content_type="application/json")
 
 @require_POST
 def sync_schedule_immediate(req):
+    _sync = Sync()
     if not req.user:
         return HttpResponse(status=401)
-    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] < Sync.MinimumSyncInterval:
+    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] < _sync.MinimumSyncInterval:
         return HttpResponse(status=403)
     exhaustive = None
-    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] > Sync.MaximumIntervalBeforeExhaustiveSync:
+    if "LastSynchronization" in req.user and req.user["LastSynchronization"] is not None and datetime.utcnow() - req.user["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
         exhaustive = True
-    Sync.ScheduleImmediateSync(req.user, exhaustive)
+    _sync.ScheduleImmediateSync(req.user, exhaustive)
     return HttpResponse()
 
 @require_POST
 def sync_clear_errorgroup(req, service, group):
+    _sync = Sync()
     if not req.user:
         return HttpResponse(status=401)
 
@@ -83,10 +86,11 @@ def sync_clear_errorgroup(req, service, group):
         if "UserException" in x and "ClearGroup" in x["UserException"] and x["UserException"]["ClearGroup"] == group:
             to_clear_count += 1
 
+    _sync = Sync()
     if to_clear_count > 0:
-            db.connections.update({"_id": rec._id}, {"$pull":{"SyncErrors":{"UserException.ClearGroup": group}}})
-            db.users.update({"_id": req.user["_id"]}, {'$inc':{"BlockingSyncErrorCount":-to_clear_count}}) # In the interests of data integrity, update the summary counts immediately as opposed to waiting for a sync to complete.
-            Sync.ScheduleImmediateSync(req.user, True) # And schedule them for an immediate full resynchronization, so the now-unblocked services can be brought up to speed.            return HttpResponse()
+            db.connections.update_one({"_id": rec._id}, {"$pull":{"SyncErrors":{"UserException_ClearGroup": group}}})
+            db.users.update_one({"_id": req.user["_id"]}, {'$inc':{"BlockingSyncErrorCount":-to_clear_count}}) # In the interests of data integrity, update the summary counts immediately as opposed to waiting for a sync to complete.
+            _sync.ScheduleImmediateSync(req.user, True) # And schedule them for an immediate full resynchronization, so the now-unblocked services can be brought up to speed.            return HttpResponse()
             return HttpResponse()
 
     return HttpResponse(status=404)
@@ -95,11 +99,33 @@ def sync_clear_errorgroup(req, service, group):
 def sync_trigger_partial_sync_callback(req, service):
     svc = Service.FromID(service)
     if req.method == "POST":
-        from sync_remote_triggers import trigger_remote
-        affected_connection_external_ids = svc.ExternalIDsForPartialSyncTrigger(req)
-        trigger_remote.apply_async(args=[service, affected_connection_external_ids])
+        # if whe're using decathlon services, force resync
+        # Get users ids list, depending of services
+        response = svc.ExternalIDsForPartialSyncTrigger(req)
+
+        _sync = Sync()
+        # Get users _id list from external ID
+        users_to_sync = _sync.getUsersIDFromExternalId(response, service)
+
+        if not users_to_sync:
+            return HttpResponse(status=401)
+        else:
+            for user in users_to_sync:
+
+                # For each users, if we can sync now
+                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
+                        user["LastSynchronization"] < _sync.MinimumSyncInterval:
+                    return HttpResponse(status=403)
+                exhaustive = None
+                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
+                        user["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
+                    exhaustive = True
+                # Force immadiate sync
+                _sync.ScheduleImmediateSync(user, exhaustive)
+
         return HttpResponse(status=204)
-    elif req.method == "GET":
+
+    elif req.method == "GET":	
         return svc.PartialSyncTriggerGET(req)
     else:
         return HttpResponse(status=400)

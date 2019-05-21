@@ -1,6 +1,8 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
+import os
+
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -31,11 +33,11 @@ urlpatterns = patterns('',
 
     url(r'^configure/save/(?P<service>.+)?$', 'tapiriik.web.views.config.config_save', {}, name='config_save', ),
     url(r'^configure/dropbox$', 'tapiriik.web.views.config.dropbox', {}, name='dropbox_config', ),
+    url(r'^aerobiaConfig$', 'tapiriik.web.views.config.aerobia', {}, name='aerobia_config', ),
     url(r'^configure/flow/save/(?P<service>.+)?$', 'tapiriik.web.views.config.config_flow_save', {}, name='config_flow_save', ),
     url(r'^settings/?$', 'tapiriik.web.views.settings.settings', {}, name='settings_panel', ),
 
     url(r'^dropbox/browse-ajax/?$', 'tapiriik.web.views.dropbox.browse', {}, name='dropbox_browse_ajax', ),
-    url(r'^dropbox/browse-ajax/(?P<path>.+)?$', 'tapiriik.web.views.dropbox.browse', {}, name='dropbox_browse_ajax', ),
 
     url(r'^sync/status$', 'tapiriik.web.views.sync_status', {}, name='sync_status'),
     url(r'^sync/activity$', 'tapiriik.web.views.sync_recent_activity', {}, name='sync_recent_activity'),
@@ -47,29 +49,22 @@ urlpatterns = patterns('',
 
     url(r'^sync/remote_callback/trigger_partial_sync/(?P<service>.+)$', 'tapiriik.web.views.sync_trigger_partial_sync_callback', {}, name='sync_trigger_partial_sync_callback'),
 
-    url(r'^diagnostics/$', 'tapiriik.web.views.diag_dashboard', {}, name='diagnostics_dashboard'),
-    url(r'^diagnostics/queue$', 'tapiriik.web.views.diag_queue_dashboard', {}, name='diagnostics_queue_dashboard'),
-    url(r'^diagnostics/errors$', 'tapiriik.web.views.diag_errors', {}, name='diagnostics_errors'),
-    url(r'^diagnostics/error/(?P<error>.+)$', 'tapiriik.web.views.diag_error', {}, name='diagnostics_error'),
-    url(r'^diagnostics/graphs$', 'tapiriik.web.views.diag_graphs', {}, name='diagnostics_graphs'),
-    url(r'^diagnostics/user/unsu$', 'tapiriik.web.views.diag_unsu', {}, name='diagnostics_unsu'),
-    url(r'^diagnostics/user/(?P<user>.+)$', 'tapiriik.web.views.diag_user', {}, name='diagnostics_user'),
-    url(r'^diagnostics/payments/$', 'tapiriik.web.views.diag_payments', {}, name='diagnostics_payments'),
-    url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
-    url(r'^diagnostics/login$', 'tapiriik.web.views.diag_login', {}, name='diagnostics_login'),
+
+    url(r'^status/$', 'tapiriik.web.views.server_status', {}, name='server_status'),
+    url(r'^status_elb/$', 'tapiriik.web.views.server_status_elb', {}, name='server_status_elb'),
 
     url(r'^supported-activities$', 'tapiriik.web.views.supported_activities', {}, name='supported_activities'),
     # url(r'^supported-services-poll$', 'tapiriik.web.views.supported_services_poll', {}, name='supported_services_poll'),
 
-    url(r'^payments/claim$', 'tapiriik.web.views.payments_claim', {}, name='payments_claim'),
-    url(r'^payments/claim-ajax$', 'tapiriik.web.views.payments_claim_ajax', {}, name='payments_claim_ajax'),
-    url(r'^payments/promo-claim-ajax$', 'tapiriik.web.views.payments_promo_claim_ajax', {}, name='payments_promo_claim_ajax'),
-    url(r'^payments/claim-wait-ajax$', 'tapiriik.web.views.payments_claim_wait_ajax', {}, name='payments_claim_wait_ajax'),
-    url(r'^payments/claim/(?P<code>[a-f0-9]+)$', 'tapiriik.web.views.payments_claim_return', {}, name='payments_claim_return'),
-    url(r'^payments/return$', 'tapiriik.web.views.payments_return', {}, name='payments_return'),
-    url(r'^payments/confirmed$', 'tapiriik.web.views.payments_confirmed', {}, name='payments_confirmed'),
-    url(r'^payments/ipn$', 'tapiriik.web.views.payments_ipn', {}, name='payments_ipn'),
-    url(r'^payments/external/(?P<provider>[^/]+)/refresh$', 'tapiriik.web.views.payments_external_refresh', {}, name='payments_external_refresh'),
+    # url(r'^payments/claim$', 'tapiriik.web.views.payments_claim', {}, name='payments_claim'),
+    # url(r'^payments/claim-ajax$', 'tapiriik.web.views.payments_claim_ajax', {}, name='payments_claim_ajax'),
+    # url(r'^payments/promo-claim-ajax$', 'tapiriik.web.views.payments_promo_claim_ajax', {}, name='payments_promo_claim_ajax'),
+    # url(r'^payments/claim-wait-ajax$', 'tapiriik.web.views.payments_claim_wait_ajax', {}, name='payments_claim_wait_ajax'),
+    # url(r'^payments/claim/(?P<code>[a-f0-9]+)$', 'tapiriik.web.views.payments_claim_return', {}, name='payments_claim_return'),
+    # url(r'^payments/return$', 'tapiriik.web.views.payments_return', {}, name='payments_return'),
+    # url(r'^payments/confirmed$', 'tapiriik.web.views.payments_confirmed', {}, name='payments_confirmed'),
+    # url(r'^payments/ipn$', 'tapiriik.web.views.payments_ipn', {}, name='payments_ipn'),
+    # url(r'^payments/external/(?P<provider>[^/]+)/refresh$', 'tapiriik.web.views.payments_external_refresh', {}, name='payments_external_refresh'),
 
     url(r'^ab/begin/(?P<key>[^/]+)$', 'tapiriik.web.views.ab_web_experiment_begin', {}, name='ab_web_experiment_begin'),
 
@@ -90,5 +85,25 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
 )
+
+
+
+if 'DIAG_ENABLED' in os.environ and os.environ['DIAG_ENABLED'] == 'True':
+    urlpatterns_diag = patterns('',
+    url(r'^diagnostics/$', 'tapiriik.web.views.diag_dashboard', {}, name='diagnostics_dashboard'),
+    url(r'^diagnostics/queue$', 'tapiriik.web.views.diag_queue_dashboard', {}, name='diagnostics_queue_dashboard'),
+    url(r'^diagnostics/errors$', 'tapiriik.web.views.diag_errors', {}, name='diagnostics_errors'),
+    url(r'^diagnostics/error/(?P<error>.+)$', 'tapiriik.web.views.diag_error', {}, name='diagnostics_error'),
+    url(r'^diagnostics/graphs$', 'tapiriik.web.views.diag_graphs', {}, name='diagnostics_graphs'),
+    url(r'^diagnostics/user/unsu$', 'tapiriik.web.views.diag_unsu', {}, name='diagnostics_unsu'),
+    url(r'^diagnostics/user/(?P<user>.+)$', 'tapiriik.web.views.diag_user', {}, name='diagnostics_user'),
+    url(r'^diagnostics/payments/$', 'tapiriik.web.views.diag_payments', {}, name='diagnostics_payments'),
+    url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
+    url(r'^diagnostics/login$', 'tapiriik.web.views.diag_login', {}, name='diagnostics_login'),
+    )
+
+    urlpatterns += urlpatterns_diag
+
+
 
 urlpatterns += staticfiles_urlpatterns()

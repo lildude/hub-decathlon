@@ -26,9 +26,11 @@ class Service:
 
     def List():
         return [
+            Aerobia,
             RunKeeper,
             Strava,
             GarminConnect,
+            PolarFlow,
             Endomondo,
             SportTracks,
             Dropbox,
@@ -43,7 +45,10 @@ class Service:
             Smashrun,
             BeginnerTriathlete,
             Setio,
-            Singletracker
+            Singletracker,
+            Decathlon,
+            PolarPersonalTrainer,
+            Fitbit,
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -53,6 +58,7 @@ class Service:
         return [
             TrainerRoad, # Special case, since TR has a lot more data in some very specific areas
             GarminConnect, # The reference
+            PolarFlow,
             Smashrun,  # TODO: not sure if this is the right place, but it seems to have a lot of data
             SportTracks, # Pretty much equivalent to GC, no temperature (not that GC temperature works all thar well now, but I digress)
             TrainingPeaks, # No seperate run cadence, but has temperature
@@ -68,7 +74,11 @@ class Service:
             NikePlus,
             Pulsstory,
             Setio,
-            Singletracker
+            Singletracker,
+            Aerobia,
+            Decathlon,
+            PolarPersonalTrainer,
+            Fitbit,
         ] + PRIVATE_SERVICES
 
     def WebInit():
@@ -98,14 +108,14 @@ class Service:
             if service.PartialSyncTriggerRequiresPolling:
                 service.SubscribeToPartialSyncTrigger(serviceRecord) # The subscription is attached more to the remote account than to the local one, so we subscribe/unsubscribe here rather than in User.ConnectService, etc.
         elif serviceRecord.Authorization != authDetails or (hasattr(serviceRecord, "ExtendedAuthorization") and serviceRecord.ExtendedAuthorization != extendedAuthDetailsForStorage):
-            db.connections.update({"ExternalID": uid, "Service": service.ID}, {"$set": {"Authorization": authDetails, "ExtendedAuthorization": extendedAuthDetailsForStorage if persistExtendedAuthDetails else None}})
+            db.connections.update_one({"ExternalID": uid, "Service": service.ID}, {"$set": {"Authorization": authDetails, "ExtendedAuthorization": extendedAuthDetailsForStorage if persistExtendedAuthDetails else None}})
 
         # if not persisted, these details are stored in the cache db so they don't get backed up
         if service.RequiresExtendedAuthorizationDetails:
             if not persistExtendedAuthDetails:
-                cachedb.extendedAuthDetails.update({"ID": serviceRecord._id}, {"ID": serviceRecord._id, "ExtendedAuthorization": extendedAuthDetailsForStorage}, upsert=True)
+                cachedb.extendedAuthDetails.update_one({"ID": serviceRecord._id}, {"ID": serviceRecord._id, "ExtendedAuthorization": extendedAuthDetailsForStorage}, upsert=True)
             else:
-                cachedb.extendedAuthDetails.remove({"ID": serviceRecord._id})
+                cachedb.extendedAuthDetails.delete_one({"ID": serviceRecord._id})
         return serviceRecord
 
     def PersistExtendedAuthDetails(serviceRecord):
@@ -119,8 +129,8 @@ class Service:
             raise ValueError("Service record claims to have extended auth, facts suggest otherwise")
         else:
             extAuth = extAuthRecord["ExtendedAuthorization"]
-        db.connections.update({"_id": serviceRecord._id}, {"$set": {"ExtendedAuthorization": extAuth}})
-        cachedb.extendedAuthDetails.remove({"ID": serviceRecord._id})
+        db.connections.update_one({"_id": serviceRecord._id}, {"$set": {"ExtendedAuthorization": extAuth}})
+        cachedb.extendedAuthDetails.delete_one({"ID": serviceRecord._id})
 
     def DeleteServiceRecord(serviceRecord):
         svc = serviceRecord.Service
@@ -128,7 +138,7 @@ class Service:
         if svc.PartialSyncTriggerRequiresPolling and serviceRecord.PartialSyncTriggerSubscribed:
             svc.UnsubscribeFromPartialSyncTrigger(serviceRecord)
         svc.RevokeAuthorization(serviceRecord)
-        cachedb.extendedAuthDetails.remove({"ID": serviceRecord._id})
-        db.connections.remove({"_id": serviceRecord._id})
+        cachedb.extendedAuthDetails.delete_one({"ID": serviceRecord._id})
+        db.connections.delete_one({"_id": serviceRecord._id})
 
 Service.Init()

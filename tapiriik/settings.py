@@ -1,6 +1,14 @@
 import os
+import sys
 from datetime import datetime
+from django.utils.translation import ugettext_lazy as _
+import logging
+import logging.handlers
+import io
+
 # Django settings for tapiriik project.
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -24,6 +32,33 @@ TIME_ZONE = 'America/Chicago'
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
+
+LANGUAGES = (
+    ('en', _('English')),
+    ('fr', _('French')),
+    ('ru', _('Russian')),
+)
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'tapiriik/locale'),
+)
+
+#LOG_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os.pardir)) + '/logs'
+LOG_PATH = os.path.abspath("logs")
+
+logging.basicConfig(
+    filename=os.path.abspath("logs") + '/log_global.log',
+    level=logging.INFO,
+    format='%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+_GLOBAL_LOGGER = logging.getLogger()
+_GLOBAL_LOGGER.setLevel(logging.INFO)
+logging_console_handler = logging.StreamHandler(io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8'))
+logging_console_handler.setLevel(logging.INFO)
+logging_console_handler.setFormatter(logging.Formatter('%(asctime)s|%(levelname)s\t|%(message)s |%(funcName)s in %(filename)s:%(lineno)d','%Y-%m-%d %H:%M:%S'))
+_GLOBAL_LOGGER.addHandler(logging_console_handler)
 
 SITE_ID = 1
 
@@ -62,6 +97,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    #os.path.join(BASE_DIR, 'assets'), 
 )
 
 # List of finder classes that know how to find static files in
@@ -101,6 +137,9 @@ PIPELINE_CSS = {
     },
 }
 
+PIPELINE_CSS_COMPRESSOR  = 'pipeline.compressors.cssmin.CSSMinCompressor'
+PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.jsmin.JSMinCompressor'
+
 PIPELINE_DISABLE_WRAPPER = True
 
 # Make this unique, and don't share it with anybody.
@@ -119,13 +158,15 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'tapiriik.web.startup.Startup',
     'tapiriik.web.startup.ServiceWebStartup',
-    'tapiriik.auth.SessionAuth'
+    'tapiriik.auth.SessionAuth',
+    'tapiriik.device_support.DeviceSupportMiddleware'
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -141,7 +182,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    "I:/wamp/www/tapiriik/tapiriik/web/templates",
+    "C:/wamp/www/tapiriik/tapiriik/web/templates",
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -152,14 +193,19 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.stats',
     'tapiriik.web.context_processors.providers',
     'tapiriik.web.context_processors.celebration_mode',
-    'django.core.context_processors.static',)
+    'tapiriik.web.context_processors.device_support',
+    'tapiriik.web.context_processors.background_use',
+    'django.core.context_processors.static',
+    'django.core.context_processors.request',
+    'django.template.context_processors.i18n')
 
 INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tapiriik.web',
-    'pipeline'
+    'pipeline',
+    'webpack_loader'
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -188,20 +234,37 @@ LOGGING = {
         'console': {
             'level': 'ERROR',
             'class': 'logging.StreamHandler'
-        }
+        },
+        'logfile': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': '/tapiriik/logs/app.log'
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins', 'console'],
+            'handlers': ['mail_admins', 'console', 'logfile'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'django': {
+            'handlers': ['logfile'],
+            'level': 'ERROR',
+            'propagate': False,
         },
     }
 }
 
+WEBPACK_LOADER = {
+    'DEFAULT': {
+            'BUNDLE_DIR_NAME': 'js/bundles/',
+            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+        }
+}
+
 TEST_RUNNER = 'tapiriik.testing.MongoDBTestRunner'
 
-MONGO_HOST = "localhost"
+MONGO_HOST_API = "localhost"
 MONGO_REPLICA_SET = None
 MONGO_CLIENT_OPTIONS = {}
 MONGO_FULL_WRITE_CONCERN = 1
@@ -240,9 +303,23 @@ SOFT_LAUNCH_SERVICES = []
 
 # Visibly disabled + excluded from synchronization
 DISABLED_SERVICES = []
-
+# Allow only these services to get connected
+CONNECTION_SERVICES = []
 # Services no longer available - will be removed across the site + excluded from sync.
-WITHDRAWN_SERVICES = []
+WITHDRAWN_SERVICES = [
+    "nikeplus"
+    , "endomondo"
+    , "motivato"
+    , "pulsstory"
+    , "runkeeper"
+    , "setio"
+    , "singletracker"
+    , "sporttracks"
+    , "trainasone"
+    , "trainerroad"
+    , "trainingpeaks"
+    , "velohero"
+]
 
 # Where to put per-user sync logs
 USER_SYNC_LOGS = "./"
@@ -254,7 +331,7 @@ SITE_VER = "unknown"
 AGGRESSIVE_CACHE = True
 
 # Diagnostics auth, None = no auth
-DIAG_AUTH_TOTP_SECRET = DIAG_AUTH_PASSWORD = None
+DIAG_AUTH_LOGIN_SECRET = DIAG_AUTH_PASSWORD = None
 
 SPORTTRACKS_OPENFIT_ENDPOINT = "https://api.sporttracks.mobi/api/v2"
 

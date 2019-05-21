@@ -1,0 +1,25 @@
+mongo:
+  image: 'mongo:3'
+  ports:
+    - '27017:27017'
+  expose:
+    - "27017"
+  environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: dev
+
+redis:
+  image: 'redis:3'
+  expose:
+    - '6379'
+
+web:
+  image: 'my-hub-decathlon:latest'
+  links:
+    - mongo
+    - redis
+  volumes:
+    - ./:/tapiriik:rw
+  ports:
+    - '8000:8000'
+  env_file: environment

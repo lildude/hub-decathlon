@@ -6,7 +6,6 @@ from tapiriik.auth import User
 import json
 import dateutil.parser
 
-
 @require_POST
 def account_setemail(req):
     if not req.user:
@@ -29,5 +28,7 @@ def account_setconfig(req):
     if data["sync_skip_before"] and len(data["sync_skip_before"]):
         data["sync_skip_before"] = dateutil.parser.parse(data["sync_skip_before"])
     User.SetConfiguration(req.user, data)
-    Sync.SetNextSyncIsExhaustive(req.user, True)
+
+    _sync = Sync()
+    _sync.SetNextSyncIsExhaustive(req.user, True)
     return HttpResponse()
