@@ -278,6 +278,7 @@ class StravaService(ServiceBase):
         activityDetails = res.json()
 
         activity.Notes = activityDetails["description"]
+        activity.DeviceName = activityDetails["device_name"]
 
         lapsdata = activityDetails["laps"]
 
@@ -402,6 +403,7 @@ class StravaService(ServiceBase):
                     "data_type": "fit",
                     "activity_name": activity.Name,
                     "description": activity.Notes, # Paul Mach said so.
+                    "device_name": activity.DeviceName,
                     "activity_type": self._activityTypeMappings[activity.Type],
                     "private": 1 if activity.Private else 0}
 
@@ -442,6 +444,7 @@ class StravaService(ServiceBase):
             req = {
                     "name": activity.Name if activity.Name else activity.StartTime.strftime("%d/%m/%Y"), # This is required
                     "description": activity.Notes,
+                    "device_name" : activity.DeviceName ,
                     "type": self._activityTypeMappings[activity.Type],
                     "private": 1 if activity.Private else 0,
                     "start_date_local": localUploadTS,
