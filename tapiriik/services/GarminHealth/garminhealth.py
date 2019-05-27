@@ -693,15 +693,16 @@ class GarminHealthService(ServiceBase):
 
                     activity_name = item['activityType']
                     if item['deviceName'] is not 'unknown':
-                        activity_name = activity_name + " - " +  item['deviceName']
+                        activity_name = activity_name + " - " + item['deviceName']
 
                     # parse date start to get timezone and date
-                    activity.StartTime = datetime.fromtimestamp(item['startTimeInSeconds'])
+                    activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
                     activity.TZ = pytz.utc
 
-                    logger.debug("\tActivity s/t %s: %s" % (activity.StartTime, activity_name))
+                    logging.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
 
-                    activity.EndTime = activity.StartTime + timedelta(0, (item["durationInSeconds"]))
+                    activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
+
                     activity.ServiceData = {"ActivityID": item["summaryId"]}
                     if "manual" in item:
                         activity.ServiceData['Manual'] = item["manual"]
@@ -804,7 +805,7 @@ class GarminHealthService(ServiceBase):
 
             start_date = end_date
 
-        logging.info("\t\t total Fitbit activities downloaded : " + str(index_total))
+        logging.info("\t\t total Garmin activities downloaded : " + str(index_total))
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
@@ -840,13 +841,6 @@ class GarminHealthService(ServiceBase):
         signin_info = self._request_signin('GET', self.URI_ACTIVITIES_DETAIL, user_tokens,
                                            parameters=signin_parameters)
 
-        print('signin parameter ------------')
-        print(signin_parameters)
-        print('------------')
-
-        print(' signin info ------------')
-        print(signin_info)
-        print('------------')
         resp = requests.request("GET", signin_info['path'], data=payload, headers=signin_info['header'])
 
         if resp.status_code != 204 and resp.status_code != 200:
@@ -868,17 +862,19 @@ class GarminHealthService(ServiceBase):
                     ridedata = {}
                     lapWaypoints = []
                     startTimeLap = activity.StartTime
+                    endTimeLap = activity.EndTime
 
                     if "samples" in item:
-                        formatedDate = startTimeLap
                         activity.GPS = True
                         activity.Stationary = False
                         for pt in item['samples']:
                             wp = Waypoint()
 
-                            delta = int(pt.get('startTimeInSeconds'))
-                            formatedDate = startTimeLap + timedelta(seconds=delta)
-                            wp.Timestamp = formatedDate
+                            delta = int(pt.get('clockDurationInSeconds'))
+                            dateStartPoint = int(pt.get('startTimeInSeconds'))
+                            dateStartPointDt = datetime.utcfromtimestamp(dateStartPoint)
+
+                            wp.Timestamp = dateStartPointDt
 
                             wp.Location = Location()
                             if "latitudeInDegree" in pt:
@@ -891,38 +887,33 @@ class GarminHealthService(ServiceBase):
                             if "totalDistanceInMeters" in pt:
                                 wp.Distance = int(pt.get('totalDistanceInMeters'))
 
-                            #if "elevationInMeters" in pt:
-                            #    ridedata[delta]['LAP'] = int(pt.get('elevationInMeters'))
-
                             if "speedMetersPerSecond" in pt:
                                 wp.Speed = int(pt.get('speedMetersPerSecond'))
 
                             if "heartRate" in pt:
                                 wp.HR = int(pt.get('heartRate'))
 
-                            # current sample is = to lap occur , sobuild a new lap
-                            if delta in lapsdata:
-                                lap = Lap(stats=activity.Stats, startTime=startTimeLap, endTime=formatedDate)
+                            # current sample is = to lap occur , so store current nap and build a new one
+                            if dateStartPoint in lapsdata:
+
+                                lap = Lap(stats=activity.Stats, startTime=startTimeLap, endTime=dateStartPointDt)
                                 lap.Waypoints = lapWaypoints
                                 activity.Laps.append(lap)
                                 # re init a new lap
-                                startTimeLap = formatedDate
+                                startTimeLap = datetime.utcfromtimestamp(dateStartPoint)
                                 lapWaypoints = []
                             # add occur
                             lapWaypoints.append(wp)
 
                         # build last lap
                         if len(lapWaypoints) > 0:
-                            lap = Lap(stats=activity.Stats, startTime=startTimeLap, endTime=formatedDate)
+                            lap = Lap(stats=activity.Stats, startTime=startTimeLap, endTime=endTimeLap)
                             lap.Waypoints = lapWaypoints
                             activity.Laps.append(lap)
                     else:
                         activity.Laps = [Lap(startTime=activity.StartTime, endTime=activity.EndTime, stats=activity.Stats)]
 
                     break
-                else:
-                    print('C est pas la bonne')
-
         return activity
 
     # Garmin Health is on read only access, we can't upload activities
