@@ -898,7 +898,6 @@ class GarminHealthService(ServiceBase):
                                 wp.Speed = int(pt.get('speedMetersPerSecond'))
 
                             if "heartRate" in pt:
-                                print(pt.get('heartRate'))
                                 wp.HR = int(pt.get('heartRate'))
 
                             # current sample is = to lap occur , sobuild a new lap
