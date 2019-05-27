@@ -387,7 +387,7 @@ class DecathlonService(ServiceBase):
                     wp.HR = rd['HR']
 
                 if 'SPEED' in rd :
-                    wp.Speed = rd['SPEED']
+                    wp.Speed = rd['SPEED'] / 3600
 
                 if 'DISTANCE' in rd :
                     wp.Distance = rd['DISTANCE']

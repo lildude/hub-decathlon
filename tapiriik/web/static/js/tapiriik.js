@@ -1150,8 +1150,8 @@ tapiriik.ApplyDatepicker = function() {
 		tapiriik.LoadScript("/static/js/datepicker/pikaday-1.6.1.min.js", doneFunc);
 	};
 
-	tapiriik.LoadStyle("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/css/pikaday.min.css");
-	tapiriik.LoadScript("//cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/pikaday.min.js", doneFunc, errorFunc);
+	tapiriik.LoadStyle("https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/css/pikaday.min.css");
+	tapiriik.LoadScript("https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.6.1/pikaday.min.js", doneFunc, errorFunc);
 };
 
 $(window).load(tapiriik.Init);
