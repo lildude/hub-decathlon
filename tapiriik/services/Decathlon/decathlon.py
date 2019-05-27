@@ -139,7 +139,8 @@ class DecathlonService(ServiceBase):
         "kcal" : "23",
         "speedaverage" : "9",
         "hrcurrent" : "1",
-        "speedcurrent" : "6"
+        "speedcurrent" : "6",
+        "hravg" : "4"
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -267,6 +268,8 @@ class DecathlonService(ServiceBase):
                         activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val.text))
                     if val.get('id') ==  self._unitMap["kcal"]:
                         activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val.text))
+                    if val.get('id') ==  self._unitMap["hravg"]:
+                        activity.Stats.HR.Average = int(val.text)
                     if val.get('id') ==  self._unitMap["speedaverage"]:
                         meterperhour = int(val.text)
                         meterpersecond = meterperhour/3600
@@ -279,7 +282,10 @@ class DecathlonService(ServiceBase):
                     activity.Name = ride.find('LIBELLE').text
                 
                 activity.Private = False
-                activity.Stationary = ride.find('MANUAL').text
+                if ride.find('MANUAL').text == "1" :
+                    activity.Stationary = True
+                else :
+                    activity.Stationary = False
                 activity.GPS = ride.find('ABOUT').find('TRACK').text
                 activity.AdjustTZ()
                 activity.CalculateUID()
@@ -314,43 +320,95 @@ class DecathlonService(ServiceBase):
         except:
             raise APIException("Stream data returned from Decathlon is not XML")
 
-        lap = Lap(stats = activity.Stats, startTime = activity.StartTime, endTime = activity.EndTime) 
-        activity.Laps = [lap]
-        lap.Waypoints = []
-        
         activity.GPS = False
-
+        activity.Stationary = True
         #work on date
         startdate = root.find('.//STARTDATE').text
         timezone = root.find('.//TIMEZONE').text
         datebase = parse(startdate+timezone)
 
+        ridedata = {}
+        ridedataindex = []
+
         for pt in root.iter('LOCATION'):
-            wp = Waypoint()
-            
             delta = int(pt.get('elapsed_time'))
-            formatedDate = datebase + timedelta(seconds=delta)
-
-            wp.Timestamp = formatedDate#self._parseDate(formatedDate.isoformat())
-
-            wp.Location = Location()
-            wp.Location.Latitude = float(pt.find('LATITUDE').text[:8])
-            wp.Location.Longitude = float(pt.find('LONGITUDE').text[:8])
+            ridedataindex.append(delta)
+            ridedata[delta] = {}
+            if activityID == 'eu2132ac60d9a40a1d9a' :
+                logging.info('========time : '+ str(delta))
+                logging.info('========lat : '+ str(float(pt.find('LATITUDE').text[:8])))
+            ridedata[delta]['LATITUDE'] = float(pt.find('LATITUDE').text[:8])
+            ridedata[delta]['LONGITUDE'] = float(pt.find('LONGITUDE').text[:8])
+            ridedata[delta]['ELEVATION'] = int(pt.find('ELEVATION').text[:8])
+        
+        if len(ridedata)>0 :
             activity.GPS = True
-            wp.Location.Altitude = int(pt.find('ELEVATION').text[:8])
+            activity.Stationary = False
 
-            #get the HR value in the Datastream node and measures collection
-            for hr in root.iter('MEASURE'):
-                if pt.get('elapsed_time') == hr.get('elapsed_time'):
-                    for measureValue in hr.iter('VALUE'):
-                        if measureValue.get('id') == "1":
-                            wp.HR = int(measureValue.text)
-                            break
-                    break
-            
-            lap.Waypoints.append(wp)
-        activity.Stationary = len(lap.Waypoints) == 0
+        for measure in root.iter('MEASURE'):
+            delta = int(measure.get('elapsed_time'))
+            if delta not in ridedataindex :
+                ridedataindex.append(delta)
+                ridedata[delta] = {}
 
+            for measureValue in measure.iter('VALUE'):
+                if measureValue.get('id') == "1":
+                    ridedata[delta]['HR'] = int(measureValue.text)
+                if measureValue.get('id') == "6":
+                    ridedata[delta]['SPEED'] = int(measureValue.text)
+                if measureValue.get('id') == "5":
+                    ridedata[delta]['DISTANCE'] = int(measureValue.text)
+                if measureValue.get('id') == "20":
+                    ridedata[delta]['LAP'] = int(measureValue.text)
+
+        ridedataindex.sort()
+
+
+        if len(ridedata) == 0 :
+            lap = Lap(stats=activity.Stats, startTime=activity.StartTime, endTime=activity.EndTime)
+            activity.Laps = [lap]
+        else :
+            lapWaypoints = []
+            startTimeLap = activity.StartTime
+            for elapsedTime in ridedataindex:
+                rd = ridedata[elapsedTime]
+                wp = Waypoint()
+                delta = elapsedTime
+                formatedDate = datebase + timedelta(seconds=delta)
+                wp.Timestamp = formatedDate#self._parseDate(formatedDate.isoformat())
+
+                if 'LATITUDE' in rd :
+                    wp.Location = Location()
+                    wp.Location.Latitude = rd['LATITUDE']
+                    wp.Location.Longitude = rd['LONGITUDE']
+                    wp.Location.Altitude = rd['ELEVATION']
+
+                if 'HR' in rd :
+                    wp.HR = rd['HR']
+
+                if 'SPEED' in rd :
+                    wp.Speed = rd['SPEED'] / 3600
+
+                if 'DISTANCE' in rd :
+                    wp.Distance = rd['DISTANCE']
+
+                lapWaypoints.append(wp)
+
+                if "LAP" in rd :
+                    #build the lap
+                    lap = Lap(stats = activity.Stats, startTime = startTimeLap, endTime = formatedDate) 
+                    lap.Waypoints = lapWaypoints
+                    activity.Laps.append(lap)
+                    # re init a new lap
+                    startTimeLap = formatedDate
+                    lapWaypoints = []
+
+            #build last lap
+            if len(lapWaypoints)>0 :
+                lap = Lap(stats = activity.Stats, startTime = startTimeLap, endTime = formatedDate) 
+                lap.Waypoints = lapWaypoints
+                activity.Laps.append(lap)
+  
         return activity
 
     
@@ -375,7 +433,7 @@ class DecathlonService(ServiceBase):
         dataSummaryDuration.text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
         dataSummaryDuration.attrib["id"] = self._unitMap["duration"]
     
-        if activity.Stats.Distance.Value is not None:
+        if activity.Stats.Distance.Value is not None and activity.Stats.Distance.Value > 0:
             dataSummaryDistance = etree.SubElement(summary, "VALUE")
             dataSummaryDistance.text = str((int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value)))
             dataSummaryDistance.attrib["id"] = self._unitMap["distance"]
@@ -385,8 +443,13 @@ class DecathlonService(ServiceBase):
             dataSummaryKcal.text = str((int(activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value)))       
             dataSummaryKcal.attrib["id"] = self._unitMap["kcal"]
 
+        if activity.Stats.HR.Average is not None and activity.Stats.HR.Average > 0:
+            dataSummaryHR = etree.SubElement(summary, "VALUE")
+            dataSummaryHR.text = str(int(activity.Stats.HR.Average))       
+            dataSummaryHR.attrib["id"] = self._unitMap["hravg"]
+
         #Speed average, We accept meter/hour
-        if activity.Stats.Speed.Average is not None:
+        if activity.Stats.Speed.Average is not None and activity.Stats.Speed.Average > 0:
             dataSummarySpeedAvg = etree.SubElement(summary, "VALUE")
             speed_kmh = activity.Stats.Speed.asUnits(ActivityStatisticUnit.KilometersPerHour).Average
             speed_mh = 1000 * speed_kmh
@@ -394,7 +457,12 @@ class DecathlonService(ServiceBase):
             dataSummarySpeedAvg.text = str((int(speed_mh)))       
             dataSummarySpeedAvg.attrib["id"] = self._unitMap["speedaverage"]
 
-        datameasure = etree.SubElement(root, "DATA")                                         
+        datameasure = etree.SubElement(root, "DATA")
+        if len(activity.Laps) > 1 :
+            addLap = True
+        else :
+            addLap = False
+
         for lap in activity.Laps:
             for wp in lap.Waypoints:
                 if wp.HR is not None or wp.Speed is not None or wp.Distance is not None or wp.Calories is not None:
@@ -416,36 +484,42 @@ class DecathlonService(ServiceBase):
                         measureDistance = etree.SubElement(oneMeasureLocation, "VALUE")
                         measureDistance.text = str(int(wp.Distance))
                         measureDistance.attrib["id"] =  self._unitMap["distance"] 
+            if addLap and oneMeasureLocation is not None:
+                measureLap = etree.SubElement(oneMeasureLocation, "VALUE")
+                measureLap.text = "1"
+                measureLap.attrib["id"] =  "20"
+
         
         
         if len(activity.GetFlatWaypoints()) > 0:
-            if activity.GetFlatWaypoints()[0].Location.Latitude is not None:
-                track = etree.SubElement(root, "TRACK")
-                tracksummary = etree.SubElement(track, "SUMMARY")
-                etree.SubElement(tracksummary, "LIBELLE").text = ""
-                tracksummarylocation = etree.SubElement(tracksummary, "LOCATION")
-                tracksummarylocation.attrib["elapsed_time"] = "0"
-                etree.SubElement(tracksummarylocation, "LATITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Latitude)[:8]
-                etree.SubElement(tracksummarylocation, "LONGITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Longitude)[:8]
-                etree.SubElement(tracksummarylocation, "ELEVATION").text = "0"
-        
-                etree.SubElement(tracksummary, "DISTANCE").text = str(int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value))
-                etree.SubElement(tracksummary, "DURATION").text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
-                etree.SubElement(tracksummary, "SPORTID").text = "121"
-                etree.SubElement(tracksummary, "LDID").text = str(svcRecord.ExternalID)
+            if activity.GetFlatWaypoints()[0].Location is not None:
+                if activity.GetFlatWaypoints()[0].Location.Latitude is not None:
+                    track = etree.SubElement(root, "TRACK")
+                    tracksummary = etree.SubElement(track, "SUMMARY")
+                    etree.SubElement(tracksummary, "LIBELLE").text = ""
+                    tracksummarylocation = etree.SubElement(tracksummary, "LOCATION")
+                    tracksummarylocation.attrib["elapsed_time"] = "0"
+                    etree.SubElement(tracksummarylocation, "LATITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Latitude)[:8]
+                    etree.SubElement(tracksummarylocation, "LONGITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Longitude)[:8]
+                    etree.SubElement(tracksummarylocation, "ELEVATION").text = "0"
+            
+                    etree.SubElement(tracksummary, "DISTANCE").text = str(int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value))
+                    etree.SubElement(tracksummary, "DURATION").text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
+                    etree.SubElement(tracksummary, "SPORTID").text = "121"
+                    etree.SubElement(tracksummary, "LDID").text = str(svcRecord.ExternalID)
 
-                for wp in activity.GetFlatWaypoints():
-                    if wp.Location is None or wp.Location.Latitude is None or wp.Location.Longitude is None:
-                        continue  # drop the point
-                    #oneLocation = etree.SubElement(track, "LOCATION")
-                    oneLocation = etree.SubElement(track,"LOCATION")
-                    oneLocation.attrib["elapsed_time"] = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
-                    etree.SubElement(oneLocation, "LATITUDE").text = str(wp.Location.Latitude)[:8]
-                    etree.SubElement(oneLocation, "LONGITUDE").text = str(wp.Location.Longitude)[:8]
-                    if wp.Location.Altitude is not None:
-                        etree.SubElement(oneLocation, "ELEVATION").text = str(int(wp.Location.Altitude))
-                    else:
-                        etree.SubElement(oneLocation, "ELEVATION").text = "0"
+                    for wp in activity.GetFlatWaypoints():
+                        if wp.Location is None or wp.Location.Latitude is None or wp.Location.Longitude is None:
+                            continue  # drop the point
+                        #oneLocation = etree.SubElement(track, "LOCATION")
+                        oneLocation = etree.SubElement(track,"LOCATION")
+                        oneLocation.attrib["elapsed_time"] = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
+                        etree.SubElement(oneLocation, "LATITUDE").text = str(wp.Location.Latitude)[:8]
+                        etree.SubElement(oneLocation, "LONGITUDE").text = str(wp.Location.Longitude)[:8]
+                        if wp.Location.Altitude is not None:
+                            etree.SubElement(oneLocation, "ELEVATION").text = str(int(wp.Location.Altitude))
+                        else:
+                            etree.SubElement(oneLocation, "ELEVATION").text = "0"
     
         activityXML = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8")
 

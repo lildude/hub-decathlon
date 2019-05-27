@@ -1,4 +1,3 @@
-@import url(//fonts.googleapis.com/css?family=PT+Sans+Narrow);
 
 body {
 	font-family:'Roboto Regular', sans-serif;
@@ -1039,7 +1038,7 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 @media (min-width: 1200px) {
 	.backHome{
 		left:15%;
-		top:40%;
+		top:30%;
 	}
 
 	.backgroundWrap .background img.border{

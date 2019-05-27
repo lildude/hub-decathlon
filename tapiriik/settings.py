@@ -331,7 +331,7 @@ SITE_VER = "unknown"
 AGGRESSIVE_CACHE = True
 
 # Diagnostics auth, None = no auth
-DIAG_AUTH_TOTP_SECRET = DIAG_AUTH_PASSWORD = None
+DIAG_AUTH_LOGIN_SECRET = DIAG_AUTH_PASSWORD = None
 
 SPORTTRACKS_OPENFIT_ENDPOINT = "https://api.sporttracks.mobi/api/v2"
 

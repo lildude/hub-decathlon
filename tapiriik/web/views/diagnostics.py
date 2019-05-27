@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from tapiriik.settings import DIAG_AUTH_TOTP_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
+from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
 from tapiriik.database import *
 from tapiriik.sync import Sync
 from tapiriik.auth import TOTP, DiagnosticsUser, User
@@ -282,7 +282,7 @@ def diag_ip(req):
 
 def diag_login(req):
     if "password" in req.POST:
-        if hashlib.sha512(req.POST["password"].encode("utf-8")).hexdigest().upper() == DIAG_AUTH_PASSWORD and TOTP.Get(DIAG_AUTH_TOTP_SECRET) == int(req.POST["totp"]):
+        if hashlib.sha512(req.POST["password"].encode("utf-8")).hexdigest().upper() == DIAG_AUTH_PASSWORD and (DIAG_AUTH_LOGIN_SECRET) == str(req.POST["login"]):
             DiagnosticsUser.Authorize(req)
             return redirect("diagnostics_dashboard")
     return render(req, "diag/login.html")
