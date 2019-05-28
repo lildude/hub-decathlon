@@ -484,10 +484,11 @@ class DecathlonService(ServiceBase):
                         measureDistance = etree.SubElement(oneMeasureLocation, "VALUE")
                         measureDistance.text = str(int(wp.Distance))
                         measureDistance.attrib["id"] =  self._unitMap["distance"] 
-                    if addLap and oneMeasureLocation is not None:
-                        measureLap = etree.SubElement(oneMeasureLocation, "VALUE")
-                        measureLap.text = "1"
-                        measureLap.attrib["id"] =  "20"
+
+            if addLap and oneMeasureLocation is not None:
+                measureLap = etree.SubElement(oneMeasureLocation, "VALUE")
+                measureLap.text = "1"
+                measureLap.attrib["id"] =  "20" #add a lap here this elapsed time
 
         
         
@@ -505,7 +506,7 @@ class DecathlonService(ServiceBase):
             
                     etree.SubElement(tracksummary, "DISTANCE").text = str(int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value))
                     etree.SubElement(tracksummary, "DURATION").text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
-                    etree.SubElement(tracksummary, "SPORTID").text = "121"
+                    etree.SubElement(tracksummary, "SPORTID").text = self._activityTypeMappings[activity.Type]
                     etree.SubElement(tracksummary, "LDID").text = str(svcRecord.ExternalID)
 
                     for wp in activity.GetFlatWaypoints():
