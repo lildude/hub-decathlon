@@ -484,7 +484,6 @@ class DecathlonService(ServiceBase):
                         measureDistance = etree.SubElement(oneMeasureLocation, "VALUE")
                         measureDistance.text = str(int(wp.Distance))
                         measureDistance.attrib["id"] =  self._unitMap["distance"] 
-
             if addLap and oneMeasureLocation is not None:
                 measureLap = etree.SubElement(oneMeasureLocation, "VALUE")
                 measureLap.text = "1"
