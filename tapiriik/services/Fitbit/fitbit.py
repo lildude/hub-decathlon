@@ -629,7 +629,7 @@ class FitbitService(ServiceBase):
             distance = activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value
 
         calories = 0
-        if activity.Stats.Energy:
+        if activity.Stats.Energy and activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value is not None:
             calories = activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value
 
         parameters = {

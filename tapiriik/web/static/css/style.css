@@ -121,6 +121,7 @@ div.cellHeader, div.cellFooter{
 }
 
 p.title{
+	position:relative;
 	color:#0071b9;
 	margin:0;
 	font-family:'Roboto Condensed', sans-serif;
