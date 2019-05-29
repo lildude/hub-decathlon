@@ -250,9 +250,6 @@ tapiriik.ActivateRememberDetailsDialog = function(svcId){
 };
 
 tapiriik.OpenDeauthDialog = function(svcId){
-
-	// TODO : MODIFIER CE SCRIPT POUR QUE LE VISUEL CORRESPONDE A LA MAQUETTE
-
 	var form = $("<form/>")
 		.addClass('logout')
 		.append(
@@ -260,13 +257,12 @@ tapiriik.OpenDeauthDialog = function(svcId){
 			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
 			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
 		)
-	//var form = $("<form><center><button id=\"disconnect\" class=\"delete\">Disconnect</button><button id=\"cancel\" class=\"cancel\">Never mind</button></center></form><h2>(nothing will be deleted)</h2>");
 	form.bind("submit", function() {return false;});
 	$("#disconnect", form).click(function(){
 		if (tapiriik.DeauthPending !== undefined) return false;
 		tapiriik.DeauthPending = true;
 		$("#disconnect", form).addClass("disabled");
-		$.ajax({url:"/auth/disconnect-ajax/"+svcId,
+		/*$.ajax({url:"/auth/disconnect-do/"+svcId,
 				type:"POST",
 				success: function(){
 					$.address.value("");
@@ -277,12 +273,13 @@ tapiriik.OpenDeauthDialog = function(svcId){
 					tapiriik.DeauthPending = undefined;
 					$("#disconnect", form).removeClass("disabled");
 				}});
+		*/
+		window.location.href = "/auth/disconnect-do/" + svcId;
 		return false;
+
 	});
 
 	$("#cancel", form).click(function(){
-		//history.back();
-		//$().redirect(location.host);
 		window.location.href = "/";
 	});
 
@@ -290,14 +287,7 @@ tapiriik.OpenDeauthDialog = function(svcId){
 };
 
 tapiriik.CreateDirectLoginForm = function(svcId){
-	/*
-	il faut réécrire proprement ce formulaire, en insérant correctement les variables.
-	
-	*/
-	console.log(svcId);
 
-	// TODO il faut ensuite adapter cet html pour le rendre présentable  et PROPRE, ajouter des classes 
-	// Puis enfin faire le css qui en découle
 	var form = $("<form novalidate>").append(
 		$("<div>")
 			.addClass('panel panel-danger error')
@@ -341,15 +331,10 @@ tapiriik.CreateDirectLoginForm = function(svcId){
 	);
 
 
-	//var form = $("<form novalidate><div class=\"error\" id=\"login-fail\">There was a problem logging you in</div><div class=\"error\" id=\"login-error\">There was a system error :(</div><label for=\"email\">Email/Username</label><input autofocus type=\"email\" id=\"email\"/><label for=\"password\">Password</label><input type=\"password\" id=\"password\"><br/><span class=\"persist-controls\"><input type=\"checkbox\" id=\"persist\"/><label for=\"persist\">Save these details</label><br/></span><center><button type=\"submit\" >Log in</button></center></form>");
 	if (!tapiriik.ServiceInfo[svcId].UsesExtendedAuth){
 		$(".persist-controls",form).hide();
 	}
-
-
 	$("#cancel", form).click(function(){
-		//history.back();
-		//$().redirect(location.host);
 		window.location.href = "/";
 	});
 
