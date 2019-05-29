@@ -175,11 +175,21 @@ class DecathlonService(ServiceBase):
         # Retrieve the user ID, meh.
         id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
 
-        # # register the webhook to receive callbacks for new activities
+        # register the webhook to receive callbacks for new activities
         jwt = id_resp.json()["requestKey"]
         headers = {"Authorization": "Bearer %s" % jwt, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
-        data_json = '{"user": "/v2/users/'+id_resp.json()["ldid"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
-        requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
+        # first check if not exist
+        webhook_exists = False
+        resp = requests.get(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", headers=headers)
+        if resp.status_code == 200 :
+            answer_json = json.loads(resp.content)
+            for web_hook in answer_json['hydra:member'] :
+                if web_hook["url"] == WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID :
+                    webhook_exists = True
+        
+        if webhook_exists == False :
+            data_json = '{"user": "/v2/users/'+id_resp.json()["ldid"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
+            requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
         self._rate_limit()
         
 
