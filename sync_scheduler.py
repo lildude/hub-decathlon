@@ -31,11 +31,13 @@ while True:
 
     scheduled_ids = [x["_id"] for x in users]
     #print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
-    logger.info("Found %d users" % (len(scheduled_ids)))
+    if len(scheduled_ids) > 0 :
+        logger.info("Found %d users" % (len(scheduled_ids)))
 
     db.users.update_many({"_id": {"$in": scheduled_ids}}, {"$set": {"QueuedAt": queueing_at, "QueuedGeneration": generation}, "$unset": {"NextSynchronization": True}}, upsert=False)
     #print("[Sync_scheduler]--- Marked %d users as queued at %s" % (len(scheduled_ids), datetime.utcnow()))
-    logger.info("Marked %d users as queued" % (len(scheduled_ids)))
+    if len(scheduled_ids) > 0 :
+        logger.info("Marked %d users as queued" % (len(scheduled_ids)))
 
     now = datetime.now()
     messages = []
@@ -70,6 +72,7 @@ while True:
     # publish all message
     sqsManager.send_messages(messages)
     #print("[Sync_scheduler]--- Scheduled %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
-    logger.info("Scheduled %d users" % (len(scheduled_ids)))
+    if len(scheduled_ids) > 0 :
+        logger.info("Scheduled %d users" % (len(scheduled_ids)))
 
     time.sleep(1)
