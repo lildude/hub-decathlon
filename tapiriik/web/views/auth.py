@@ -86,7 +86,8 @@ def auth_disconnect_do(req, service):
     svcRec = Service.GetServiceRecordByID(svcId)
     Service.DeleteServiceRecord(svcRec)
     User.DisconnectService(svcRec)
-    return True
+    response = redirect('/')
+    return response
 
 @require_POST
 def auth_logout(req):

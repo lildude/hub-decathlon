@@ -229,7 +229,7 @@ class GarminHealthService(ServiceBase):
         # Get last used token
         date_now = datetime.now()
         token_ttl = date_now - timedelta(hours=1)
-        #deletedToken = db.garmin_health.delete_many({"date": {'$lt': token_ttl}, 'used': False})
+        deletedToken = db.garmin_health.delete_many({"date": {'$lt': token_ttl}, 'used': False})
         last_connection = db.garmin_health.find_one({}, sort=[("date", -1)])
         if last_connection:
             if last_connection['used'] is True:
@@ -509,6 +509,9 @@ class GarminHealthService(ServiceBase):
             "AccessTokenSecret": access_token_secret,
             "AccessTokenRequestedAt": now,
         }
+        response = self._unauthorized_request()
+        self.WebInit()
+
 
         return (user_id, authorizationData)
 
@@ -537,6 +540,8 @@ class GarminHealthService(ServiceBase):
         if resp.status_code != 204 and resp.status_code != 200:
             raise APIException("Unable to deauthorize Garmin Health auth token, status " + str(resp.status_code) + " resp " + resp.text)
 
+        response = self._unauthorized_request()
+        self.WebInit()
         logging.info("Revoke Garmin Authorization")
 
     def DownloadActivityList(self, svcRecord, exhaustive=False):
