@@ -6,4 +6,5 @@ set -euf
 while true; do
 	# Chokes on non-absolute path!
 	python3 /tapiriik/sync_worker.py
+	sleep 5
 done
