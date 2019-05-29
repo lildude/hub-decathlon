@@ -463,6 +463,7 @@ class DecathlonService(ServiceBase):
         else :
             addLap = False
 
+        oneMeasureLocation = None
         for lap in activity.Laps:
             for wp in lap.Waypoints:
                 if wp.HR is not None or wp.Speed is not None or wp.Distance is not None or wp.Calories is not None:
