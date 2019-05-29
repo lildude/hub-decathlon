@@ -254,15 +254,15 @@ tapiriik.OpenDeauthDialog = function(svcId){
 		.addClass('logout')
 		.append(
 			$('<button/ id="cancel">').addClass('cancel button button-primary').html('Cancel'),
-			$('<button/ id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
+			$('<a/ href="/auth/disconnect-do/' + svcId + '" id="disconnect">').addClass('delete button button-danger').html('Disconnect'),
 			$('<p/>').addClass('subtitle').html('Nothing will be deleted.')
 		)
 	form.bind("submit", function() {return false;});
-	$("#disconnect", form).click(function(){
+	/*$("#disconnect", form).click(function(){
 		if (tapiriik.DeauthPending !== undefined) return false;
 		tapiriik.DeauthPending = true;
 		$("#disconnect", form).addClass("disabled");
-		/*$.ajax({url:"/auth/disconnect-do/"+svcId,
+		$.ajax({url:"/auth/disconnect-do/"+svcId,
 				type:"POST",
 				success: function(){
 					$.address.value("");
@@ -273,11 +273,11 @@ tapiriik.OpenDeauthDialog = function(svcId){
 					tapiriik.DeauthPending = undefined;
 					$("#disconnect", form).removeClass("disabled");
 				}});
-		*/
+	
 		window.location.href = "/auth/disconnect-do/" + svcId;
 		return false;
 
-	});
+	});	*/
 
 	$("#cancel", form).click(function(){
 		window.location.href = "/";
