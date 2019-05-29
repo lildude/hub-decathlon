@@ -177,7 +177,7 @@ class DecathlonService(ServiceBase):
 
         # # register the webhook to receive callbacks for new activities
         jwt = id_resp.json()["requestKey"]
-        headers = {"Authorization": "Bearer %s" % jwt, 'User-Agent': 'Python Tapiriik Hub' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
+        headers = {"Authorization": "Bearer %s" % jwt, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
         data_json = '{"user": "/v2/users/'+id_resp.json()["ldid"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
         requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
         self._rate_limit()
@@ -198,7 +198,7 @@ class DecathlonService(ServiceBase):
                 raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
             raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text))
         requestKey = response.json()["requestKey"]
-        return {"Authorization": "Bearer %s" % requestKey, 'User-Agent': 'Python Tapiriik Hub' , 'X-Api-Key':DECATHLON_API_KEY}
+        return {"Authorization": "Bearer %s" % requestKey, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key':DECATHLON_API_KEY}
 
     def _parseDate(self, date):
         #model '2017-12-01T12:00:00+00:00'
