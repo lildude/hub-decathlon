@@ -49,7 +49,6 @@ class FitbitService(ServiceBase):
 
     SupportsActivityDeletion = False
 
-    GlobalRateLimits = None
 
     # source for the mapping : GET https://api.fitbit.com/1/activities.json and https://dev.fitbit.com/build/reference/web-api/activity/#activity-types
     _activityTypeMappings = {
