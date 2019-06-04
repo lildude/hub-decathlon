@@ -225,6 +225,9 @@ class GarminHealthService(ServiceBase):
 
     # Use this function to get Autorization URL
     def WebInit(self):
+        self.UserAuthorizationURL = reverse("oauth_redirect", kwargs={"service": "garminhealth"})
+
+    def GenerateUserAuthorizationURL(self, session, level=None):
         # Get last used token
         date_now = datetime.now()
         token_ttl = date_now - timedelta(hours=1)
@@ -250,7 +253,8 @@ class GarminHealthService(ServiceBase):
             'oauth_callback': WEB_ROOT + reverse("oauth_return", kwargs={"service": self.ID}),
         }
 
-        self.UserAuthorizationURL = self.OAUTH_TOKEN + "?" + urlencode(uri_parameters)
+        url = self.OAUTH_TOKEN + "?" + urlencode(uri_parameters)
+        return url
 
     # This function generate a new signature for api request
     def _request_signin(self, http_method, path, user_tokens, parameters=None):
