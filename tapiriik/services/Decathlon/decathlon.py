@@ -219,7 +219,7 @@ class DecathlonService(ServiceBase):
         exclusions = []
 
         now = datetime.now()
-        prev = now - timedelta(6*365/12)
+        prev = now - timedelta(365/12)
 
         period = []
         
