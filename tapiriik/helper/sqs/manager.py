@@ -16,12 +16,12 @@ class SqsManager():
     _messages = []
 
     def __init__(self):
-        logger.info("-----[ INITIALIZE A NEW SQS QUEUE MANAGER ]-----")
+        #logger.info("-----[ INITIALIZE A NEW SQS QUEUE MANAGER ]-----")
         self._AWS_REGION = AWS_REGION
         # Create SQS client resource
         self._resource = boto3.resource('sqs', region_name=self._AWS_REGION)
         self._client = boto3.client('sqs', region_name=self._AWS_REGION)
-        logger.info("Define SQS resource in AWS zone")
+        #logger.info("Define SQS resource in AWS zone")
         #print("[Helper SQS]--- Define SQS resource in %s AWS zone" % self._AWS_REGION)
 
     # Function use to get a specific queue from AWS SQS, it uses self.QUEUE_NAME as parameter
@@ -31,7 +31,7 @@ class SqsManager():
         if queue_name:
             self.QUEUE_NAME = queue_name
         #print("[Helper SQS]--- Get queue %s in %s resource" % (self.QUEUE_NAME, self._AWS_REGION))
-        logger.info("Get queue SQS")
+        #logger.info("Get queue SQS")
         self._queue = self._resource.get_queue_by_name(QueueName=self.QUEUE_NAME)
         self._queue_url = self._queue.url
 
@@ -61,7 +61,7 @@ class SqsManager():
 
         else:
             #print('[Helper SQS]--- Nothing to send')
-            logger.info('Nothing to send')
+            #logger.info('Nothing to send')
 
     # Function use to get a message from self._queue
     # Message will be available in self._messages
@@ -69,7 +69,7 @@ class SqsManager():
         self._messages = self._queue.receive_messages(AttributeNames=attributes_names, MaxNumberOfMessages=1)
         if self._messages:
             #print("[Helper SQS]--- Getting message from queue")
-            logger.info('Getitng message from queue')
+            logger.info('Getting message from queue')
         else:
             #print("[Helper SQS]--- No message found. Queue is empty !")
             logger.info('No message found. Queue is empty !')
@@ -96,7 +96,7 @@ class SqsManager():
     def delete_message_by_receipt_handle(self, receipt_handle, queue_url=None):
         self._client.delete_message(QueueUrl=(queue_url if queue_url is not None else self._queue.url), ReceiptHandle=receipt_handle)
         #print("[Helper SQS]--- Deleting one message by receipt handle (%s)" % receipt_handle)
-        logger.info("Deleting one message by receipt handle (%s)" % receipt_handle)
+        #logger.info("Deleting one message by receipt handle (%s)" % receipt_handle)
 
     # Function use to remove all message in queue
     # current_queue determine if we remove ALL message in queue or just current sample of message
