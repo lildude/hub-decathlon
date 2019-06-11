@@ -7,6 +7,7 @@ from tapiriik.services.api import APIException, UserException, UserExceptionType
 from django.core.urlresolvers import reverse
 from datetime import date, datetime, timezone, timedelta
 from urllib.parse import urlencode
+from tapiriik.database import redis
 import requests
 import logging
 import pytz
@@ -200,7 +201,6 @@ class GarminHealthService(ServiceBase):
         resp = requests.request("POST", self.REQUEST_TOKEN, data=payload, headers=headers)
 
         if resp.status_code != 200:
-            data = resp.text
             raise APIException("No authorization", block=True,
                                user_exception=UserException(UserExceptionType.Authorization,
                                                             intervention_required=True))
@@ -212,11 +212,8 @@ class GarminHealthService(ServiceBase):
 
         self.token_secret = credentials.get(b'oauth_token_secret')[0].decode()
 
-        db.garmin_health.update_one(
-            {'_id': self.token},
-            {"$set": {'_id': self.token, 'token': self.token, 'secret': self.token_secret, 'used': False, 'date': datetime.now()}},
-            upsert=True
-        )
+        redis_token_key = 'garminhealth:oauth:%s' % self.token
+        redis.setex(redis_token_key, self.token_secret, timedelta(hours=1))
 
         return credentials
 
@@ -231,22 +228,11 @@ class GarminHealthService(ServiceBase):
         # Get last used token
         date_now = datetime.now()
         token_ttl = date_now - timedelta(hours=1)
-        deletedToken = db.garmin_health.delete_many({"date": {'$lt': token_ttl}, 'used': False})
-        last_connection = db.garmin_health.find_one({}, sort=[("date", -1)])
-        if last_connection:
-            if last_connection['used'] is True:
-                # Get new oauth token
-                response = self._unauthorized_request()
-                self.token = response.get(b'oauth_token')[0].decode()
-                self.token_secret = response.get(b'oauth_token_secret')[0].decode()
-            else:
-                self.token = last_connection['token']
-                self.token_secret = last_connection['token']
-        else:
-            # first generation or TTL is done
-            response = self._unauthorized_request()
-            self.token = response.get(b'oauth_token')[0].decode()
-            self.token_secret = response.get(b'oauth_token_secret')[0].decode()
+        
+        # first generation or TTL is done
+        response = self._unauthorized_request()
+        self.token = response.get(b'oauth_token')[0].decode()
+        self.token_secret = response.get(b'oauth_token_secret')[0].decode()
 
         uri_parameters = {
             'oauth_token': self.token, #credentials.get(b'oauth_token')[0],
@@ -371,11 +357,13 @@ class GarminHealthService(ServiceBase):
         oauth_token_encoded = urllib.parse.quote_plus(oauth_token, safe='%')
 
         # find secret of this token
-        current_conn = db.garmin_health.find_one({'_id': self.token})
+        redis_token_key = "garminhealth:oauth:%s" % self.token
+        secret = redis.get(redis_token_key)
+        redis.delete(redis_token_key)
 
-        oauth_token_secret = current_conn['secret']
+        oauth_token_secret = secret
         oauth_token_secret_encoded = urllib.parse.quote_plus(oauth_token_secret, safe='%')
-
+        
         oauth_verifier = req.GET.get("oauth_verifier")
         oauth_verifier_encoded = urllib.parse.quote_plus(oauth_verifier, safe='%')
 
@@ -447,11 +435,7 @@ class GarminHealthService(ServiceBase):
             'Authorization': 'OAuth ' + header_oauth_string
         }
 
-        db.garmin_health.update_one(
-            {'_id': self.token},
-            {"$set": {'used': True}},
-            upsert=True
-        )
+
 
         # Call access_token
         resp = requests.request("POST", self.ACCESS_TOKEN, data=payload, headers=headers)
@@ -500,8 +484,6 @@ class GarminHealthService(ServiceBase):
                  )
             )
 
-        # We get user access, we can now remove token from db
-        db.garmin_health.delete_one({'_id': self.token})
 
         json_data = json.loads(resp.text)
         user_id = json_data['userId']
@@ -565,9 +547,6 @@ class GarminHealthService(ServiceBase):
         # the 01-01-2019 will be return
         # So we download activities from upload date
 
-        service_id = svcRecord._id
-        user = db.users.find_one({'ConnectedServices': {'$elemMatch': {'ID': service_id, 'Service': self.ID}}})
-
         afterDateObj = datetime.now() - timedelta(days=1)
 
         afterDate = afterDateObj.strftime("%Y-%m-%d")
@@ -575,7 +554,6 @@ class GarminHealthService(ServiceBase):
         date_now = datetime.now()
         now_tstmp = str(int(date_now.timestamp()))
 
-        userID = svcRecord.ExternalID
         oauth_token = svcRecord.Authorization.get('OAuthToken')
         user_access_token = svcRecord.Authorization.get('AccessToken')
         user_access_token_secret = svcRecord.Authorization.get('AccessTokenSecret')
@@ -650,20 +628,20 @@ class GarminHealthService(ServiceBase):
 
                     activity.Type = self._reverseActivityTypeMappings[item["activityType"]]
 
-                    activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters,
-                                                                value=item["distanceInMeters"])
+                    if "distanceInMeters" in item :
+                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=item["distanceInMeters"])
 
-                    if "avgSpeedInMetersPerSecond" in item and "maxSpeedInMetersPerSecond" in item:
+                    if "averageSpeedInMetersPerSecond" in item and "maxSpeedInMetersPerSecond" in item:
                         activity.Stats.Speed = ActivityStatistic(
                             ActivityStatisticUnit.MetersPerSecond,
-                            avg=item["avgSpeedInMetersPerSecond"],
+                            avg=item["averageSpeedInMetersPerSecond"],
                             max=item["maxSpeedInMetersPerSecond"]
                         )
                     else:
-                        if "avgSpeedInMetersPerSecond" in item:
+                        if "averageSpeedInMetersPerSecond" in item:
                             activity.Stats.Speed = ActivityStatistic(
                                 ActivityStatisticUnit.MetersPerSecond,
-                                avg=item["avgSpeedInMetersPerSecond"]
+                                avg=item["averageSpeedInMetersPerSecond"]
                             )
                         if "maxSpeedInMetersPerSecond" in item:
                             activity.Stats.Speed = ActivityStatistic(
@@ -723,10 +701,18 @@ class GarminHealthService(ServiceBase):
                     if "calories" in item:
                         activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
                                                                   value=item["calories"])
+                    elif "activeKilocalories" in item :
+                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
+                                                                  value=item["activeKilocalories"])
                     activity.Name = activity_name
 
                     activity.Private = False
-                    activity.Stationary = False
+
+                    activity.Stationary = True
+                    activity.GPS = False
+                    if "startingLatitudeInDegree" in item :
+                        activity.Stationary = False
+                        activity.GPS = True
 
                     activity.AdjustTZ()
                     activity.CalculateUID()
@@ -739,11 +725,6 @@ class GarminHealthService(ServiceBase):
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
-
-        service_id = svcRecord._id
-        user = db.users.find_one({'ConnectedServices': {'$elemMatch': {'ID': service_id, 'Service': self.ID}}})
-
-        userID = svcRecord.ExternalID
         oauth_token = svcRecord.Authorization.get('OAuthToken')
         user_access_token = svcRecord.Authorization.get('AccessToken')
         user_access_token_secret = svcRecord.Authorization.get('AccessTokenSecret')
@@ -842,8 +823,15 @@ class GarminHealthService(ServiceBase):
                             activity.Laps.append(lap)
                     else:
                         activity.Laps = [Lap(startTime=activity.StartTime, endTime=activity.EndTime, stats=activity.Stats)]
+                        logger.info("\t\tGarmin no laps, full laps")
+
 
                     break
+
+        if len(activity.Laps) == 0 :
+            activity.Stationary = True
+            activity.GPS = False
+            activity.Laps = [Lap(startTime=activity.StartTime, endTime=activity.EndTime, stats=activity.Stats)]
         return activity
 
     # Garmin Health is on read only access, we can't upload activities
