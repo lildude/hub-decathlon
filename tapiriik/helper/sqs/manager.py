@@ -62,6 +62,7 @@ class SqsManager():
         else:
             #print('[Helper SQS]--- Nothing to send')
             #logger.info('Nothing to send')
+            pass
 
     # Function use to get a message from self._queue
     # Message will be available in self._messages
