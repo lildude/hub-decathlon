@@ -637,6 +637,8 @@ class SynchronizationTask:
                 serviceDataCollection.update(existingActivity.ServiceDataCollection)
                 existingActivity.ServiceDataCollection = serviceDataCollection
 
+                self._global_logger.info("\tDuplicate activity " + str(act.UIDs))
+
                 existingActivity.UIDs |= act.UIDs  # I think this is merited
                 act.UIDs = existingActivity.UIDs  # stop the circular inclusion, not that it matters
                 continue
