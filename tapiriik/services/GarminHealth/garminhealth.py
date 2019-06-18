@@ -355,13 +355,13 @@ class GarminHealthService(ServiceBase):
 
         oauth_token = req.GET.get("oauth_token")
         oauth_token_encoded = urllib.parse.quote_plus(oauth_token, safe='%')
-
+        
         # find secret of this token
         redis_token_key = "garminhealth:oauth:%s" % self.token
         secret = redis.get(redis_token_key)
         redis.delete(redis_token_key)
 
-        oauth_token_secret = secret
+        oauth_token_secret = secret.decode("utf-8") 
         oauth_token_secret_encoded = urllib.parse.quote_plus(oauth_token_secret, safe='%')
         
         oauth_verifier = req.GET.get("oauth_verifier")
@@ -522,10 +522,9 @@ class GarminHealthService(ServiceBase):
 
         resp = requests.request("GET", signin_info['path'], headers=signin_info['header'])
 
-        if resp.status_code != 204 and resp.status_code != 200:
-            raise APIException("Unable to deauthorize Garmin Health auth token, status " + str(resp.status_code) + " resp " + resp.text)
+        # if resp.status_code != 204 and resp.status_code != 200:
+        #    raise APIException("Unable to deauthorize Garmin Health auth token, status " + str(resp.status_code) + " resp " + resp.text)
 
-        response = self._unauthorized_request()
         self.WebInit()
         logging.info("Revoke Garmin Authorization")
 
