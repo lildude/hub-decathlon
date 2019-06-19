@@ -73,7 +73,8 @@ class SqsManager():
             logger.info('Getting message from queue')
         else:
             #print("[Helper SQS]--- No message found. Queue is empty !")
-            logger.info('No message found. Queue is empty !')
+            #logger.info('No message found. Queue is empty !')
+            pass
 
 
     # Function use to get a list of 1 message (1 by default, 10 max) from self._queue

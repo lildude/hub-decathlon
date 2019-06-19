@@ -191,15 +191,15 @@ class Sync:
 
         # sqsManager._messages is a list but contain only one message
         #print('[Sync.PerformGlobalSync]--- Processing %d message of sync' % len(self._sqs_manager._messages))
-        _global_logger.info('Processing %d message of sync' % len(self._sqs_manager._messages))
+        #_global_logger.info('Processing %d message of sync' % len(self._sqs_manager._messages))
         if self._sqs_manager._messages:
 
             for message in self._sqs_manager._messages:
                 # Print out the body and author (if set)
                 #print('[Sync.PerformGlobalSync]--- Message ID : {0}'.format(message.message_id, message.body))
                 #print('[Sync.PerformGlobalSync]--- Message Body : {0}'.format(message.body))
-                _global_logger.info('Message ID : {0}'.format(message.message_id, message.body))
-                _global_logger.info('Message Body : {0}'.format(message.body))
+                #_global_logger.info('Message ID : {0}'.format(message.message_id, message.body))
+                #_global_logger.info('Message Body : {0}'.format(message.body))
 
                 if message:
                     body_dict = json.loads(message.body)
@@ -209,7 +209,8 @@ class Sync:
                     self._consumeSyncTask(body_dict, receipt_handle, heartbeat_callback, version)
         else:
             #print('[Sync.PerformGlobalSync]--- Nothing to sync !')
-            _global_logger.info('Nothing to sync')
+            #_global_logger.info('Nothing to sync')
+            pass
 
     def _consumeSyncTask(self, body, receipt_handle, heartbeat_callback_direct, version):
         from tapiriik.auth import User
