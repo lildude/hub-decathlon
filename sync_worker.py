@@ -16,7 +16,7 @@ def worker_message(state, now=datetime.now()):
 
 
 logging.info("-----[ INITIALIZE SYNC_WORKER ]-----")
-worker_message("booting")
+#worker_message("booting")
 
 from tapiriik.requests_lib import patch_requests_with_default_timeout, patch_requests_source_address
 from tapiriik import settings
