@@ -72,7 +72,7 @@ while True:
     # publish all message
     sqsManager.send_messages(messages)
     #print("[Sync_scheduler]--- Scheduled %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
-    if len(scheduled_ids) > 0 :
-        logger.info("Scheduled %d users" % (len(scheduled_ids)))
+    #if len(scheduled_ids) > 0 :
+    #    logger.info("Scheduled %d users" % (len(scheduled_ids)))
 
     time.sleep(5)
