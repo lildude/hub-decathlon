@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     url(r'^auth/disconnect/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect', {}, name='auth_disconnect', ),
     #url(r'^auth/disconnect-ajax/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect_ajax', {}, name='auth_disconnect_ajax', ),
     url(r'^auth/disconnect-do/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect_do', {}, name='auth_disconnect_do', ),
+    url(r'^auth/auth_disconnect_garmin_health$', 'tapiriik.web.views.auth_disconnect_garmin_health', {}, name='auth_disconnect_garmin_health', ),
     url(r'^auth/logout$', 'tapiriik.web.views.auth_logout', {}, name='auth_logout', ),
 
     url(r'^account/setemail$', 'tapiriik.web.views.account_setemail', {}, name='account_set_email', ),

@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from tapiriik.services import Service
 from tapiriik.auth import User
@@ -88,6 +89,30 @@ def auth_disconnect_do(req, service):
     User.DisconnectService(svcRec)
     response = redirect('/')
     return response
+
+@csrf_exempt
+@require_POST
+def auth_disconnect_garmin_health(req):
+    if req.body.decode("UTF-8") is not "":
+        data = json.loads(req.body.decode("UTF-8"))
+        external_user_ids = data['deregistrations']
+
+        svc = Service.FromID("garminhealth")
+
+        for external_user_id in external_user_ids:
+            if external_user_id['userId'] is not None:
+                serviceRecord = Service.EnsureServiceRecordWithAuth(svc, external_user_id['userId'], external_user_id['userAccessToken'])
+                # auth by this service connection
+                existingUser = User.AuthByService(serviceRecord)
+                if req.user is None and existingUser is not None:
+                    svcId = [x["ID"] for x in existingUser["ConnectedServices"] if x["Service"] == svc.ID]
+                    svcId = svcId[0]
+                    svcRec = Service.GetServiceRecordByID(svcId)
+                    #Service.DeleteServiceRecord(svcRec)
+                    User.DisconnectService(svcRec)
+
+    return HttpResponse(status=200)
+    
 
 @require_POST
 def auth_logout(req):
