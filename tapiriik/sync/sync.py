@@ -292,9 +292,9 @@ class Sync:
             reschedule_confirm_message = "User reschedule for %s returned %s" % (next_sync, scheduling_result)
 
             # Tack this on the end of the log file since otherwise it's lost for good (blegh, but nicer than moving logging out of the sync task?)
-            user_log = open(USER_SYNC_LOGS + str(user["_id"]) + ".log", "a+")
-            user_log.write(" \n%s\n" % reschedule_confirm_message)
-            user_log.close()
+            #user_log = open(USER_SYNC_LOGS + str(user["_id"]) + ".log", "a+")
+            #user_log.write(" \n%s\n" % reschedule_confirm_message)
+            #user_log.close()
 
             _global_logger.debug(reschedule_confirm_message)
             sync_time = (datetime.utcnow() - sync_start).total_seconds()
