@@ -842,3 +842,15 @@ class GarminHealthService(ServiceBase):
         cachedb.garminhealth_cache.remove({"Owner": serviceRecord.ExternalID})
         cachedb.garminhealth_activity_cache.remove({"Owner": serviceRecord.ExternalID})
 
+
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        data = json.loads(req.body.decode("UTF-8"))
+        logger.info("GARMIN CALLBACK POKE")
+        logging.info("GARMIN CALLBACK POKE")
+        # Get user ids to sync
+        external_user_ids = []
+        if data['activityDetails'] is not None :
+            for activity in data['activityDetails']:
+                external_user_ids.append(activity['userId'])
+                logging.info("GARMIN CALLBACK user to sync "+ activity['userId'])
+        return external_user_ids
