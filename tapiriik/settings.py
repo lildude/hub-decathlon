@@ -287,12 +287,12 @@ PAYMENT_CURRENCY = "USD"
 
 CELEBRATION_MODES = {
     (
-        datetime(day=21, month=6, year=datetime.now().year, hour=0, minute=0),
-        datetime(day=21, month=6, year=datetime.now().year, hour=23, minute=59)
+        datetime(day=1, month=1, year=datetime.now().year, hour=0, minute=0),
+        datetime(day=1, month=1, year=datetime.now().year, hour=23, minute=59)
     ): {
-        "Logo": "tapiriik-inuktitut.png",
-        "Subtitle": "National Aboriginal Day",
-        "TitleText": "Our Home on Native Land"
+        "Logo": "logo_hub_blue.png",
+        "Subtitle": "Happy new year!",
+        "TitleText": "Happy new year!"
     }
 }
 
