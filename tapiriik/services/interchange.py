@@ -232,8 +232,9 @@ class Activity:
             raise ValueError("0 < n <= 1 unpaused points in activity")
         if pointsWithLocation == 1:
             raise ValueError("0 < n <= 1 geographic points in activity") # Make RK happy
-        if altLow is not None and altLow == altHigh and altLow == 0:  # some activities have very sporadic altitude data, we'll let it be...
-            raise ValueError("Invalid altitudes / no change from " + str(altLow))
+        # As we have sometimes the elevation not yet calculated in Decathlon, we let pass without any elevation
+        #if altLow is not None and altLow == altHigh and altLow == 0:  # some activities have very sporadic altitude data, we'll let it be...
+        #    raise ValueError("Invalid altitudes / no change from " + str(altLow))
 
     # Gets called a bit later than CheckSanity, meh
     def CheckTimestampSanity(self):
