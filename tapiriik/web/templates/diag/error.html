@@ -2,7 +2,7 @@
 {% load displayutils %}
 {% block title %}error {{ error.value.exemplar }}{% endblock %}
 {% block content %}
-<div style="text-align:left">
+<div style="text-align:left" class="block">
 	<h4><a href="{% url 'diagnostics_errors' %}">&laquo; Back to dashboard</a></h4>
 	<h1>{{ error.value.exemplar }} ({{ error|dict_get:'_id'|dict_get:'service' }})</h1>
 	<h2>Affected users:</h2>

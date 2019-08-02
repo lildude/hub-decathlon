@@ -252,13 +252,13 @@ span.label.warning{
 }
 .backgroundWrap .background img.header{
 	width:100%;
-	z-index:0;
+	z-index:-1;
 }
 .backgroundWrap .background img.border{
 	display:none;
 	position: fixed;
 	width:auto;
-	z-index:1;
+	z-index:0;
 }
 
 .center {
@@ -267,7 +267,7 @@ span.label.warning{
 	padding: 0 0 40px 0;
 	width:100%;
 	max-width:1024px;
-	z-index:1;
+	z-index:100;
 
 }
 
