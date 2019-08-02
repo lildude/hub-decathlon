@@ -471,7 +471,8 @@ class FitbitService(ServiceBase):
 
                     activity.Type = self._reverseActivityTypeMappings[ftbt_activity["activityTypeId"]]
 
-                    activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Kilometers,
+                    if ftbt_activity["distance"] is not None :
+                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Kilometers,
                                                                 value=ftbt_activity["distance"])
 
                     if "speed" in ftbt_activity:
