@@ -59,6 +59,7 @@ class GarminHealthService(ServiceBase):
 
     SupportsActivityDeletion = False
 
+    ReceivesActivities = False
 
     _activityTypeMappings = {
         ActivityType.Running: "RUNNING",
