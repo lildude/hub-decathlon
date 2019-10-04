@@ -282,7 +282,7 @@ class DecathlonService(ServiceBase):
                         activity.Stats.HR.Average = int(val.text)
                     if val.get('id') ==  self._unitMap["speedaverage"]:
                         meterperhour = int(val.text)
-                        meterpersecond = meterperhour/3600
+                        meterpersecond = round(meterperhour/3600, 2)
                         activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=meterpersecond, max= None)
     
                 if ride.find('LIBELLE').text == "" or ride.find('LIBELLE').text is None:
