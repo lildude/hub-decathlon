@@ -93,7 +93,7 @@ def _unpackUserException(raw):
 class Sync:
 
     _sqs_manager = None
-    SyncInterval = timedelta(hours=1)
+    SyncInterval = timedelta(hours=3)
     SyncIntervalJitter = timedelta(minutes=5)
     MinimumSyncInterval = timedelta(seconds=30)
     MaximumIntervalBeforeExhaustiveSync = timedelta(days=14)  # Based on the general page size of 50 activites, this would be >3/day...
@@ -705,7 +705,7 @@ class SynchronizationTask:
             self._syncExclusions[serviceRecord._id][identifier] = {"Message": exclusion.Message, "Activity": str(exclusion.Activity) if exclusion.Activity else None, "ExternalActivityID": exclusion.ExternalActivityID, "Permanent": exclusion.Permanent, "Effective": datetime.utcnow(), "UserException": _packUserException(exclusion.UserException)}
 
     def _ensurePartialSyncPollingSubscription(self, conn):
-        if conn.Service.PartialSyncRequiresTrigger and not conn.PartialSyncTriggerSubscribed:
+        if conn.Service.PartialSyncRequiresTrigger and conn.Service.PartialSyncTriggerRequiresSubscription and not conn.PartialSyncTriggerSubscribed:
             if conn.Service.RequiresExtendedAuthorizationDetails and not conn.ExtendedAuthorization:
                 self._global_logger.info("No ext auth details, cannot subscribe")
                 return # We (probably) can't subscribe unless we have their credentials. May need to change this down the road.
