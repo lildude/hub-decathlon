@@ -29,8 +29,8 @@ class StravaService(ServiceBase):
     UserProfileURL = "http://www.strava.com/athletes/{0}"
     UserActivityURL = "http://app.strava.com/activities/{1}"
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
-    PartialSyncRequiresTrigger = True
-    PartialSyncTriggerRequiresSubscription = True
+    PartialSyncRequiresTrigger = False
+    # PartialSyncTriggerRequiresSubscription = True
     LastUpload = None
 
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = True
