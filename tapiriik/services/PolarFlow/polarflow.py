@@ -38,7 +38,7 @@ class PolarFlowService(ServiceBase):
     
     GlobalRateLimits = POLAR_RATE_LIMITS
 
-    PartialSyncRequiresTrigger = True
+    PartialSyncRequiresTrigger = False
     
     PartialSyncTriggerPollInterval = timedelta(minutes=1)
 
@@ -115,6 +115,11 @@ class PolarFlowService(ServiceBase):
     SupportedActivities = list(_activity_type_mappings.keys())
 
     _api_endpoint = "https://www.polaraccesslink.com"
+
+
+    def __init__(self):
+        logging.getLogger('PolarFlow SVC')
+        return None
 
     def _register_user(self, access_token):
         headers = {
@@ -218,13 +223,17 @@ class PolarFlowService(ServiceBase):
     def DownloadActivityList(self, serviceRecord, exhaustive=False):
         activities = []
         exclusions = []
+
+        logging.info("Polar Start DownloadActivityList")
+
         
         transaction_url = self._create_transaction(serviceRecord)
         if transaction_url:
-
+            logging.info("Polar of transactionurl")
             res = requests.get(transaction_url, headers=self._api_headers(serviceRecord))
             
             if res.status_code == 200: # otherwise no new data, skip
+                logging.info("Polar new data")
                 for activity_url in res.json()["exercises"]:
                     data = requests.get(activity_url, headers=self._api_headers(serviceRecord))
                     if data.status_code == 200:
@@ -269,6 +278,7 @@ class PolarFlowService(ServiceBase):
         # https://www.polar.com/accesslink-api/?python#get-tcx
         #tcx_data_raw = requests.get(activity_link + "/tcx", headers=self._api_headers(serviceRecord))
         #tcx_data = gzip.GzipFile(fileobj=StringIO(tcx_data_raw)).read()
+        logging.info("Polar DownloadActivity")
         tcx_url = serviceRecord.ServiceData["Transaction-uri"] + "/exercises/{}/tcx".format(activity.ServiceData["ActivityID"])
         response = requests.get(tcx_url, headers=self._api_headers(serviceRecord, {"Accept": "application/vnd.garmin.tcx+xml"}))
         if response.status_code == 404:
@@ -279,6 +289,23 @@ class PolarFlowService(ServiceBase):
             activity = TCXIO.Parse(tcx_data.encode('utf-8'), activity)
         except lxml.etree.XMLSyntaxError:
             raise APIException("Cannot recieve training tcx at url: {}".format(tcx_url), user_exception=UserException(UserExceptionType.DownloadError))
+
+        logging.info("Polar DownloadActivity")        
+        if activity.Stationary == True :
+            logging.info("Polar STATIONNARY")
+        else :
+            logging.info("Polar NOT STATIONNARY")
+
+        if len(activity.GetFlatWaypoints()) == 0 :
+            logging.info("Polar No flat way point")
+
+        for lap in activity.Laps:
+            for wp in lap.Waypoints:
+                    if wp.Location is not None :
+                        if wp.Location.Latitude is not None or wp.Location.Longitude is not None:
+                            logging.info("Polar LAT " + str(wp.Location.Latitude) )
+                       
+
         return activity
 
     def SynchronizationComplete(self, serviceRecord):
