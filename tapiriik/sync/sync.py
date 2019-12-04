@@ -1206,9 +1206,11 @@ class SynchronizationTask:
                             full_activity.EnsureTZ()
                         except Exception as e:
                             self._global_logger.error("\tCould not determine TZ %s" % e)
-                            self._accumulateExclusions(full_activity.SourceConnection, APIExcludeActivity("Could not determine TZ", activity=full_activity, permanent=False))
-                            activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.UnknownTZ))
-                            raise ActivityShouldNotSynchronizeException()
+                            # TODO: Review timezone checks
+                            pass
+                            #self._accumulateExclusions(full_activity.SourceConnection, APIExcludeActivity("Could not determine TZ", activity=full_activity, permanent=False))
+                            #activity.Record.MarkAsNotPresentOtherwise(UserException(UserExceptionType.UnknownTZ))
+                            #raise ActivityShouldNotSynchronizeException()
                         else:
                             self._global_logger.debug("\tDetermined TZ %s" % full_activity.TZ)
 
