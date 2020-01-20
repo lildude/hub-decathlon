@@ -542,18 +542,18 @@ msgstr "Access <b>tokens</b>"
 
 #: tapiriik/web/templates/privacy.html:14
 msgid "Activity <b>metadata</b>"
-msgstr "<b>Metadonnées</b> de l'activité"
+msgstr "<b>Métadonnées</b> de l'activité"
 
 #: tapiriik/web/templates/privacy.html:26
 msgid ""
 "..until you disconnect your account or they are no longer needed, whichever "
 "is sooner"
 msgstr ""
-"..jusqu'à ce que vous vous déconnectiez ou qu'ils ne soient plus requis."
+"..jusqu'à ce que vous vous déconnectez ou qu'ils ne soient plus requis."
 
 #: tapiriik/web/templates/privacy.html:30
 msgid "<span>What are</span>Access tokens?"
-msgstr "<span>Qu'est ce qu'un</span>Access tokens?"
+msgstr "<span>Qu'est ce qu'un</span> Access tokens?"
 
 #: tapiriik/web/templates/privacy.html:31
 msgid ""
@@ -565,13 +565,13 @@ msgid ""
 msgstr ""
 "Les Access tokens permettent au Hub <b>de réaliser des actions pour vous</"
 "b>. En utilisant des access tokens, le Hub ne sauvegarde pas vos login et "
-"mot de passe.Afin d'obtenir votre access token, le Hub a besoin de demander "
-"vos identifiants - qui ne sont pas conservé après avoir obtenu l'access "
+"mot de passe. Afin d'obtenir votre access token, le Hub a besoin de demander "
+"vos identifiants - qui ne sont pas conservés après avoir obtenu l'access "
 "token."
 
 #: tapiriik/web/templates/privacy.html:35
 msgid "<span>What is</span>Activity metadata?"
-msgstr "<span>Qu'est ce qu'une</span> metadonnées?"
+msgstr "<span>Qu'est ce qu'une</span> métadonnées?"
 
 #: tapiriik/web/templates/privacy.html:36
 msgid ""
@@ -581,7 +581,7 @@ msgid ""
 "your accounts."
 msgstr ""
 "Les métadonnées sont les informations basiques d'une activité: <b>date, "
-"durée zone, distance, et type</b>. Le Hub a besoin de stocker ces "
+"durée, distance, et type</b>. Le Hub a besoin de stocker ces "
 "informations afin de déterminer quelles activités doivent être synchronisées."
 
 #: tapiriik/web/templates/privacy.html:40
@@ -594,10 +594,9 @@ msgid ""
 "sensor data, and all metadata</b>. To improve synchronization performance, "
 "the Hub temporarily stores (caches) this data from your Dropbox account."
 msgstr ""
-"Les données d'activités sont les enregistrements complet d'une activité: "
+"Les données d'activités sont les enregistrements complets d'une activité: "
 "<b>le tracé GPS, les données de capteurs, et toutes les métadonnées</b>. "
-"Pour améiorer les performances de synchronisation, le Hub stocke "
-"temporaireent les données de votre compte Dropbox."
+
 
 #: tapiriik/web/templates/privacy.html:48
 msgid "All the juicy details"
@@ -611,7 +610,7 @@ msgid ""
 "third parties beyond the accounts you connect."
 msgstr ""
 "Le Hub transfère vos activités sportives entre vos différents services. A "
-"noter que vos activités ne sont pas stocker par le Hub."
+"noter que vos activités ne sont pas stockées par le Hub."
 
 #: tapiriik/web/templates/privacy.html:54
 msgid ""
@@ -634,7 +633,7 @@ msgid ""
 "Limited data regarding your interaction with hub.decathlon.com is recorded "
 "in order to monitor the performance of the website itself."
 msgstr ""
-"Les données d'intéraction avec le site sont enregistrés afin de suivre la "
+"Les données d'interaction avec le site sont enregistrées afin de suivre la "
 "performance et l'usage du site."
 
 #: tapiriik/web/templates/privacy.html:56
@@ -656,10 +655,10 @@ msgid ""
 "data the Hub has stored regarding your user account, or request the deletion "
 "of this data, please "
 msgstr ""
-"Vos données sur le Hub sont supprimées lorsque vous déconnecter le dernier "
+"Vos données sur le Hub sont supprimées lorsque vous déconnectez le dernier "
 "service sur votre compte. Seulement vos logs de synchronisation seront "
 "conservés durant une période limitée. Il n'y a aucun impact sur les "
-"activités synchronisées précédement. Si vous souhaitez recevoir une copie de "
+"activités synchronisées précédemment. Si vous souhaitez recevoir une copie de "
 "toutes vos données stockées par le Hub ou demander leur suppression, "
 
 #: tapiriik/web/templates/privacy.html:59
