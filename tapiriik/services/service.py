@@ -49,7 +49,8 @@ class Service:
             Decathlon,
             PolarPersonalTrainer,
             Fitbit,
-            GarminHealth
+            GarminHealth,
+            Relive
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -80,7 +81,8 @@ class Service:
             Decathlon,
             PolarPersonalTrainer,
             Fitbit,
-            GarminHealth
+            GarminHealth,
+            Relive
         ] + PRIVATE_SERVICES
 
     def WebInit():

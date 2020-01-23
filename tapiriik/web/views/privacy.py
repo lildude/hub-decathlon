@@ -60,6 +60,8 @@ def privacy(request):
         services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
     if "garminhealth" in services :
         services["garminhealth"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
+    if "relive" in services :
+        services["relive"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":NO})
     #services["polarpersonaltrainer"].update({"email": YES, "password": YES, "tokens": NO, "metadata": YES, "data":NO})
 
     for svc_id in SOFT_LAUNCH_SERVICES:
