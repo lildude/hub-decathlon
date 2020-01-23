@@ -44,12 +44,12 @@ from tapiriik.services.Decathlon import DecathlonService
 Decathlon = DecathlonService()
 from tapiriik.services.PolarPersonalTrainer import PolarPersonalTrainerService
 PolarPersonalTrainer = PolarPersonalTrainerService()
+
 from tapiriik.services.Fitbit import FitbitService
 Fitbit = FitbitService()
+
 from tapiriik.services.GarminHealth import GarminHealthService
 GarminHealth = GarminHealthService()
-from tapiriik.services.Relive import ReliveService
-Relive = ReliveService()
 
 PRIVATE_SERVICES = []
 try:

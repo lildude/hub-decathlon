@@ -212,6 +212,7 @@ class StravaService(ServiceBase):
                 if "calories" in ride:
                     activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ride["calories"])
                 activity.Name = ride["name"]
+                activity.Private = ride["private"]
                 activity.Stationary = ride["manual"]
                 activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
                 activity.AdjustTZ()
