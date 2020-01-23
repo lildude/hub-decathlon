@@ -437,6 +437,7 @@ class DecathlonService(ServiceBase):
         
         etree.SubElement(header, "LDID").text = str(svcRecord.ExternalID)
         etree.SubElement(header, "MANUAL", attrib=None).text = "true"
+        etree.SubElement(header, "CONNECTOR").text = "901" #hub Connector id
 
         summary = etree.SubElement(root,"SUMMARY")
         dataSummaryDuration = etree.SubElement(summary, "VALUE")
