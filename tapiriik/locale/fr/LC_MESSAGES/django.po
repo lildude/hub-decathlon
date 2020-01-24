@@ -803,7 +803,7 @@ msgstr "Timur Bilalov"
 
 #: tapiriik/web/templates/static/credits.html:9
 msgid "for frontend contributions"
-msgstr "poru les contributions sur site"
+msgstr "pour les contributions sur site"
 
 #: tapiriik/web/templates/static/credits.html:10
 msgid ""
