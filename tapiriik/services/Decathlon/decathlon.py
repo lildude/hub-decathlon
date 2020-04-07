@@ -160,8 +160,6 @@ class DecathlonService(ServiceBase):
                   'redirect_uri':WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
         self.UserAuthorizationURL = self.OauthEndpoint +"/oauth/authorize?" + urlencode(params)
 
-    def _apiHeaders(self, serviceRecord):
-        return {"Authorization": "access_token " + serviceRecord.Authorization["OAuthToken"]}
 
     def RetrieveAuthorizationToken(self, req, level):
         code = req.GET.get("code")
@@ -172,6 +170,7 @@ class DecathlonService(ServiceBase):
             raise APIException("Invalid code")
         data = response.json()
         refresh_token = data["access_token"]
+        
         # Retrieve the user ID, meh.
         id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
 
@@ -218,24 +217,13 @@ class DecathlonService(ServiceBase):
         activities = []
         exclusions = []
 
-        now = datetime.now()
-        prev = now - timedelta(365/12)
+        page_number = 0
+        page_total = 1
 
-        period = []
-        
-        aperiod = "%s%02d-%s%02d" % (prev.year, prev.month, now.year, now.month)
-        period.append(aperiod)
-        
-        if exhaustive:
-            for _ in range(20):
-                now = prev
-                prev = now - timedelta(6*365/12)
-                aperiod = "%s%02d-%s%02d" % (prev.year, prev.month, now.year, now.month)
-                period.append(aperiod)
-        
-        for dateInterval in period:
+        while page_number < page_total:
+            page_number += 1
             headers = self._getAuthHeaders(svcRecord)
-            resp = requests.get(DECATHLON_API_BASE_URL + "/users/" + str(svcRecord.ExternalID) + "/activities.xml?date=" + dateInterval, headers=headers)
+            resp = requests.get(DECATHLON_API_BASE_URL + "/v2/activities?user=" + str(svcRecord.ExternalID) + "&page=" + str(page_number), headers=headers)
             if resp.status_code == 400:
                 logging.info(resp.content)
                 raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
@@ -246,60 +234,69 @@ class DecathlonService(ServiceBase):
                 logging.info(resp.content)
                 raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
 
-            root = xml.fromstring(resp.content)
+            resp_activities = json.loads(resp.content.decode('utf-8'))
+
+            #set page total
+            if resp_activities["hydra:view"]["hydra:next"] is not None :
+                page_total += 1
+                    
       
-            logging.info("\t\t nb activity : " + str(len(root.findall('.//ID'))))
-            for ride in root.iter('ACTIVITY'):
+            logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
+            for ride in resp_activities["hydra:member"]:
     
                 activity = UploadedActivity()
                 activity.TZ = pytz.timezone("UTC")  
 
-                startdate = ride.find('.//STARTDATE').text + ride.find('.//TIMEZONE').text
+                startdate = ride["startdate"]
                 datebase = parse(startdate)
 
                 activity.StartTime = datebase#pytz.utc.localize(datebase)
                 
-                activity.ServiceData = {"ActivityID": ride.find('ID').text, "Manual": ride.find('MANUAL').text}
+                activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
                 
-                logging.info("\t\t Decathlon Activity ID : " + ride.find('ID').text)
+                logging.info("\t\t Decathlon Activity ID : " + ride["id"])
     
-    
-                if ride.find('SPORTID').text not in self._reverseActivityTypeMappings:
-                    exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride.find('SPORTID').text, activity_id=ride.find('ID').text, user_exception=UserException(UserExceptionType.Other)))
-                    logging.info("\t\tDecathlon Unknown activity, sport id " + ride.find('SPORTID').text+" is not mapped")
+                sport_uri = ride["sport"]
+                sport = sport_uri.replace("/v2/sports/", "")
+                if sport not in self._reverseActivityTypeMappings:
+                    exclusions.append(APIExcludeActivity("Unsupported activity type %s" % sport, activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
+                    logging.info("\t\tDecathlon Unknown activity, sport id " + sport + " is not mapped")
                     continue
     
-                activity.Type = self._reverseActivityTypeMappings[ride.find('SPORTID').text]
+                activity.Type = self._reverseActivityTypeMappings[sport]
+                
+                val = ride["dataSummaries"]
+                if self._unitMap["duration"] in val:
+                    activity.EndTime = activity.StartTime + timedelta(0, int(val[self._unitMap["duration"]]))
+                if self._unitMap["distance"] in val:
+                    activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val[self._unitMap["distance"]]))
+                if self._unitMap["kcal"] in val:
+                    activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val[self._unitMap["kcal"]]))
+                if self._unitMap["hravg"] in val:
+                    activity.Stats.HR.Average = int(val[self._unitMap["hravg"]])
+                if self._unitMap["speedaverage"] in val:
+                    meterperhour = int(val[self._unitMap["speedaverage"]])
+                    kmperhour = float(meterperhour/1000)
+                    activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.KilometersPerHour, avg=kmperhour, max= None)
     
-                for val in ride.iter('VALUE'):
-                    if val.get('id') == self._unitMap["duration"]:
-                        activity.EndTime = activity.StartTime + timedelta(0, int(val.text))
-                    if val.get('id') ==  self._unitMap["distance"]:
-                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val.text))
-                    if val.get('id') ==  self._unitMap["kcal"]:
-                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val.text))
-                    if val.get('id') ==  self._unitMap["hravg"]:
-                        activity.Stats.HR.Average = int(val.text)
-                    if val.get('id') ==  self._unitMap["speedaverage"]:
-                        meterperhour = int(val.text)
-                        kmperhour = float(meterperhour/1000)
-                        activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.KilometersPerHour, avg=kmperhour, max= None)
-    
-                if ride.find('LIBELLE').text == "" or ride.find('LIBELLE').text is None:
+                if ride["name"] == "" or ride["name"] is None:
                     txtdate = startdate.split(' ')
                     activity.Name = "Sport Decathlon " + txtdate[0]
                 else:
-                    activity.Name = ride.find('LIBELLE').text
+                    activity.Name = ride["name"]
                 
                 activity.Private = False
-                if ride.find('MANUAL').text == "1" :
+                if ride["manual"] == True :
                     activity.Stationary = True
                 else :
                     activity.Stationary = False
-                activity.GPS = ride.find('ABOUT').find('TRACK').text
+                activity.GPS = ride["trackFlag"]
                 activity.AdjustTZ()
                 activity.CalculateUID()
                 activities.append(activity)
+
+            if not exhaustive:
+                break
 
         return activities, exclusions
 
