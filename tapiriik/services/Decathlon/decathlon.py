@@ -237,8 +237,9 @@ class DecathlonService(ServiceBase):
             resp_activities = json.loads(resp.content.decode('utf-8'))
 
             #set page total
-            if resp_activities["hydra:view"]["hydra:next"] is not None :
-                page_total += 1
+            if "hydra:next" in resp_activities["hydra:view"] :
+                if resp_activities["hydra:view"]["hydra:next"] is not None :
+                    page_total += 1
                     
       
             logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
@@ -317,56 +318,53 @@ class DecathlonService(ServiceBase):
 
         headers = self._getAuthHeaders(svcRecord)
         self._rate_limit()
-        resp = requests.get(DECATHLON_API_BASE_URL + "/activity/" + activityID + "/fullactivity.xml", headers=headers)
+        resp = requests.get(DECATHLON_API_BASE_URL + "/v2/activities/" + activityID , headers=headers)
 
         if resp.status_code == 401:
             raise APIException("No authorization to download activity", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
 
         try:
-            root = xml.fromstring(resp.content)
+            root = json.loads(resp.content.decode('utf-8'))
         except:
-            raise APIException("Stream data returned from Decathlon is not XML")
+            raise APIException("Stream data returned from Decathlon is not JSON")
 
         activity.GPS = False
         activity.Stationary = True
         #work on date
-        startdate = root.find('.//STARTDATE').text
-        timezone = root.find('.//TIMEZONE').text
-        datebase = parse(startdate+timezone)
+        startdate = root["startdate"]
+        datebase = parse(startdate)
 
         ridedata = {}
         ridedataindex = []
 
-        for pt in root.iter('LOCATION'):
-            delta = int(pt.get('elapsed_time'))
-            ridedataindex.append(delta)
-            ridedata[delta] = {}
-            if activityID == 'eu2132ac60d9a40a1d9a' :
-                logging.info('========time : '+ str(delta))
-                logging.info('========lat : '+ str(float(pt.find('LATITUDE').text[:8])))
-            ridedata[delta]['LATITUDE'] = float(pt.find('LATITUDE').text[:8])
-            ridedata[delta]['LONGITUDE'] = float(pt.find('LONGITUDE').text[:8])
-            ridedata[delta]['ELEVATION'] = int(pt.find('ELEVATION').text[:8])
-        
+        if "locations" in root and root["locations"] is not None:
+            for pt in root["locations"]:
+                delta = int(pt)
+                ridedataindex.append(delta)
+                ridedata[delta] = {}
+                ridedata[delta]['LATITUDE'] = float(root["locations"][pt]["latitude"])
+                ridedata[delta]['LONGITUDE'] = float(root["locations"][pt]["longitude"])
+                ridedata[delta]['ELEVATION'] = int(root["locations"][pt]["elevation"])
+            
         if len(ridedata)>0 :
             activity.GPS = True
             activity.Stationary = False
 
-        for measure in root.iter('MEASURE'):
-            delta = int(measure.get('elapsed_time'))
-            if delta not in ridedataindex :
-                ridedataindex.append(delta)
-                ridedata[delta] = {}
+        if "datastream" in root and root["datastream"] is not None:
+            for measure in root["datastream"]:
+                delta = int(measure)
+                if delta not in ridedataindex :
+                    ridedataindex.append(delta)
+                    ridedata[delta] = {}
 
-            for measureValue in measure.iter('VALUE'):
-                if measureValue.get('id') == "1":
-                    ridedata[delta]['HR'] = int(measureValue.text)
-                if measureValue.get('id') == "6":
-                    ridedata[delta]['SPEED'] = int(measureValue.text)
-                if measureValue.get('id') == "5":
-                    ridedata[delta]['DISTANCE'] = int(measureValue.text)
-                if measureValue.get('id') == "20":
-                    ridedata[delta]['LAP'] = int(measureValue.text)
+                if "5" in root["datastream"][measure]:
+                    ridedata[delta]['DISTANCE'] = int(root["datastream"][measure]["5"])
+                if "1" in root["datastream"][pt]:
+                    ridedata[delta]['HR'] = int(root["datastream"][pt]["1"])
+                if "6" in root["datastream"][measure]:
+                    ridedata[delta]['SPEED'] = int(root["datastream"][measure]["6"])
+                if "20" in root["datastream"][measure]:
+                    ridedata[delta]['LAP'] = int(root["datastream"][measure]["20"])
 
         ridedataindex.sort()
 
