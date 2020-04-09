@@ -70,7 +70,7 @@ msgid ""
 "appear here once the synchronization completes. All dates shown are in UTC."
 msgstr ""
 "<b>Si vos comptes sont en train de se synchroniser<b>, ces activités "
-"apparaitrons ici une fois la synchronisation finie. Toutes les dates sont "
+"apparaitront ici une fois la synchronisation finie. Toutes les dates sont "
 "affichées en UTC"
 
 #: tapiriik/web/templates/auth/disconnect.html:14
