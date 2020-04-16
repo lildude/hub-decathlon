@@ -9,8 +9,6 @@ from tapiriik.services.interchange import UploadedActivity, ActivityType, Activi
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
 from tapiriik.database import db
 
-from lxml import etree
-import xml.etree.ElementTree as xml
 from django.core.urlresolvers import reverse
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
@@ -58,7 +56,7 @@ class DecathlonService(ServiceBase):
         ActivityType.DownhillSkiing: "176",
         ActivityType.Swimming: "274",
         ActivityType.Gym: "91",
-        ActivityType.Rowing: "263",
+        ActivityType.Rowing: "398",
         ActivityType.Elliptical: "397",
         ActivityType.RollerSkiing: "367",
         ActivityType.StrengthTraining: "98",
@@ -118,7 +116,7 @@ class DecathlonService(ServiceBase):
         "18" : ActivityType.Other,#Handball
         "20" : ActivityType.Other,#Hockey
         "284" : ActivityType.Other,#diving
-        "398" : ActivityType.Other,#rower machine
+        "398" : ActivityType.Rowing,#rower machine
         "27" : ActivityType.Other,#Rugby
         "357" : ActivityType.Other,#Tennis
         "32" : ActivityType.Other,#Volleyball
@@ -207,7 +205,7 @@ class DecathlonService(ServiceBase):
                 raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
             raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text))
         requestKey = response.json()["requestKey"]
-        return {"Authorization": "Bearer %s" % requestKey, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key':DECATHLON_API_KEY}
+        return {"Authorization": "Bearer %s" % requestKey, 'Content-Type' : 'application/json', 'User-Agent': 'Hub User-Agent' , 'X-Api-Key' : DECATHLON_API_KEY}
 
     def _parseDate(self, date):
         #model '2017-12-01T12:00:00+00:00'
@@ -250,8 +248,9 @@ class DecathlonService(ServiceBase):
 
                 startdate = ride["startdate"]
                 datebase = parse(startdate)
+                
 
-                activity.StartTime = datebase#pytz.utc.localize(datebase)
+                activity.StartTime = datebase #pytz.utc.localize(datebase)
                 
                 activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
                 
@@ -420,50 +419,47 @@ class DecathlonService(ServiceBase):
     def UploadActivity(self, svcRecord, activity):
         logging.info("UPLOAD To Decathlon Activity tz " + str(activity.TZ) + " dt tz " + str(activity.StartTime.tzinfo) + " starttime " + str(activity.StartTime))
         
-        #XML build
-        root = etree.Element("ACTIVITY")
-        header = etree.SubElement(root, "HEADER")
-        etree.SubElement(header, "NAME").text = activity.Name
-        etree.SubElement(header, "DATE").text = str(activity.StartTime).replace(" ","T") 
-        duration = int((activity.EndTime - activity.StartTime).total_seconds())
-        etree.SubElement(header, "DURATION").text =  str(duration)
-        
-        etree.SubElement(header, "SPORTID").text = self._activityTypeMappings[activity.Type]
-        
-        etree.SubElement(header, "LDID").text = str(svcRecord.ExternalID)
-        etree.SubElement(header, "MANUAL", attrib=None).text = "true"
-        etree.SubElement(header, "CONNECTOR").text = "901" #hub Connector id
+        #JSON build
+        root = {}
 
-        summary = etree.SubElement(root,"SUMMARY")
-        dataSummaryDuration = etree.SubElement(summary, "VALUE")
-        dataSummaryDuration.text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
-        dataSummaryDuration.attrib["id"] = self._unitMap["duration"]
-    
-        if activity.Stats.Distance.Value is not None and activity.Stats.Distance.Value > 0:
-            dataSummaryDistance = etree.SubElement(summary, "VALUE")
-            dataSummaryDistance.text = str((int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value)))
-            dataSummaryDistance.attrib["id"] = self._unitMap["distance"]
+        root["name"] = activity.Name
+        root["startdate"] = str(activity.StartTime).replace(" ","T") 
+        duration = int((activity.EndTime - activity.StartTime).total_seconds())
+        root["duration"] = duration
+        
+        root["sport"] = "/v2/sports/" + self._activityTypeMappings[activity.Type]
+        
+        root["user"] = "/v2/users/" + str(svcRecord.ExternalID)
+        
+        root["manual"] = True
+        root["connector"] = "/v2/connectors/" + "901" #hub Connector id
+
+        dataSummaries = {}
+        
+        # duration 
+        dataSummaries[self._unitMap["duration"]]= duration
+
+        if activity.Stats.Distance.Value is not None and activity.Stats.Distance.Value > 0 :
+            dataSummaries[self._unitMap["distance"]] = int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value)
         
         if activity.Stats.Energy.Value is not None:
-            dataSummaryKcal = etree.SubElement(summary, "VALUE")
-            dataSummaryKcal.text = str((int(activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value)))       
-            dataSummaryKcal.attrib["id"] = self._unitMap["kcal"]
+            dataSummaries[self._unitMap["kcal"]] = int(activity.Stats.Energy.asUnits(ActivityStatisticUnit.Kilocalories).Value)
 
         if activity.Stats.HR.Average is not None and activity.Stats.HR.Average > 0:
-            dataSummaryHR = etree.SubElement(summary, "VALUE")
-            dataSummaryHR.text = str(int(activity.Stats.HR.Average))       
-            dataSummaryHR.attrib["id"] = self._unitMap["hravg"]
+            dataSummaries[self._unitMap["hravg"]] = int(activity.Stats.HR.Average)
 
         #Speed average, We accept meter/hour
-        if activity.Stats.Speed.Average is not None and activity.Stats.Speed.Average > 0:
-            dataSummarySpeedAvg = etree.SubElement(summary, "VALUE")
+        if activity.Stats.Speed.Average is not None and activity.Stats.Speed.Average > 0 :
             speed_kmh = activity.Stats.Speed.asUnits(ActivityStatisticUnit.KilometersPerHour).Average
             speed_mh = 1000 * speed_kmh
-            
-            dataSummarySpeedAvg.text = str((int(speed_mh)))       
-            dataSummarySpeedAvg.attrib["id"] = self._unitMap["speedaverage"]
+            dataSummaries[self._unitMap["speedaverage"]] = int(speed_mh)
 
-        datameasure = etree.SubElement(root, "DATA")
+
+        root["dataSummaries"] = dataSummaries
+
+
+        dataStream = {}
+        
         if len(activity.Laps) > 1 :
             addLap = True
         else :
@@ -473,77 +469,60 @@ class DecathlonService(ServiceBase):
         for lap in activity.Laps:
             for wp in lap.Waypoints:
                 if wp.HR is not None or wp.Speed is not None or wp.Distance is not None or wp.Calories is not None:
-                    oneMeasureLocation = etree.SubElement(datameasure, "MEASURE")
-                    oneMeasureLocation.attrib["elapsed_time"] = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
+                    oneMeasureLocation = {}
+                    elapsedTime = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
                     if wp.HR is not None:
-                        measureHR = etree.SubElement(oneMeasureLocation, "VALUE")
-                        measureHR.text = str(int(wp.HR))
-                        measureHR.attrib["id"] =  self._unitMap["hrcurrent"]
+                        oneMeasureLocation[self._unitMap["hrcurrent"]] = int(wp.HR)
                     if wp.Speed is not None:
-                        measureSpeed = etree.SubElement(oneMeasureLocation, "VALUE")
-                        measureSpeed.text = str(int(wp.Speed*3600))
-                        measureSpeed.attrib["id"] = self._unitMap["speedcurrent"]
+                        oneMeasureLocation[self._unitMap["speedcurrent"]] = int(wp.Speed*3600)
                     if wp.Calories is not None:
-                        measureKcaletree = etree.SubElement(oneMeasureLocation, "VALUE")
-                        measureKcaletree.text = str(int(wp.Calories))
-                        measureKcaletree.attrib["id"] =  self._unitMap["kcal"] 
+                        oneMeasureLocation[self._unitMap["kcal"]] = int(wp.Calories)
                     if wp.Distance is not None:
-                        measureDistance = etree.SubElement(oneMeasureLocation, "VALUE")
-                        measureDistance.text = str(int(wp.Distance))
-                        measureDistance.attrib["id"] =  self._unitMap["distance"] 
+                        oneMeasureLocation[self._unitMap["distance"]] = int(wp.Distance)
+                    dataStream[elapsedTime] = oneMeasureLocation
             if addLap and oneMeasureLocation is not None:
-                measureLap = etree.SubElement(oneMeasureLocation, "VALUE")
-                measureLap.text = "1"
-                measureLap.attrib["id"] =  "20" #add a lap here this elapsed time
+                oneMeasureLocation["20"] = 1
 
         
         
         if len(activity.GetFlatWaypoints()) > 0:
             if activity.GetFlatWaypoints()[0].Location is not None:
                 if activity.GetFlatWaypoints()[0].Location.Latitude is not None:
-                    track = etree.SubElement(root, "TRACK")
-                    tracksummary = etree.SubElement(track, "SUMMARY")
-                    etree.SubElement(tracksummary, "LIBELLE").text = ""
-                    tracksummarylocation = etree.SubElement(tracksummary, "LOCATION")
-                    tracksummarylocation.attrib["elapsed_time"] = "0"
-                    etree.SubElement(tracksummarylocation, "LATITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Latitude)[:8]
-                    etree.SubElement(tracksummarylocation, "LONGITUDE").text = str(activity.GetFlatWaypoints()[0].Location.Longitude)[:8]
-                    etree.SubElement(tracksummarylocation, "ELEVATION").text = "0"
-            
-                    etree.SubElement(tracksummary, "DISTANCE").text = str(int(activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value))
-                    etree.SubElement(tracksummary, "DURATION").text = str(int((activity.EndTime - activity.StartTime).total_seconds()))
-                    etree.SubElement(tracksummary, "SPORTID").text = self._activityTypeMappings[activity.Type]
-                    etree.SubElement(tracksummary, "LDID").text = str(svcRecord.ExternalID)
+                    locations = {}
+                    root["latitude"] = activity.GetFlatWaypoints()[0].Location.Latitude
+                    root["longitude"] = activity.GetFlatWaypoints()[0].Location.Longitude
+                    root["elevation"] = activity.GetFlatWaypoints()[0].Location.Altitude
 
                     for wp in activity.GetFlatWaypoints():
                         if wp.Location is None or wp.Location.Latitude is None or wp.Location.Longitude is None:
                             continue  # drop the point
-                        #oneLocation = etree.SubElement(track, "LOCATION")
-                        oneLocation = etree.SubElement(track,"LOCATION")
-                        oneLocation.attrib["elapsed_time"] = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
-                        etree.SubElement(oneLocation, "LATITUDE").text = str(wp.Location.Latitude)[:8]
-                        etree.SubElement(oneLocation, "LONGITUDE").text = str(wp.Location.Longitude)[:8]
+                        oneLocation = {}
+                        oneLocation["latitude"] = wp.Location.Latitude
+                        oneLocation["longitude"] = wp.Location.Longitude
                         if wp.Location.Altitude is not None:
-                            etree.SubElement(oneLocation, "ELEVATION").text = str(int(wp.Location.Altitude))
+                            oneLocation["elevation"] = wp.Location.Altitude
                         else:
-                            etree.SubElement(oneLocation, "ELEVATION").text = "0"
+                            oneLocation["elevation"] = 0 
+                        elapsedTime = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
+                        locations[elapsedTime] = oneLocation
+                    root["locations"] = locations
     
-        activityXML = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        activityJSON = json.dumps(root)
 
         headers = self._getAuthHeaders(svcRecord)
         self._rate_limit()
-        upload_resp = requests.post(DECATHLON_API_BASE_URL + "/activity/import.xml", data=activityXML, headers=headers)
+        upload_resp = requests.post(DECATHLON_API_BASE_URL + "/v2/activities", data=activityJSON, headers=headers)
 
-        if upload_resp.status_code != 200:
+        if upload_resp.status_code != 201:
             raise APIException("Could not upload activity %s %s" % (upload_resp.status_code, upload_resp.text))
         
         upload_id = None    
 
         try:
-            root = xml.fromstring(upload_resp.content)
-            upload_id = root.find('.//ID').text
+            root = json.loads(upload_resp.content.decode('utf-8'))
+            upload_id = root["id"]
         except:
-            raise APIException("Stream data returned is not XML")
+            raise APIException("Stream data returned is not JSON")
 
         return upload_id
 
@@ -561,5 +540,5 @@ class DecathlonService(ServiceBase):
     def DeleteActivity(self, serviceRecord, uploadId):
         headers = self._getAuthHeaders(serviceRecord)
         self._rate_limit()
-        del_res = requests.delete(DECATHLON_API_BASE_URL + "/activity/+d/summary.xml" % uploadId, headers=headers)
+        del_res = requests.delete(DECATHLON_API_BASE_URL + "/v2/activities/+d" % uploadId, headers=headers)
         del_res.raise_for_status()
