@@ -358,8 +358,8 @@ class DecathlonService(ServiceBase):
 
                 if "5" in root["datastream"][measure]:
                     ridedata[delta]['DISTANCE'] = int(root["datastream"][measure]["5"])
-                if "1" in root["datastream"][pt]:
-                    ridedata[delta]['HR'] = int(root["datastream"][pt]["1"])
+                if "1" in root["datastream"][measure]:
+                    ridedata[delta]['HR'] = int(root["datastream"][measure]["1"])
                 if "6" in root["datastream"][measure]:
                     ridedata[delta]['SPEED'] = int(root["datastream"][measure]["6"])
                 if "20" in root["datastream"][measure]:
