@@ -482,6 +482,7 @@ class DecathlonService(ServiceBase):
                     dataStream[elapsedTime] = oneMeasureLocation
             if addLap and oneMeasureLocation is not None:
                 oneMeasureLocation["20"] = 1
+        root["datastream"] = dataStream
 
         
         
