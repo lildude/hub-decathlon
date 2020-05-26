@@ -108,7 +108,7 @@ def sync_trigger_partial_sync_callback(req, service):
         users_to_sync = _sync.getUsersIDFromExternalId(response, service)
 
         if not users_to_sync:
-            return HttpResponse(status=401)
+            return HttpResponse(status=202)
         else:
             for user in users_to_sync:
 
