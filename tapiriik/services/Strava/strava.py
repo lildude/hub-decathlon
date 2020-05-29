@@ -350,7 +350,6 @@ class StravaService(ServiceBase):
                     "activity_name": activity.Name,
                     "description": activity.Notes, # Paul Mach said so.
                     "activity_type": self._activityTypeMappings[activity.Type],
-                    "distance": activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value,
                     "private": 1 if activity.Private else 0}
 
             if "fit" in activity.PrerenderedFormats:
