@@ -27,9 +27,9 @@ class User:
         return db.users.find_one({"ConnectedServices.ID": svcRec._id})
 
     def Ensure(req):
-        from ipware.ip import get_real_ip
+        #from ipware.ip import get_real_ip
         if req.user == None:
-            req.user = User.Create(creationIP=get_real_ip(req))
+            req.user = User.Create(creationIP=req.META.get("REMOTE_ADDR"))
             User.Login(req.user, req)
         return req.user
 
