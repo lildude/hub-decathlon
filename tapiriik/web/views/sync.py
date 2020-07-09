@@ -107,23 +107,21 @@ def sync_trigger_partial_sync_callback(req, service):
         # Get users _id list from external ID
         users_to_sync = _sync.getUsersIDFromExternalId(response, service)
 
-        if not users_to_sync:
-            return HttpResponse(status=202)
-        else:
-            for user in users_to_sync:
 
-                # For each users, if we can sync now
-                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
-                        user["LastSynchronization"] < _sync.MinimumSyncInterval:
-                    return HttpResponse(status=403)
-                exhaustive = None
-                if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
-                        user["LastSynchronization"] > _sync.MaximumIntervalBeforeExhaustiveSync:
-                    exhaustive = True
-                # Force immadiate sync
-                _sync.ScheduleImmediateSync(user, exhaustive)
+        for user in users_to_sync:
+            # verify if it is an user
+            if "_id" not in user:
+                return HttpResponse(status=403)    
+            # For each users, if we can sync now
+            if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
+                    user["LastSynchronization"] < _sync.MinimumSyncInterval:
+                return HttpResponse(status=200)
 
-        return HttpResponse(status=204)
+            exhaustive = None
+            # Force immadiate sync
+            _sync.ScheduleImmediateSync(user, exhaustive)
+
+        return HttpResponse(status=200)
 
     elif req.method == "GET":	
         return svc.PartialSyncTriggerGET(req)
