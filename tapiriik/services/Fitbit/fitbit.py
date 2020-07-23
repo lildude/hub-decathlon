@@ -64,7 +64,7 @@ class FitbitService(ServiceBase):
         #ActivityType.Swimming: "Swim",
         ActivityType.Gym: 3015,
         #ActivityType.Rowing: "Rowing",
-        #ActivityType.Elliptical: "Elliptical",
+        ActivityType.Elliptical: 20047,
         #ActivityType.RollerSkiing: "RollerSki",
         #ActivityType.StrengthTraining: "WeightTraining",
         ActivityType.Climbing: 15535,
@@ -76,6 +76,7 @@ class FitbitService(ServiceBase):
 
     _reverseActivityTypeMappings = {
         90001: ActivityType.Cycling,
+        20047: ActivityType.Elliptical,
         0: ActivityType.Gym,
         90004: ActivityType.Gym, # 		0	Aerobic step	Dancing
         3015: ActivityType.Gym, # 		0	Aerobic, general	Dancing
