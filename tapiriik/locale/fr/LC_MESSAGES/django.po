@@ -233,7 +233,7 @@ msgid ""
 msgstr ""
 "Le Hub by DECATHLON synchronise vos activités entre Aerobia, Garmin Connect, "
 "Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, BeginnerTriathlete et "
-"DecathlonCoach <br/>\t(Vos données cardiaque, température, cadence...)"
+"DecathlonCoach <br/>\t(Vos données cardiaques, température, cadence...)"
 
 #: tapiriik/web/templates/donation.html:4
 #: tapiriik/web/templates/donation.html:19
