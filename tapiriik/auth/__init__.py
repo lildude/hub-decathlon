@@ -172,8 +172,8 @@ class User:
         _sync = Sync()
         db.users.update_one({"_id": user["_id"]}, {'$set':user})
         if delta or (hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0):  # also schedule an immediate sync if there is an outstanding error (i.e. user reconnected)
-            db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException_Type": UserExceptionType.Authorization}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
-            db.connections.update_one({"_id": serviceRecord._id}, {"$pull": {"SyncErrors": {"UserException_Type": UserExceptionType.RenewPassword}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
+            db.connections.update_one({"_id": serviceRecord._id}, {"$unset": {"SyncErrors": {"UserException_Type": UserExceptionType.Authorization}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
+            db.connections.update_one({"_id": serviceRecord._id}, {"$unset": {"SyncErrors": {"UserException_Type": UserExceptionType.RenewPassword}}}) # Pull all auth-related errors from the service so they don't continue to see them while the sync completes.
             _sync.SetNextSyncIsExhaustive(user, True)  # exhaustive, so it'll pick up activities from newly added services / ones lost during an error
             if hasattr(serviceRecord, "SyncErrors") and len(serviceRecord.SyncErrors) > 0:
                 _sync.ScheduleImmediateSync(user)

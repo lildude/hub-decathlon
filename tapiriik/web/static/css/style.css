@@ -321,6 +321,13 @@ body.mobile .header .logo a{
 	padding: 0 15px;
 }
 
+.error {
+	position: relative;
+	display:block;
+	width:100%;
+	margin: 0 auto 50px auto;
+}
+
 .content .block{
 	position: relative;
 	display:block;
