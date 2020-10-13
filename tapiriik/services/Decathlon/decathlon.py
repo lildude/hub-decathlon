@@ -160,7 +160,7 @@ class DecathlonService(ServiceBase):
                   'response_type':'code',
                   'redirect_uri':WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"}),
                   'state':'1234',
-                  'scope':'sports_tracking_data+sports_tracking_data:write'
+                  'scope':'openid profile sports_tracking_data sports_tracking_data:write'
                   }
         self.UserAuthorizationURL = self.OauthEndpointDecathlonLogin +"/authorize?" + urlencode(params)
 
@@ -185,6 +185,7 @@ class DecathlonService(ServiceBase):
         id_resp = requests.get(DECATHLON_API_BASE_URL + "/v2/me", headers=headers)
         if id_resp.status_code == 200 :
             # first check if not exist
+            logging.info("\t\t Decathlon USER ID : " + id_resp.json()["id"])
             webhook_exists = False
             resp = requests.get(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", headers=headers)
             if resp.status_code == 200 :
@@ -196,7 +197,8 @@ class DecathlonService(ServiceBase):
             if webhook_exists == False :
                 data_json = '{"user": "/v2/users/'+id_resp.json()["id"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
                 requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
-            self._rate_limit()
+        else:
+            raise APIException("error getting user "+ str(id_resp.status_code))
         
 
         return (id_resp.json()["id"], {"RefreshTokenDecathlonLogin": refresh_token_decathlon_login, "AccessTokenDecathlonLoginExpiresAt": AccessTokenExpiresAt, "AccessTokenDecathlonLogin":access_token_decathlon_login})
