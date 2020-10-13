@@ -1,6 +1,8 @@
 from tapiriik.database import db, close_connections
 from tapiriik.settings import RABBITMQ_BROKER_URL, MONGO_FULL_WRITE_CONCERN
 from datetime import datetime
+
+'''
 from celery import Celery
 from celery.signals import worker_shutdown
 
@@ -19,11 +21,13 @@ def celery_shutdown(**kwargs):
     close_connections()
 
 @celery_app.task(acks_late=True)
+'''
+
 def trigger_remote(service_id, affected_connection_external_ids):
     from tapiriik.auth import User
     from tapiriik.services import Service
     svc = Service.FromID(service_id)
-    db.connections.update_many({"Service": svc.ID, "ExternalID": {"$in": affected_connection_external_ids}}, {"$set":{"TriggerPartialSync": True, "TriggerPartialSyncTimestamp": datetime.utcnow()}}, w=MONGO_FULL_WRITE_CONCERN)
+    db.connections.update_many({"Service": svc.ID, "ExternalID": {"$in": affected_connection_external_ids}}, {"$set":{"TriggerPartialSync": True, "TriggerPartialSyncTimestamp": datetime.utcnow()}})
     affected_connection_ids = db.connections.find({"Service": svc.ID, "ExternalID": {"$in": affected_connection_external_ids}}, {"_id": 1})
     affected_connection_ids = [x["_id"] for x in affected_connection_ids]
     trigger_users_query = User.PaidUserMongoQuery()
