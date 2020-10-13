@@ -108,7 +108,7 @@
 	<div class="block logoPartners">
 		<div class="titleBlock">{% trans "Available services" %}</div>
 		<div class="partnerOuter row">
-			{% with localservices="decathlon decathlonpreprod" %}
+			{% with localservices="decathlon decathlondev" %}
   			{% for provider in service_providers %}
 				{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
 					{% include "service-logos.html" with provider=provider %}

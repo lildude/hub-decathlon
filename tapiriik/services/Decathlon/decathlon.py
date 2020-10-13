@@ -1,6 +1,6 @@
 # Synchronization module for decathloncoach.com
 # (c) 2018 Charles Anssens, charles.anssens@decathlon.com
-from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_API_KEY, DECATHLON_API_BASE_URL, DECATHLON_RATE_LIMITS
+from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_OAUTH_URL, DECATHLON_API_KEY, DECATHLON_API_BASE_URL, DECATHLON_RATE_LIMITS, DECATHLON_LOGIN_CLIENT_SECRET, DECATHLON_LOGIN_CLIENT_ID, DECATHLON_LOGIN_OAUTH_URL
 from tapiriik.services.ratelimiting import RateLimit, RateLimitExceededException
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
@@ -30,15 +30,17 @@ class DecathlonService(ServiceBase):
     AuthenticationType = ServiceAuthenticationType.OAuth
     UserProfileURL = "https://www.decathloncoach.com/fr-fr/portal/?{0}"
     UserActivityURL = "http://www.decathloncoach.com/fr-fr/portal/activities/{1}"
-    accountOauth = "https://account.geonaute.com/oauth"
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
     PartialSyncRequiresTrigger = False
     LastUpload = None
 
     GlobalRateLimits = DECATHLON_RATE_LIMITS
 
-    OauthEndpoint = "https://account.geonaute.com"
-    
+    OauthEndpoint = DECATHLON_OAUTH_URL
+    accountOauth = DECATHLON_OAUTH_URL + "/oauth"
+
+    OauthEndpointDecathlonLogin = DECATHLON_LOGIN_OAUTH_URL + "/oauth"
+
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = False
 
     SupportsActivityDeletion = False
@@ -61,7 +63,8 @@ class DecathlonService(ServiceBase):
         ActivityType.RollerSkiing: "367",
         ActivityType.StrengthTraining: "98",
         ActivityType.Climbing: "153",
-        ActivityType.Other: "121"
+        ActivityType.Other: "121",
+        ActivityType.StandUpPaddling: "400"
     }
 
     # For mapping Decathlon sport id->common
@@ -125,7 +128,7 @@ class DecathlonService(ServiceBase):
         "354" : ActivityType.Other,#Squash
         "358" : ActivityType.Other,#Table tennis
         "7" : ActivityType.Other,#paragliding
-        "400" : ActivityType.Other,#Stand Up Paddle
+        "400" : ActivityType.StandUpPaddling,#Stand Up Paddle
         "340" : ActivityType.Other,#Padel
         "326" : ActivityType.Other,#archery
         "366" : ActivityType.Other#Yatching
@@ -153,58 +156,92 @@ class DecathlonService(ServiceBase):
 
     def WebInit(self):
         params = {
-                  'client_id':DECATHLON_CLIENT_ID,
+                  'client_id':DECATHLON_LOGIN_CLIENT_ID,
                   'response_type':'code',
-                  'redirect_uri':WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
-        self.UserAuthorizationURL = self.OauthEndpoint +"/oauth/authorize?" + urlencode(params)
+                  'redirect_uri':WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"}),
+                  'state':'1234',
+                  'scope':'sports_tracking_data+sports_tracking_data:write'
+                  }
+        self.UserAuthorizationURL = self.OauthEndpointDecathlonLogin +"/authorize?" + urlencode(params)
 
 
     def RetrieveAuthorizationToken(self, req, level):
         code = req.GET.get("code")
-        params = {"grant_type": "authorization_code", "code": code, "client_id": DECATHLON_CLIENT_ID, "client_secret": DECATHLON_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
 
-        response = requests.get(self.accountOauth + "/accessToken", params=params)
+        params = {"grant_type": "authorization_code", "code": code, "client_id": DECATHLON_LOGIN_CLIENT_ID, "client_secret": DECATHLON_LOGIN_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "decathlon"})}
+
+        response = requests.get(self.OauthEndpointDecathlonLogin + "/token", params=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
         data = response.json()
-        refresh_token = data["access_token"]
-        
-        # Retrieve the user ID, meh.
-        id_resp = requests.get(self.OauthEndpoint + "/api/me?access_token=" + data["access_token"])
-
-        # register the webhook to receive callbacks for new activities
-        jwt = id_resp.json()["requestKey"]
-        headers = {"Authorization": "Bearer %s" % jwt, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
-        # first check if not exist
-        webhook_exists = False
-        resp = requests.get(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", headers=headers)
-        if resp.status_code == 200 :
-            answer_json = json.loads(resp.content)
-            for web_hook in answer_json['hydra:member'] :
-                if web_hook["url"] == WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID :
-                    webhook_exists = True
-        
-        if webhook_exists == False :
-            data_json = '{"user": "/v2/users/'+id_resp.json()["ldid"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
-            requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
-        self._rate_limit()
+        access_token_decathlon_login = data["access_token"]
+        refresh_token_decathlon_login = data["refresh_token"]
+        AccessTokenExpiresAt = time.time() + int(data["expires_in"])
         
 
-        return (id_resp.json()["ldid"], {"RefreshToken": refresh_token})
+        headers = {"Authorization": "Bearer %s" % access_token_decathlon_login, 'User-Agent': 'Hub User-Agent' , 'X-Api-Key': DECATHLON_API_KEY, 'Content-Type': 'application/json'}
+
+        # get user ID (aka LDID)
+        id_resp = requests.get(DECATHLON_API_BASE_URL + "/v2/me", headers=headers)
+        if id_resp.status_code == 200 :
+            # first check if not exist
+            webhook_exists = False
+            resp = requests.get(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", headers=headers)
+            if resp.status_code == 200 :
+                answer_json = json.loads(resp.content)
+                for web_hook in answer_json['hydra:member'] :
+                    if web_hook["url"] == WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID :
+                        webhook_exists = True
+            
+            if webhook_exists == False :
+                data_json = '{"user": "/v2/users/'+id_resp.json()["id"]+'", "url": "'+WEB_ROOT+'/sync/remote_callback/trigger_partial_sync/'+self.ID+'", "events": ["activity_create"]}'
+                requests.post(DECATHLON_API_BASE_URL + "/v2/user_web_hooks", data=data_json, headers=headers)
+            self._rate_limit()
+        
+
+        return (id_resp.json()["id"], {"RefreshTokenDecathlonLogin": refresh_token_decathlon_login, "AccessTokenDecathlonLoginExpiresAt": AccessTokenExpiresAt, "AccessTokenDecathlonLogin":access_token_decathlon_login})
 
     def RevokeAuthorization(self, serviceRecord):
-        resp = requests.get(self.OauthEndpoint + "/logout?access_token="+serviceRecord.Authorization["RefreshToken"])
-        if resp.status_code != 204 and resp.status_code != 200:
+        ''' Not implemented in Decathlon Login
+        resp = requests.get(DECATHLON_LOGIN_OAUTH_URL + "/openid/logout?id_token_hint="+serviceRecord.Authorization["RefreshTokenDecathlonLogin"])
+        if resp.status_code != 204 and resp.status_code != 200  and resp.status_code != 302:
             raise APIException("Unable to deauthorize Decathlon auth token, status " + str(resp.status_code) + " resp " + resp.text)
+        '''
         pass
 
     def _getAuthHeaders(self, serviceRecord=None):
-        response = requests.get(self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
-        if response.status_code != 200:
-            if response.status_code >= 400 and response.status_code < 500:
-                raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
-            raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text))
-        requestKey = response.json()["requestKey"]
+        if "RefreshTokenDecathlonLogin" in serviceRecord.Authorization :
+            if time.time() > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0) - 60:
+                # Expired access token
+                refreshToken = serviceRecord.Authorization.get("RefreshTokenDecathlonLogin")
+
+                response = requests.post(self.OauthEndpointDecathlonLogin + "/token", data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": refreshToken,
+                    "client_id": DECATHLON_LOGIN_CLIENT_ID,
+                    "client_secret": DECATHLON_LOGIN_CLIENT_SECRET,
+                })
+                if response.status_code != 200:
+                    raise APIException("No authorization to refresh token", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
+                data = response.json()
+                authorizationData = {
+                    "AccessTokenDecathlonLogin": data["access_token"],
+                    "AccessTokenDecathlonLoginExpiresAt": time.time() + int(data["expires_in"]),
+                    "RefreshTokenDecathlonLogin": data["refresh_token"]
+                }
+
+                serviceRecord.Authorization.update(authorizationData)
+                db.connections.update({"_id": serviceRecord._id}, {"$set": {"Authorization": authorizationData}})
+            
+            requestKey = serviceRecord.Authorization["AccessTokenDecathlonLogin"]
+        else :
+            #OLD way with Geonaute Account
+            response = requests.get(self.OauthEndpoint + "/api/me?access_token="+serviceRecord.Authorization["RefreshToken"])
+            if response.status_code != 200:
+                if response.status_code >= 400 and response.status_code < 500:
+                    raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
+                raise APIException("Could not retrieve refreshed token %s %s" % (response.status_code, response.text))
+            requestKey = response.json()["requestKey"]
         return {"Authorization": "Bearer %s" % requestKey, 'Content-Type' : 'application/json', 'User-Agent': 'Hub User-Agent' , 'X-Api-Key' : DECATHLON_API_KEY}
 
     def _parseDate(self, date):
@@ -235,68 +272,69 @@ class DecathlonService(ServiceBase):
             resp_activities = json.loads(resp.content.decode('utf-8'))
 
             #set page total
-            if "hydra:next" in resp_activities["hydra:view"] :
-                if resp_activities["hydra:view"]["hydra:next"] is not None :
-                    page_total += 1
+            if "hydra:view" in resp_activities:
+                if "hydra:next" in resp_activities["hydra:view"] :
+                    if resp_activities["hydra:view"]["hydra:next"] is not None :
+                        page_total += 1
                     
-      
-            logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
-            for ride in resp_activities["hydra:member"]:
-    
-                activity = UploadedActivity()
-                activity.TZ = pytz.timezone("UTC")  
+            if "hydra:member" in resp_activities :
+                logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
+                for ride in resp_activities["hydra:member"]:
+        
+                    activity = UploadedActivity()
+                    activity.TZ = pytz.timezone("UTC")  
 
-                startdate = ride["startdate"]
-                datebase = parse(startdate)
-                
+                    startdate = ride["startdate"]
+                    datebase = parse(startdate)
+                    
 
-                activity.StartTime = datebase #pytz.utc.localize(datebase)
-                
-                activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
-                
-                logging.info("\t\t Decathlon Activity ID : " + ride["id"])
-    
-                sport_uri = ride["sport"]
-                sport = sport_uri.replace("/v2/sports/", "")
-                if sport not in self._reverseActivityTypeMappings:
-                    exclusions.append(APIExcludeActivity("Unsupported activity type %s" % sport, activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
-                    logging.info("\t\tDecathlon Unknown activity, sport id " + sport + " is not mapped")
-                    continue
-    
-                activity.Type = self._reverseActivityTypeMappings[sport]
-                
-                val = ride["dataSummaries"]
-                if self._unitMap["duration"] in val:
-                    activity.EndTime = activity.StartTime + timedelta(0, int(val[self._unitMap["duration"]]))
-                if self._unitMap["distance"] in val:
-                    activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val[self._unitMap["distance"]]))
-                if self._unitMap["kcal"] in val:
-                    activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val[self._unitMap["kcal"]]))
-                if self._unitMap["hravg"] in val:
-                    activity.Stats.HR.Average = int(val[self._unitMap["hravg"]])
-                if self._unitMap["speedaverage"] in val:
-                    meterperhour = int(val[self._unitMap["speedaverage"]])
-                    kmperhour = float(meterperhour/1000)
-                    activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.KilometersPerHour, avg=kmperhour, max= None)
-    
-                if ride["name"] == "" or ride["name"] is None:
-                    txtdate = startdate.split(' ')
-                    activity.Name = "Sport Decathlon " + txtdate[0]
-                else:
-                    activity.Name = ride["name"]
-                
-                activity.Private = False
-                if ride["manual"] == True :
-                    activity.Stationary = True
-                else :
-                    activity.Stationary = False
-                activity.GPS = ride["trackFlag"]
-                activity.AdjustTZ()
-                activity.CalculateUID()
-                activities.append(activity)
+                    activity.StartTime = datebase #pytz.utc.localize(datebase)
+                    
+                    activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
+                    
+                    logging.info("\t\t Decathlon Activity ID : " + ride["id"])
+        
+                    sport_uri = ride["sport"]
+                    sport = sport_uri.replace("/v2/sports/", "")
+                    if sport not in self._reverseActivityTypeMappings:
+                        exclusions.append(APIExcludeActivity("Unsupported activity type %s" % sport, activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
+                        logging.info("\t\tDecathlon Unknown activity, sport id " + sport + " is not mapped")
+                        continue
+        
+                    activity.Type = self._reverseActivityTypeMappings[sport]
+                    
+                    val = ride["dataSummaries"]
+                    if self._unitMap["duration"] in val:
+                        activity.EndTime = activity.StartTime + timedelta(0, int(val[self._unitMap["duration"]]))
+                    if self._unitMap["distance"] in val:
+                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val[self._unitMap["distance"]]))
+                    if self._unitMap["kcal"] in val:
+                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val[self._unitMap["kcal"]]))
+                    if self._unitMap["hravg"] in val:
+                        activity.Stats.HR.Average = int(val[self._unitMap["hravg"]])
+                    if self._unitMap["speedaverage"] in val:
+                        meterperhour = int(val[self._unitMap["speedaverage"]])
+                        kmperhour = float(meterperhour/1000)
+                        activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.KilometersPerHour, avg=kmperhour, max= None)
+        
+                    if ride["name"] == "" or ride["name"] is None:
+                        txtdate = startdate.split(' ')
+                        activity.Name = "Sport Decathlon " + txtdate[0]
+                    else:
+                        activity.Name = ride["name"]
+                    
+                    activity.Private = False
+                    if ride["manual"] == True :
+                        activity.Stationary = True
+                    else :
+                        activity.Stationary = False
+                    activity.GPS = ride["trackFlag"]
+                    activity.AdjustTZ()
+                    activity.CalculateUID()
+                    activities.append(activity)
 
-            if not exhaustive:
-                break
+                if not exhaustive:
+                    break
 
         return activities, exclusions
 
@@ -391,7 +429,8 @@ class DecathlonService(ServiceBase):
                     wp.HR = rd['HR']
 
                 if 'SPEED' in rd :
-                    wp.Speed = round(rd['SPEED'] / 3600,2)
+                    if rd['SPEED'] < 100000 :
+                        wp.Speed = round(rd['SPEED'] / 3600, 2)
 
                 if 'DISTANCE' in rd :
                     wp.Distance = rd['DISTANCE']
