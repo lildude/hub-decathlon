@@ -99,6 +99,10 @@ def sync_clear_errorgroup(req, service, group):
 def sync_trigger_partial_sync_callback(req, service):
     svc = Service.FromID(service)
     if req.method == "POST":
+        
+        # We import the trigger handler mostly for strava rate limitations
+        from sync_remote_triggers import trigger_remote
+
         # if whe're using decathlon services, force resync
         # Get users ids list, depending of services
         response = svc.ExternalIDsForPartialSyncTrigger(req)
@@ -107,6 +111,8 @@ def sync_trigger_partial_sync_callback(req, service):
         # Get users _id list from external ID
         users_to_sync = _sync.getUsersIDFromExternalId(response, service)
 
+        # We launch the hadler to set the trigger to True in the database
+        trigger_remote(service, response)
 
         for user in users_to_sync:
             # verify if it is an user

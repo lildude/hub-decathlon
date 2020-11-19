@@ -23,6 +23,8 @@ class ServiceRecord:
     ExcludedActivities = {}
     Config = {}
     PartialSyncTriggerSubscribed = False
+    # If absent, the trigger handling will not work
+    TriggerPartialSync = False
 
     @property
     def Service(self):
