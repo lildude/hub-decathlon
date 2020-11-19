@@ -99,6 +99,7 @@ def sync_clear_errorgroup(req, service, group):
 def sync_trigger_partial_sync_callback(req, service):
     svc = Service.FromID(service)
     if req.method == "POST":
+        
         # We import the trigger handler mostly for strava rate limitations
         from sync_remote_triggers import trigger_remote
 
