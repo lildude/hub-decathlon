@@ -165,6 +165,8 @@ class StravaService(ServiceBase):
             resp = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/athletes/" + str(svcRecord.ExternalID) + "/activities", params={"before": before}), svcRecord)
             if resp.status_code == 401:
                 raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
+            if 429 == resp.status_code:
+                raise APIException("Strava quota limit reached %s - %s" % (resp.status_code, resp.text))
 
             earliestDate = None
 
