@@ -93,7 +93,7 @@ def _unpackUserException(raw):
 class Sync:
 
     _sqs_manager = None
-    SyncInterval = timedelta(hours=24) #auto sync each interval
+    SyncInterval = timedelta(hours=100) #auto sync each interval
     SyncIntervalJitter = timedelta(minutes=5)
     MinimumSyncInterval = timedelta(seconds=30)
     MaximumIntervalBeforeExhaustiveSync = timedelta(days=14)  # Based on the general page size of 50 activites, this would be >3/day...
