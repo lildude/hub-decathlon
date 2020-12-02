@@ -19,6 +19,7 @@ import lxml
 import pytz
 import requests
 import isodate
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class PolarFlowService(ServiceBase):
     
     GlobalRateLimits = POLAR_RATE_LIMITS
 
-    PartialSyncRequiresTrigger = False
+    PartialSyncRequiresTrigger = True
     
     PartialSyncTriggerPollInterval = timedelta(minutes=1)
 
@@ -323,3 +324,9 @@ class PolarFlowService(ServiceBase):
     def UploadActivity(self, serviceRecord, activity):
         # Not supported
         pass
+
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        data = json.loads(req.body.decode("UTF-8"))
+        if data["event"] == "PING":
+            return []
+        return [data["user_id"]]
