@@ -300,12 +300,13 @@ class PolarFlowService(ServiceBase):
         if len(activity.GetFlatWaypoints()) == 0 :
             logging.info("Polar No flat way point")
 
+        '''
         for lap in activity.Laps:
             for wp in lap.Waypoints:
                     if wp.Location is not None :
                         if wp.Location.Latitude is not None or wp.Location.Longitude is not None:
                             logging.info("Polar LAT " + str(wp.Location.Latitude) )
-                       
+        '''
 
         return activity
 
