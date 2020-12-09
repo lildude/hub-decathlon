@@ -7,8 +7,8 @@ from tapiriik.services.api import APIException, UserException, UserExceptionType
 # from tapiriik.services.tcx import TCXIO
 
 # from datetime import datetime, timedelta
-# from django.core.urlresolvers import reverse
-# from urllib.parse import urlencode
+from django.core.urlresolvers import reverse
+from urllib.parse import urlencode
 # from requests.auth import HTTPBasicAuth
 # from io import StringIO
 
@@ -33,6 +33,9 @@ class CorosService(ServiceBase):
     UserProfileURL = None
     UserActivityURL = None
 
+    # Used only in tests | But to be verified in case of
+    SupportsHR = SupportsCalories = SupportsCadence = SupportsTemp = SupportsPower = False
+
     # Enables extended auth ("Save these details") functionality
     RequiresExtendedAuthorizationDetails = False
 
@@ -42,9 +45,7 @@ class CorosService(ServiceBase):
     # List of ActivityTypes
     SupportedActivities = None
 
-    # Used only in tests | But to be verified in case of
-    SupportsHR = SupportsCalories = SupportsCadence = SupportsTemp = SupportsPower = False
-
+    
     # Does it?
     ReceivesActivities = True # Any at all?
     ReceivesStationaryActivities = True # Manually-entered?
@@ -78,3 +79,13 @@ class CorosService(ServiceBase):
     # Global rate limiting options
     # For when there's a limit on the API key itself
     GlobalRateLimits = []
+
+    def WebInit(self):
+        params = {
+            'client_id': COROS_CLIENT_ID,
+            'redirect_uri': WEB_ROOT + reverse("oauth_return", kwargs={"service": "coros"}),
+            # Kinda look like the challenge string of strava (To test in conditions), but required though.
+            'state': 'Potato',
+            'response_type': 'code'
+        }
+        self.UserAuthorizationURL = "https://open.coros.com/oauth2/authorize?" + urlencode(params)
