@@ -1,6 +1,6 @@
 # Synchronization module for COROS
 # Imports are based on the polarflow ones they will be afinated later
-from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID
+from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, _GLOBAL_LOGGER, COLOG
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 # from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
@@ -17,7 +17,7 @@ from urllib.parse import urlencode
 import logging
 # import lxml
 # import pytz
-# import requests
+import requests
 # import isodate
 # import json
 
@@ -88,4 +88,22 @@ class CorosService(ServiceBase):
             'state': 'Potato',
             'response_type': 'code'
         }
-        self.UserAuthorizationURL = "https://open.coros.com/oauth2/authorize?" + urlencode(params)
+        self.UserAuthorizationURL = "https://opentest.coros.com/oauth2/authorize?" + urlencode(params)
+
+    def RetrieveAuthorizationToken(self, req, level):
+        code = req.GET.get("code")
+        params = {"grant_type": "authorization_code", "code": code, "client_id": COROS_CLIENT_ID, "client_secret": COROS_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "coros"})}
+
+        # Implement this one if there is actual rate limits for coros
+        # self._rate_limit()
+        response = requests.post("https://opentest.coros.com/oauth2/accesstoken", data=params)
+        if response.status_code != 200:
+            raise APIException("Invalid code")
+        data = response.json()
+
+        authorizationData = {
+            "AccessToken": data["access_token"],
+            "AccessTokenExpiresAt": data["expires_in"],
+            "RefreshToken": data["refresh_token"]
+        }
+        return (data["openId"], authorizationData)
