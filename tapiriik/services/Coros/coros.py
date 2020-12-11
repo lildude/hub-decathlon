@@ -107,3 +107,13 @@ class CorosService(ServiceBase):
             "RefreshToken": data["refresh_token"]
         }
         return (data["openId"], authorizationData)
+
+    def DeleteCachedData(self, serviceRecord):
+        # Nothing to delete according to the Coros API specs
+        pass
+
+    def RevokeAuthorization(self, serviceRecord):
+        # As there are no disconnect endpoints from coros this functions does not seem to be useful
+        # For example for Strava we call https://www.strava.com/oauth/deauthorize
+        # For polar flow we make a DELETE https://www.polaraccesslink.com/v3/users/{userid}
+        pass
