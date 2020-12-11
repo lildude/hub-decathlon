@@ -89,6 +89,7 @@ GARMINHEALTH_SECRET = "#####"
 
 COROS_CLIENT_ID = "###"
 COROS_CLIENT_SECRET = "###"
+COROS_API_BASE_URL = "###"
 
 # Service available for first connection
 CONNECTION_SERVICES = [
