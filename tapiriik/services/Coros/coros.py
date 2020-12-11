@@ -1,10 +1,11 @@
 # Synchronization module for COROS
 # Imports are based on the polarflow ones they will be afinated later
-from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, _GLOBAL_LOGGER, COLOG
+from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, COROS_API_BASE_URL, _GLOBAL_LOGGER, COLOG
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 # from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
 # from tapiriik.services.tcx import TCXIO
+from tapiriik.database import db
 
 # from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
@@ -20,6 +21,7 @@ import logging
 import requests
 # import isodate
 # import json
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,8 @@ class CorosService(ServiceBase):
     # For when there's a limit on the API key itself
     GlobalRateLimits = []
 
+    _BaseUrl = COROS_API_BASE_URL
+
     def WebInit(self):
         params = {
             'client_id': COROS_CLIENT_ID,
@@ -88,7 +92,7 @@ class CorosService(ServiceBase):
             'state': 'Potato',
             'response_type': 'code'
         }
-        self.UserAuthorizationURL = "https://opentest.coros.com/oauth2/authorize?" + urlencode(params)
+        self.UserAuthorizationURL = self._BaseUrl+"/oauth2/authorize?" + urlencode(params)
 
     def RetrieveAuthorizationToken(self, req, level):
         code = req.GET.get("code")
@@ -96,14 +100,14 @@ class CorosService(ServiceBase):
 
         # Implement this one if there is actual rate limits for coros
         # self._rate_limit()
-        response = requests.post("https://opentest.coros.com/oauth2/accesstoken", data=params)
+        response = requests.post(self._BaseUrl+"/oauth2/accesstoken", data=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
         data = response.json()
 
         authorizationData = {
             "AccessToken": data["access_token"],
-            "AccessTokenExpiresAt": data["expires_in"],
+            "AccessTokenExpiresAt": time.time()+data["expires_in"],
             "RefreshToken": data["refresh_token"]
         }
         return (data["openId"], authorizationData)
@@ -117,3 +121,25 @@ class CorosService(ServiceBase):
         # For example for Strava we call https://www.strava.com/oauth/deauthorize
         # For polar flow we make a DELETE https://www.polaraccesslink.com/v3/users/{userid}
         pass
+
+    def _refresh_token(self, serviceRecord):
+        params = {
+            'client_id': COROS_CLIENT_ID,
+            'client_secret': COROS_CLIENT_SECRET,
+            'grant_type': "refresh_token",
+            'refresh_token': serviceRecord.Authorization.get("RefreshToken")
+        }
+        response = requests.post(self._BaseUrl+"/oauth2/refresh-token", data=params)
+
+        tokenRefreshmentStatus = response.json()
+        if tokenRefreshmentStatus["message"] != "OK":
+            raise APIException("Can't refresh token")
+
+        authorizationData = {
+                "AccessToken": serviceRecord.Authorization.get("RefreshToken"),
+                "AccessTokenExpiresAt": time.time()+2592000, # Adding 30 days in sec as specified in the coros API doc
+                "RefreshToken": serviceRecord.Authorization.get("RefreshToken")
+            }
+
+        serviceRecord.Authorization.update(authorizationData)
+        db.connections.update({"_id": serviceRecord._id}, {"$set": {"Authorization": authorizationData}})
