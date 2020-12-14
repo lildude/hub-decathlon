@@ -182,8 +182,7 @@ class CorosService(ServiceBase):
         if tokenRefreshmentStatus["message"] != "OK":
             raise APIException("Can't refresh token")
 
-        authoriger.debug("\t\tUnknown activity")
-                conzationData = {
+        authorizationData = {
                 "AccessToken": serviceRecord.Authorization.get("AccessToken"),
                 "AccessTokenExpiresAt": time.time()+2592000, # Adding 30 days in sec as specified in the coros API doc
                 "RefreshToken": serviceRecord.Authorization.get("RefreshToken")
