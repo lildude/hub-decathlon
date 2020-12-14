@@ -82,6 +82,47 @@ class CorosService(ServiceBase):
     # For when there's a limit on the API key itself
     GlobalRateLimits = []
 
+
+    # For mapping common->Strava; no ambiguity in Strava activity type
+    _activityTypeMappings = {
+        ActivityType.Running: "8",
+        ActivityType.Cycling: "9",
+        ActivityType.Swimming: "10",
+        ActivityType.Climbing: "14",
+        ActivityType.Hiking: "16",
+        ActivityType.Walking: "16", # There is no walking in coros but as it is a very common one it will be displayed ad hiking
+        ActivityType.Gym: "18",
+        ActivityType.CrossCountrySkiing: "19",
+        ActivityType.Snowboarding: "21",
+        ActivityType.DownhillSkiing: "21",
+        ActivityType.StrengthTraining: "23"
+        # ActivityType.Skating: "IceSkate",
+        # ActivityType.Rowing: "Rowing",
+        # ActivityType.Elliptical: "Elliptical",
+        # ActivityType.RollerSkiing: "RollerSki",
+        # ActivityType.StandUpPaddling: "StandUpPaddling",
+    }
+
+    # For mapping Coros->common
+    _reverseActivityTypeMappings = {
+        "8": ActivityType.Running,
+        "9": ActivityType.Cycling,
+        "10": ActivityType.Swimming,
+        # "13": ActivityType. # TRIATHLON and MULTISPORT
+        "14": ActivityType.Climbing,
+        "15": ActivityType.Running,
+        "16": ActivityType.Hiking,
+        "18": ActivityType.Gym,
+        "19": ActivityType.CrossCountrySkiing,
+        "20": ActivityType.Running,
+        "21": ActivityType.DownhillSkiing,
+        # "22": ActivityType. # PILOT
+        "23": ActivityType.StrengthTraining
+    }
+
+    SupportedActivities = list(_activityTypeMappings.keys())
+
+
     _BaseUrl = COROS_API_BASE_URL
 
     def WebInit(self):
@@ -164,9 +205,12 @@ class CorosService(ServiceBase):
             'endDate': nowLessThirty.strftime("%Y%m%d")
         }
 
+        # We refresh the token before asking for data
         self._refresh_token(svcRecord)
+        # Then we ask for the activities done in coros
         response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
         
+        # If there is no data in the response so there is an error it can be everything (expired or wrong token, etc.)
         if response.json()["data"] == None:
             raise APIException("Bad request to Coros")
         
