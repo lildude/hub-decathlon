@@ -83,7 +83,7 @@ class CorosService(ServiceBase):
     GlobalRateLimits = []
 
 
-    # For mapping common->Strava; no ambiguity in Strava activity type
+    # For mapping common->Coros
     _activityTypeMappings = {
         ActivityType.Running: "8",
         ActivityType.Cycling: "9",
@@ -182,7 +182,8 @@ class CorosService(ServiceBase):
         if tokenRefreshmentStatus["message"] != "OK":
             raise APIException("Can't refresh token")
 
-        authorizationData = {
+        authoriger.debug("\t\tUnknown activity")
+                conzationData = {
                 "AccessToken": serviceRecord.Authorization.get("AccessToken"),
                 "AccessTokenExpiresAt": time.time()+2592000, # Adding 30 days in sec as specified in the coros API doc
                 "RefreshToken": serviceRecord.Authorization.get("RefreshToken")
@@ -192,8 +193,8 @@ class CorosService(ServiceBase):
         db.connections.update({"_id": serviceRecord._id}, {"$set": {"Authorization": authorizationData}})
 
     def DownloadActivityList(self, svcRecord, exhaustive=False):
-        # activities = []self._BaseUrl+"/v2/coros/sport/list"+ urlencode(params)
-        # exclusions = []
+        activities = []
+        exclusions = []
         # before = earliestDate = None
         now = datetime.now()
         nowLessThirty = now - timedelta(days=30)
@@ -209,75 +210,56 @@ class CorosService(ServiceBase):
         self._refresh_token(svcRecord)
         # Then we ask for the activities done in coros
         response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
-        
+
         # If there is no data in the response so there is an error it can be everything (expired or wrong token, etc.)
         if response.json()["data"] == None:
             raise APIException("Bad request to Coros")
         
-        return response.json()["data"], []
-        # while True:
-        #     if before is not None and before < 0:
-        #         break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
-        #     logger.debug("Req with before=" + str(before) + "/" + str(earliestDate))
-        #     resp = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/athletes/" + str(svcRecord.ExternalID) + "/activities", params={"before": before}), svcRecord)
-        #     if resp.status_code == 401:
-        #         raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
-        #     if 429 == resp.status_code:
-        #         raise APIException("Strava quota limit reached %s - %s" % (resp.status_code, resp.text))
+        reqdata = response.json()["data"]
+        
+        for ride in reqdata:
+            activity = UploadedActivity()
+            activity.TZ = ride["start_date"]
+            activity.StartTime = ride["startTime"]
+            activity.EndTime = ride["endTime"]
+            activity.ServiceData = {"ActivityID": ride["labelId"]}
 
-        #     earliestDate = None
+            if ride["type"] not in self._reverseActivityTypeMappings:
+                exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["type"], activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
+                logger.debug("\t\tUnknown activity")
+                continue
 
-        #     try:
-        #         reqdata = resp.json()
-        #     except ValueError:
-        #         raise APIException("Failed parsing strava list response %s - %s" % (resp.status_code, resp.text))
+            activity.Type = self._reverseActivityTypeMappings[ride["type"]]
 
-        #     if not len(reqdata):
-        #         break  # No more activities to see
+            activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride["distance"])
+            if "avgSpeed" in ride:
+                activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
+            
+            # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride["moving_time"] if "moving_time" in ride and ride["moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
+            # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
+            # if "average_watts" in ride:
+            #     activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts, avg=ride["average_watts"])
 
-        #     for ride in reqdata:
-        #         activity = UploadedActivity()
-        #         activity.TZ = pytz.timezone(re.sub("^\([^\)]+\)\s*", "", ride["timezone"]))  # Comes back as "(GMT -13:37) The Stuff/We Want""
-        #         activity.StartTime = pytz.utc.localize(datetime.strptime(ride["start_date"], "%Y-%m-%dT%H:%M:%SZ"))
-        #         logger.debug("\tActivity s/t %s: %s" % (activity.StartTime, ride["name"]))
-        #         if not earliestDate or activity.StartTime < earliestDate:
-        #             earliestDate = activity.StartTime
-        #             before = calendar.timegm(activity.StartTime.astimezone(pytz.utc).timetuple())
+            # if "average_heartrate" in ride:
+            #     activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=ride["average_heartrate"]))
+            # if "max_heartrate" in ride:
+            #     activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, max=ride["max_heartrate"]))
 
-        #         activity.EndTime = activity.StartTime + timedelta(0, ride["elapsed_time"])
-        #         activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
+            if "avgFrequency" in ride:
+                activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
 
-        #         if ride["type"] not in self._reverseActivityTypeMappings:
-        #             exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["type"], activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
-        #             logger.debug("\t\tUnknown activity")
-        #             continue
+            # if "average_temp" in ride:
+            #     activity.Stats.Temperature.update(ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
 
-        #         activity.Type = self._reverseActivityTypeMappings[ride["type"]]
-        #         activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride["distance"])
-        #         if "max_speed" in ride or "average_speed" in ride:
-        #             activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["average_speed"] if "average_speed" in ride else None, max=ride["max_speed"] if "max_speed" in ride else None)
-        #         activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride["moving_time"] if "moving_time" in ride and ride["moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
-        #         # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
-        #         if "average_watts" in ride:
-        #             activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts, avg=ride["average_watts"])
-        #         if "average_heartrate" in ride:
-        #             activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=ride["average_heartrate"]))
-        #         if "max_heartrate" in ride:
-        #             activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, max=ride["max_heartrate"]))
-        #         if "average_cadence" in ride:
-        #             activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.RevolutionsPerMinute, avg=ride["average_cadence"]))
-        #         if "average_temp" in ride:
-        #             activity.Stats.Temperature.update(ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
-        #         if "calories" in ride:
-        #             activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ride["calories"])
-        #         activity.Name = ride["name"]
-        #         activity.Stationary = ride["manual"]
-        #         activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
-        #         activity.AdjustTZ()
-        #         activity.CalculateUID()
-        #         activities.append(activity)
+            if "calorie" in ride:
+                activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ride["calorie"])
 
-        #     if not exhaustive or not earliestDate:
-        #         break
+            activity.Name = ride["deviceName"]
+            # activity.Stationary = ride["manual"]
+            # activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
+            activity.AdjustTZ()
+            activity.CalculateUID()
+            activities.append(activity)
 
-        # return activities, exclusions
+
+        return activities, exclusions
