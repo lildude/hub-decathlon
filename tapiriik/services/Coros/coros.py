@@ -17,7 +17,7 @@ from urllib.parse import urlencode
 # import gzip
 import logging
 # import lxml
-# import pytz
+import pytz
 import requests
 # import isodate
 # import json
@@ -85,9 +85,9 @@ class CorosService(ServiceBase):
 
     # For mapping common->Coros
     _activityTypeMappings = {
-        ActivityType.Running: "8",
-        ActivityType.Cycling: "9",
-        ActivityType.Swimming: "10",
+        ActivityType.Running: 8,
+        ActivityType.Cycling: 9,
+        ActivityType.Swimming: 10,
         ActivityType.Climbing: "14",
         ActivityType.Hiking: "16",
         ActivityType.Walking: "16", # There is no walking in coros but as it is a very common one it will be displayed ad hiking
@@ -105,9 +105,9 @@ class CorosService(ServiceBase):
 
     # For mapping Coros->common
     _reverseActivityTypeMappings = {
-        "8": ActivityType.Running,
-        "9": ActivityType.Cycling,
-        "10": ActivityType.Swimming,
+        8: ActivityType.Running,
+        9: ActivityType.Cycling,
+        10: ActivityType.Swimming,
         # "13": ActivityType. # TRIATHLON and MULTISPORT
         "14": ActivityType.Climbing,
         "15": ActivityType.Running,
@@ -208,32 +208,35 @@ class CorosService(ServiceBase):
         # We refresh the token before asking for data
         self._refresh_token(svcRecord)
         # Then we ask for the activities done in coros
-        response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
+        response = requests.get("http://everydayimtesting.eu:3000/")#self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
 
         # If there is no data in the response so there is an error it can be everything (expired or wrong token, etc.)
         if response.json()["data"] == None:
             raise APIException("Bad request to Coros")
         
         reqdata = response.json()["data"]
-        
+        _GLOBAL_LOGGER.info(COLOG.blue("Trying to COROS"))
+
         for ride in reqdata:
             activity = UploadedActivity()
-            activity.TZ = ride["start_date"]
-            activity.StartTime = ride["startTime"]
-            activity.EndTime = ride["endTime"]
+            # _GLOBAL_LOGGER.info(COLOG.red(self.possible_timezones(ride["startTimezone"]/4)))
+            activity.TZ = pytz.timezone("UTC")
+            _GLOBAL_LOGGER.info(COLOG.red(datetime.fromtimestamp(ride["startTime"])))
+            activity.StartTime = datetime.fromtimestamp(ride["startTime"])
+            activity.EndTime = datetime.fromtimestamp(ride["endTime"])
             activity.ServiceData = {"ActivityID": ride["labelId"]}
 
-            if ride["type"] not in self._reverseActivityTypeMappings:
-                exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["type"], activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
+            if ride["mode"] not in self._reverseActivityTypeMappings:
+                exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["mode"], activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
                 logger.debug("\t\tUnknown activity")
                 continue
 
-            activity.Type = self._reverseActivityTypeMappings[ride["type"]]
+            activity.Type = self._reverseActivityTypeMappings[ride["mode"]]
 
             activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride["distance"])
             if "avgSpeed" in ride:
                 activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
-            
+
             # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride["moving_time"] if "moving_time" in ride and ride["moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
             # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
             # if "average_watts" in ride:
@@ -245,7 +248,7 @@ class CorosService(ServiceBase):
             #     activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, max=ride["max_heartrate"]))
 
             if "avgFrequency" in ride:
-                activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
+                activity.Stats.RunCadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
 
             # if "average_temp" in ride:
             #     activity.Stats.Temperature.update(ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
@@ -260,5 +263,27 @@ class CorosService(ServiceBase):
             activity.CalculateUID()
             activities.append(activity)
 
-
         return activities, exclusions
+
+
+    def possible_timezones(self, tz_offset, common_only=True):
+        # pick one of the timezone collections
+        timezones = pytz.common_timezones if common_only else pytz.all_timezones
+
+        # convert the float hours offset to a timedelta
+        offset_days, offset_seconds = 0, int(tz_offset * 3600)
+        if offset_seconds < 0:
+            offset_days = -1
+            offset_seconds += 24 * 3600
+        desired_delta = timedelta(offset_days, offset_seconds)
+
+        # Loop through the timezones and find any with matching offsets
+        null_delta = timedelta(0, 0)
+        results = []
+        for tz_name in timezones:
+            tz = pytz.timezone(tz_name)
+            non_dst_offset = getattr(tz, '_transition_info', [[null_delta]])[-1]
+            if desired_delta == non_dst_offset[0]:
+                results.append(tz_name)
+
+        return results
