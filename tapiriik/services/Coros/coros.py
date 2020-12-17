@@ -3,7 +3,7 @@
 from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, COROS_API_BASE_URL, _GLOBAL_LOGGER, COLOG
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
-from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
+from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Lap
 # from tapiriik.services.tcx import TCXIO
 from tapiriik.database import db
 
@@ -208,6 +208,7 @@ class CorosService(ServiceBase):
         # We refresh the token before asking for data
         self._refresh_token(svcRecord)
         # Then we ask for the activities done in coros
+        # TODO Unmock this endpoint
         response = requests.get("http://everydayimtesting.eu:3000/")#self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
 
         # If there is no data in the response so there is an error it can be everything (expired or wrong token, etc.)
@@ -264,6 +265,30 @@ class CorosService(ServiceBase):
             activities.append(activity)
 
         return activities, exclusions
+
+    def DownloadActivity(self, svcRecord, activity):
+        activityID = activity.ServiceData["ActivityID"]
+        _GLOBAL_LOGGER.info(COLOG.cyan(activityID))
+
+        # TODO Unmock this endpoint
+        response = requests.get("http://everydayimtesting.eu:3000/")
+        if response.json()["data"] == None:
+            raise APIException("Bad request to Coros")
+        reqdata = response.json()["data"]
+
+        root = reqdata[0]
+
+        _GLOBAL_LOGGER.info(COLOG.red(root))
+
+        # TODO This is meant to not deal with fit file but it has to change
+        activity.GPS = False
+        activity.Stationary = True
+
+        lap = Lap(stats=activity.Stats, startTime=activity.StartTime, endTime=activity.EndTime)
+        activity.Laps = [lap]
+
+        return activity
+
 
 
     def possible_timezones(self, tz_offset, common_only=True):
