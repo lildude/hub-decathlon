@@ -255,7 +255,7 @@ class CorosService(ServiceBase):
             #     activity.Stats.Temperature.update(ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
 
             if "calorie" in ride:
-                activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ride["calorie"])
+                activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=(ride["calorie"]/1000))
 
             activity.Name = ride["deviceName"]
             # activity.Stationary = ride["manual"]
