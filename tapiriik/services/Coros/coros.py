@@ -1,26 +1,17 @@
 # Synchronization module for COROS
-# Imports are based on the polarflow ones they will be afinated later
 from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, COROS_API_BASE_URL, _GLOBAL_LOGGER, COLOG
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
-from tapiriik.services.api import APIException, UserException, UserExceptionType
+from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceWarning
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Lap
-# from tapiriik.services.tcx import TCXIO
 from tapiriik.database import db
 
 from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
 from urllib.parse import urlencode
-# from requests.auth import HTTPBasicAuth
-# from io import StringIO
 
-# import uuid
-# import gzip
 import logging
-# import lxml
 import pytz
 import requests
-# import isodate
-# import json
 import time
 
 logger = logging.getLogger(__name__)
@@ -88,14 +79,14 @@ class CorosService(ServiceBase):
         ActivityType.Running: 8,
         ActivityType.Cycling: 9,
         ActivityType.Swimming: 10,
-        ActivityType.Climbing: "14",
-        ActivityType.Hiking: "16",
-        ActivityType.Walking: "16", # There is no walking in coros but as it is a very common one it will be displayed ad hiking
-        ActivityType.Gym: "18",
-        ActivityType.CrossCountrySkiing: "19",
-        ActivityType.Snowboarding: "21",
-        ActivityType.DownhillSkiing: "21",
-        ActivityType.StrengthTraining: "23"
+        ActivityType.Climbing: 14,
+        ActivityType.Hiking: 16,
+        ActivityType.Walking: 16, # There is no walking in coros but as it is a very common one it will be displayed ad hiking
+        ActivityType.Gym: 18,
+        ActivityType.CrossCountrySkiing: 19,
+        ActivityType.Snowboarding: 21,
+        ActivityType.DownhillSkiing: 21,
+        ActivityType.StrengthTraining: 23
         # ActivityType.Skating: "IceSkate",
         # ActivityType.Rowing: "Rowing",
         # ActivityType.Elliptical: "Elliptical",
@@ -108,16 +99,15 @@ class CorosService(ServiceBase):
         8: ActivityType.Running,
         9: ActivityType.Cycling,
         10: ActivityType.Swimming,
-        # "13": ActivityType. # TRIATHLON and MULTISPORT
-        "14": ActivityType.Climbing,
-        "15": ActivityType.Running,
-        "16": ActivityType.Hiking,
-        "18": ActivityType.Gym,
-        "19": ActivityType.CrossCountrySkiing,
-        "20": ActivityType.Running,
-        "21": ActivityType.DownhillSkiing,
-        # "22": ActivityType. # PILOT
-        "23": ActivityType.StrengthTraining
+        # 13: ActivityType. # TRIATHLON and MULTISPORT
+        14: ActivityType.Climbing,
+        15: ActivityType.Running,
+        16: ActivityType.Hiking,
+        18: ActivityType.Gym,
+        19: ActivityType.CrossCountrySkiing,
+        20: ActivityType.Running,
+        21: ActivityType.DownhillSkiing,
+        23: ActivityType.StrengthTraining
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -141,7 +131,7 @@ class CorosService(ServiceBase):
             "grant_type": "authorization_code", 
             "code": code, 
             "client_id": COROS_CLIENT_ID, 
-            "client_secret": COROS_CLIENT_SECRET, 
+            "client_secret": COROS_CLIENT_SECRET,
             "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "coros"})
         }
 
@@ -191,38 +181,53 @@ class CorosService(ServiceBase):
         serviceRecord.Authorization.update(authorizationData)
         db.connections.update({"_id": serviceRecord._id}, {"$set": {"Authorization": authorizationData}})
 
+
     def DownloadActivityList(self, svcRecord, exhaustive=False):
         activities = []
         exclusions = []
-        # before = earliestDate = None
-        now = datetime.now()
-        nowLessThirty = now - timedelta(days=30)
+        activitiesData = []
+
+        # We refresh the token before asking for data
+        self._refresh_token(svcRecord)
+
+        # Defining dates, 7 days if not exhaustive else 30
+        startDate = datetime.now() - timedelta(days=(30 if exhaustive else 7))
+        endDate = datetime.now()
 
         params = {
             'token': svcRecord.Authorization.get("AccessToken"),
             'openId': svcRecord.ExternalID,
-            'startDate': now.strftime("%Y%m%d"),
-            'endDate': nowLessThirty.strftime("%Y%m%d")
+            'startDate': startDate.strftime("%Y%m%d"),
+            'endDate': endDate.strftime("%Y%m%d")
         }
 
-        # We refresh the token before asking for data
-        self._refresh_token(svcRecord)
-        # Then we ask for the activities done in coros
-        # TODO Unmock this endpoint
-        response = requests.get("http://everydayimtesting.eu:3000/")#self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
 
-        # If there is no data in the response so there is an error it can be everything (expired or wrong token, etc.)
-        if response.json()["data"] == None:
-            raise APIException("Bad request to Coros")
-        
-        reqdata = response.json()["data"]
-        _GLOBAL_LOGGER.info(COLOG.blue("Trying to COROS"))
+        # Coros allows only 30 days by query so i make 24 of them decrementing the dates if exhaustive = True 
+        for nbMonth in range((24 if exhaustive else 1)):
+            response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
+            # If there is no data in the response so there is an error. It can be everything (expired or wrong token, etc.)
+            if response.json()["data"] == None:
+                raise APIException("Bad request to Coros")
+            
+            # We don't use append 'cause it will become 2 dimensional array and that implies making double for 
+            activitiesData += response.json()["data"]
 
-        for ride in reqdata:
+            # Decrementing query dates by 30 days
+            startDate -= timedelta(days=30)
+            endDate -= timedelta(days=30)
+
+            params["startDate"] = startDate.strftime("%Y%m%d")
+            params["endDate"] = endDate.strftime("%Y%m%d")
+
+
+        for ride in activitiesData:
+            # Some king of factory design patern for instanciating an activity
             activity = UploadedActivity()
-            # _GLOBAL_LOGGER.info(COLOG.red(self.possible_timezones(ride["startTimezone"]/4)))
+
+            # Puting UTC by default but it's possible to get possibles timezones and chose it randomly with the possible_timezones method. 
+            # The only problem is the possility to select a non DST timezone for an activity in a DST one.
+            # self.possible_timezones(ride["startTimezone"]/4)  <== keeping this in case of really needing timzones
             activity.TZ = pytz.timezone("UTC")
-            _GLOBAL_LOGGER.info(COLOG.red(datetime.fromtimestamp(ride["startTime"])))
             activity.StartTime = datetime.fromtimestamp(ride["startTime"])
             activity.EndTime = datetime.fromtimestamp(ride["endTime"])
             activity.ServiceData = {"ActivityID": ride["labelId"]}
@@ -233,52 +238,22 @@ class CorosService(ServiceBase):
                 continue
 
             activity.Type = self._reverseActivityTypeMappings[ride["mode"]]
-
             activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride["distance"])
-            if "avgSpeed" in ride:
-                activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
+            activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
+            activity.Stats.RunCadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
+            activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=(ride["calorie"]/1000))
+            activity.FitFileUrl = ride["fitUrl"]
 
-            # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride["moving_time"] if "moving_time" in ride and ride["moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
-            # Strava doesn't handle "timer time" to the best of my knowledge - although they say they do look at the FIT total_timer_time field, so...?
-            # if "average_watts" in ride:
-            #     activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts, avg=ride["average_watts"])
+            # As coros don't provide name in activity summary I temporarly put the activity name
+            activity.Name = activity.Type
 
-            # if "average_heartrate" in ride:
-            #     activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=ride["average_heartrate"]))
-            # if "max_heartrate" in ride:
-            #     activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, max=ride["max_heartrate"]))
-
-            if "avgFrequency" in ride:
-                activity.Stats.RunCadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
-
-            # if "average_temp" in ride:
-            #     activity.Stats.Temperature.update(ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
-
-            if "calorie" in ride:
-                activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=(ride["calorie"]/1000))
-
-            activity.Name = ride["deviceName"]
-            # activity.Stationary = ride["manual"]
-            # activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
             activity.AdjustTZ()
             activity.CalculateUID()
             activities.append(activity)
-
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
-        activityID = activity.ServiceData["ActivityID"]
-        _GLOBAL_LOGGER.info(COLOG.cyan(activityID))
-
-        # TODO Unmock this endpoint
-        response = requests.get("http://everydayimtesting.eu:3000/")
-        if response.json()["data"] == None:
-            raise APIException("Bad request to Coros")
-        reqdata = response.json()["data"]
-
-        root = reqdata[0]
-
-        _GLOBAL_LOGGER.info(COLOG.red(root))
+        # We don't redownload the activities
 
         # TODO This is meant to not deal with fit file but it has to change
         activity.GPS = False
@@ -289,6 +264,9 @@ class CorosService(ServiceBase):
 
         return activity
 
+
+    def UploadActivity(self, svcRecord, activity):
+        raise ServiceWarning("There is no upload for COROS Skipping")
 
 
     def possible_timezones(self, tz_offset, common_only=True):
