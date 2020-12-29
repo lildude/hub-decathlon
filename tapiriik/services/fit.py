@@ -395,7 +395,54 @@ class FITIO:
 		return struct.pack("<BBHI4s", header_len, protocolVer, profileVer, dataLength, tag.encode("ASCII"))
 
 	def Parse(raw_file):
-		raise Exception("Not implemented")
+		from tapiriik.settings import _GLOBAL_LOGGER
+		import colog
+		import fitparse
+		from fitparse.records import DefinitionMessage, DataMessage
+
+		fitfile = fitparse.FitFile(raw_file)
+		fitfile.parse()
+
+		actividict = {
+			"waypoints": [],
+			"laps": [],
+			"sessions": [],
+			"activity": None
+		}
+
+		for msg in fitfile._messages:
+			# We check if the message is not an instance of DefinitionMessage (so it is a data message)
+			if not isinstance(msg, DefinitionMessage) and msg != None :
+				# We get the key/values of the message
+				msg_data = msg.get_values()
+				msg_data_keys = msg_data.keys()
+
+				# We check for the records (waypoints) and the minimal information needed
+				if msg.name == "record" and "position_lat" in msg_data_keys and "position_long" in msg_data_keys and "altitude" in msg_data_keys and "timestamp" in msg_data_keys:
+					# We append the waypoint to a waypoints list
+					actividict["waypoints"].append({
+						"timestamp": msg_data["timestamp"],
+						"lat": msg_data["position_lat"],
+						"lon": msg_data["position_long"],
+						"altitude": msg_data["altitude"],
+						"hr": msg_data["heart_rate"] if "heart_rate" in msg_data_keys else None,
+						"cadence": msg_data["cadence"] if "cadence" in msg_data_keys else None
+					})
+
+				elif msg.name == "lap":
+					# We just push the lap data as it is, because it seems that there is no different defs
+					actividict["laps"].append(msg_data)
+
+				elif msg.name == "session":
+					# We just push the lap data as it is, because it seems that there is no different defs
+					actividict["sessions"].append(msg_data)
+
+				elif msg.name == "activity":
+					# according to fit documentations there must be only one activity record
+					# For multisport the activity will be tagged multisport and the sessions will tell the subsports
+					actividict["activity"] = msg_data
+
+		return actividict
 
 	def Dump(act, drop_pauses=False):
 		def toUtc(ts):
