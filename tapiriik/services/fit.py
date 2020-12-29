@@ -395,8 +395,6 @@ class FITIO:
 		return struct.pack("<BBHI4s", header_len, protocolVer, profileVer, dataLength, tag.encode("ASCII"))
 
 	def Parse(raw_file):
-		from tapiriik.settings import _GLOBAL_LOGGER
-		import colog
 		import fitparse
 		from fitparse.records import DefinitionMessage, DataMessage
 
