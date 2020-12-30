@@ -6,6 +6,12 @@ WORKDIR /tapiriik
 
 RUN pip3 install -r requirements.txt
 
+RUN git clone https://github.com/dtcooper/python-fitparse.git /tmp/python-fitparse/
+
+RUN pip3 install /tmp/python-fitparse/
+
+RUN rm -rf /tmp/python-fitparse/
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	netcat gettext \
 	&& rm -rf /var/lib/apt/lists/*
