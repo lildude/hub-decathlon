@@ -425,8 +425,8 @@ class FITIO:
 					# We append the waypoint to a waypoints list
 					actividict["waypoints"].append({
 						"timestamp": msg_data["timestamp"],
-						"lat": msg_data["position_lat"],
-						"lon": msg_data["position_long"],
+						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
+                		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
 						"altitude": msg_data["altitude"],
 						"hr": msg_data["heart_rate"] if "heart_rate" in msg_data_keys else None,
 						"cadence": msg_data["cadence"] if "cadence" in msg_data_keys else None
