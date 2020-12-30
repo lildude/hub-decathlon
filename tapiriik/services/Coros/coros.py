@@ -3,6 +3,7 @@ from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, CO
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceWarning
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Lap
+from tapiriik.services.fit import FITIO
 from tapiriik.database import db
 
 from datetime import datetime, timedelta
@@ -191,7 +192,8 @@ class CorosService(ServiceBase):
         self._refresh_token(svcRecord)
 
         # Defining dates, 7 days if not exhaustive else 30
-        startDate = datetime.now() - timedelta(days=(30 if exhaustive else 7))
+        # TODO set exhaustive to False
+        startDate = datetime.now() - timedelta(days=(30 if True else 7))#exhaustive else 7))
         endDate = datetime.now()
 
         params = {
@@ -202,6 +204,8 @@ class CorosService(ServiceBase):
         }
 
 
+        if exhaustive:
+            _GLOBAL_LOGGER.info("Retreiving 24 month COROS activities this may take couple of seconds")
         # Coros allows only 30 days by query so i make 24 of them decrementing the dates if exhaustive = True 
         for nbMonth in range((24 if exhaustive else 1)):
             response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
@@ -253,14 +257,20 @@ class CorosService(ServiceBase):
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
-        # We don't redownload the activities
+        # We don't redownload the activities but only the fit file thanks to the fitURL
 
-        # TODO This is meant to not deal with fit file but it has to change
-        activity.GPS = False
-        activity.Stationary = True
+        fitFileBinary = requests.get(activity.FitFileUrl).content
+        activity = FITIO.Parse(fitFileBinary, activity)
 
-        lap = Lap(stats=activity.Stats, startTime=activity.StartTime, endTime=activity.EndTime)
-        activity.Laps = [lap]
+        # _GLOBAL_LOGGER.info(fitData)
+
+        # raise Exception("YOLO")
+        # # TODO This is meant to not deal with fit file but it has to change
+        # activity.GPS = False
+        # activity.Stationary = True
+
+        # lap = Lap(stats=activity.Stats, startTime=activity.StartTime, endTime=activity.EndTime)
+        # activity.Laps = [lap]
 
         return activity
 
