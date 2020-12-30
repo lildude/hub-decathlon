@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from .interchange import WaypointType, ActivityStatisticUnit, ActivityType, LapIntensity, LapTriggerMethod
+from .interchange import WaypointType, ActivityStatisticUnit, ActivityType, LapIntensity, LapTriggerMethod, Activity, Lap, UploadedActivity, Waypoint, Location, ActivityStatistics
 from .devices import DeviceIdentifier, DeviceIdentifierType
 import struct
 import sys
@@ -394,11 +394,15 @@ class FITIO:
 		tag = ".FIT"
 		return struct.pack("<BBHI4s", header_len, protocolVer, profileVer, dataLength, tag.encode("ASCII"))
 
-	def Parse(raw_file):
+	def Parse(fitData, activity=None):
 		import fitparse
 		from fitparse.records import DefinitionMessage, DataMessage
 
-		fitfile = fitparse.FitFile(raw_file)
+		# We create a new activity if it's not sent through that function
+		activity = activity if activity else UploadedActivity()
+
+		# We open the FIT binary stream and parse it
+		fitfile = fitparse.FitFile(fitData)
 		fitfile.parse()
 
 		actividict = {
@@ -408,6 +412,7 @@ class FITIO:
 			"activity": None
 		}
 
+		# We fill the actividict
 		for msg in fitfile._messages:
 			# We check if the message is not an instance of DefinitionMessage (so it is a data message)
 			if not isinstance(msg, DefinitionMessage) and msg != None :
@@ -440,7 +445,68 @@ class FITIO:
 					# For multisport the activity will be tagged multisport and the sessions will tell the subsports
 					actividict["activity"] = msg_data
 
-		return actividict
+
+		# We check if there is only one session for the moment
+		if len(actividict["sessions"]) == 1:
+			# We create a temp var for simplicity
+			actividata = actividict["sessions"][0]
+
+			# And we fill the activity data
+			activity.StartTime = actividata["start_time"]
+			activity.EndTime = actividata["timestamp"]
+			activity.Type = ActivityType.Running
+			activity.Stats = ActivityStatistics(
+				distance=actividata["total_distance"], 
+				timer_time=actividata["total_timer_time"], 
+				avg_speed=actividata["avg_speed"], 
+				max_speed=actividata["max_speed"], 
+				avg_hr=actividata["avg_heart_rate"], 
+				max_hr=actividata["max_heart_rate"], 
+				avg_run_cadence=actividata["avg_running_cadence"], 
+				max_run_cadence=actividata["max_running_cadence"],
+				strides=actividata["total_strides"],
+				kcal=actividata["total_calories"],
+				avg_temp=actividata["avg_temperature"],
+				avg_power=actividata["avg_power"] if actividata["avg_power"] !=0 else None
+			)
+		else:
+			# TODO handle multiple sessions
+			raise NotImplementedError
+
+		# Time to fill the activity laps (and waypoints)
+		activity.Laps = [
+			# A bit like the SELECT SQL clause
+			Lap(
+				startTime=lapData["start_time"], 
+				endTime=lapData["timestamp"],
+				waypointList=[
+					# SELECT
+					Waypoint(
+						timestamp=wp["timestamp"],
+						location=Location(
+							lat=wp["lat"],
+							lon=wp["lon"],
+							alt=wp["altitude"]
+						),
+						hr=wp["hr"],
+						runCadence=wp["cadence"]
+					)
+					# FROM actividict["waypoints"] as wp
+					for wp in actividict["waypoints"]
+					# WHERE the wp timestamp is between the lap start and end timestamps.
+					if (wp["timestamp"] >= lapData["start_time"] and wp["timestamp"] < lapData["timestamp"])
+				]
+			)
+			# FROM actividict["laps"]
+			for lapData in actividict["laps"]
+		]
+
+		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
+		activity.GPS=True
+		activity.Stationary=False
+		activity.CheckSanity()
+
+		return activity
 
 	def Dump(act, drop_pauses=False):
 		def toUtc(ts):
