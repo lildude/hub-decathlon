@@ -41,13 +41,11 @@ class CorosService(ServiceBase):
 
     
     # Does it?
-    ReceivesActivities = True # Any at all?
-    ReceivesStationaryActivities = True # Manually-entered?
-    ReceivesNonGPSActivitiesWithOtherSensorData = True # Trainer-ish?
+    ReceivesActivities = False # Any at all?
+    ReceivesStationaryActivities = False # Manually-entered?
+    ReceivesNonGPSActivitiesWithOtherSensorData = False # Trainer-ish?
     SuppliesActivities = True
-    # Services with this flag unset will receive an explicit date range for activity listing,
-    # rather than the exhaustive flag alone. They are also processed after all other services.
-    # An account must have at least one service that supports exhaustive listing.
+
     SupportsExhaustiveListing = True
 
 
@@ -192,8 +190,7 @@ class CorosService(ServiceBase):
         self._refresh_token(svcRecord)
 
         # Defining dates, 7 days if not exhaustive else 30
-        # TODO set exhaustive to False
-        startDate = datetime.now() - timedelta(days=(30 if True else 7))#exhaustive else 7))
+        startDate = datetime.now() - timedelta(days=(30 if exhaustive else 7))
         endDate = datetime.now()
 
         params = {
@@ -207,7 +204,7 @@ class CorosService(ServiceBase):
         if exhaustive:
             logger.info("Retreiving 24 month COROS activities this may take couple of seconds")
         # Coros allows only 30 days by query so i make 24 of them decrementing the dates if exhaustive = True 
-        for nbMonth in range((24 if exhaustive else 1)):
+        for _ in range((24 if exhaustive else 1)):
             response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
             # If there is no data in the response so there is an error. It can be everything (expired or wrong token, etc.)
             if response.json()["data"] == None:
