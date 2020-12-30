@@ -1,5 +1,5 @@
 # Synchronization module for COROS
-from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, COROS_API_BASE_URL, _GLOBAL_LOGGER, COLOG
+from tapiriik.settings import WEB_ROOT, COROS_CLIENT_SECRET, COROS_CLIENT_ID, COROS_API_BASE_URL
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceWarning
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Lap
@@ -205,7 +205,7 @@ class CorosService(ServiceBase):
 
 
         if exhaustive:
-            _GLOBAL_LOGGER.info("Retreiving 24 month COROS activities this may take couple of seconds")
+            logger.info("Retreiving 24 month COROS activities this may take couple of seconds")
         # Coros allows only 30 days by query so i make 24 of them decrementing the dates if exhaustive = True 
         for nbMonth in range((24 if exhaustive else 1)):
             response = requests.get(self._BaseUrl+"/v2/coros/sport/list?"+ urlencode(params))
@@ -258,19 +258,8 @@ class CorosService(ServiceBase):
 
     def DownloadActivity(self, svcRecord, activity):
         # We don't redownload the activities but only the fit file thanks to the fitURL
-
         fitFileBinary = requests.get(activity.FitFileUrl).content
         activity = FITIO.Parse(fitFileBinary, activity)
-
-        # _GLOBAL_LOGGER.info(fitData)
-
-        # raise Exception("YOLO")
-        # # TODO This is meant to not deal with fit file but it has to change
-        # activity.GPS = False
-        # activity.Stationary = True
-
-        # lap = Lap(stats=activity.Stats, startTime=activity.StartTime, endTime=activity.EndTime)
-        # activity.Laps = [lap]
 
         return activity
 
