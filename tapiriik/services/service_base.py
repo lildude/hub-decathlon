@@ -18,6 +18,9 @@ class ServiceBase:
     # 2-3 letter abbreviated name
     DisplayAbbreviation = None
 
+    # Indicate the filename to display a login button
+    DisplayLoginButtonImage = None
+
     # One of ServiceAuthenticationType
     AuthenticationType = None
 

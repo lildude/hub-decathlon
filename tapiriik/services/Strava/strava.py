@@ -25,6 +25,7 @@ class StravaService(ServiceBase):
     ID = "strava"
     DisplayName = "Strava"
     DisplayAbbreviation = "STV"
+    DisplayLoginButtonImage = "strava_button.png"
     AuthenticationType = ServiceAuthenticationType.OAuth
     UserProfileURL = "http://www.strava.com/athletes/{0}"
     UserActivityURL = "http://app.strava.com/activities/{1}"
