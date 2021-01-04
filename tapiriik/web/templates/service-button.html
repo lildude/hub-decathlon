@@ -13,8 +13,9 @@
 				{% endif %}
 						<div class="row">
 							
-							{% if provider.DisplayLoginButtonImage and user and not login %}
+							{% if provider.DisplayLoginButtonImage and user and provider.ID not in user.ConnectedServices|svc_ids %}
 								<div class="col-md-12 col-xs-12">
+									TOTO
 									<img src="{{ STATIC_URL }}img/services/{{ provider.DisplayLoginButtonImage }}" alt="{{ provider.DisplayName }}" style="width:auto;max-height:100%;" />
 								</div>
 							{% else %}
