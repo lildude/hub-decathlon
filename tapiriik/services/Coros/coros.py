@@ -240,7 +240,7 @@ class CorosService(ServiceBase):
 
             activity.Type = self._reverseActivityTypeMappings[ride["mode"]]
             activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride["distance"])
-            activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
+            activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.SecondsPerKilometer, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
             activity.Stats.RunCadence.update(ActivityStatistic(ActivityStatisticUnit.StepsPerMinute, avg=ride["avgFrequency"]))
             activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=(ride["calorie"]/1000))
             activity.FitFileUrl = ride["fitUrl"]

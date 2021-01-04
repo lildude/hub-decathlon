@@ -458,8 +458,9 @@ class FITIO:
 			activity.Stats = ActivityStatistics(
 				distance=actividata["total_distance"], 
 				timer_time=actividata["total_timer_time"], 
-				avg_speed=actividata["avg_speed"], 
-				max_speed=actividata["max_speed"], 
+				# m/s to km/h conversion
+				avg_speed=actividata["avg_speed"]*3.6, 
+				max_speed=actividata["max_speed"]*3.6, 
 				avg_hr=actividata["avg_heart_rate"], 
 				max_hr=actividata["max_heart_rate"], 
 				avg_run_cadence=actividata["avg_running_cadence"], 
