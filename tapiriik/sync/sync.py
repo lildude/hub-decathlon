@@ -93,7 +93,7 @@ def _unpackUserException(raw):
 class Sync:
 
     _sqs_manager = None
-    SyncIntervalHours = 48 + random.randint(1,48)
+    SyncIntervalHours = 96 + random.randint(1,48)
     SyncInterval = timedelta(hours=SyncIntervalHours) #auto sync each interval
     SyncIntervalJitter = timedelta(minutes=5)
     MinimumSyncInterval = timedelta(seconds=30)
