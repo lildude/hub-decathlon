@@ -31,7 +31,8 @@ class StravaService(ServiceBase):
     UserActivityURL = "http://app.strava.com/activities/{1}"
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
     PartialSyncRequiresTrigger = True
-    # PartialSyncTriggerRequiresSubscription = True
+    PartialSyncTriggerStatusCode = 200
+    #PartialSyncTriggerRequiresSubscription = True
     LastUpload = None
 
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = True
@@ -236,7 +237,15 @@ class StravaService(ServiceBase):
 
     def ExternalIDsForPartialSyncTrigger(self, req):
         data = json.loads(req.body.decode("UTF-8"))
-        return [data["owner_id"]]
+        # we control if it is a new activity and if we don't know this activity to avoid resync
+        if "create" == data["aspect_type"] and "activity" == data["object_type"]:
+            isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : {"$eq": data["object_id"]} })
+            if not isAlreadyKnown:
+                return [data["owner_id"]]
+            else :
+                return []
+        else :
+            return []
 
     def PartialSyncTriggerGET(self, req):
         # Strava requires this endpoint to echo back a challenge.
