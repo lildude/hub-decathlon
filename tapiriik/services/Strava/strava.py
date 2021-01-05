@@ -240,7 +240,7 @@ class StravaService(ServiceBase):
         # we control if it is a new activity and if we don't know this activity to avoid resync
         if "create" == data["aspect_type"] and "activity" == data["object_type"]:
             isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : {"$eq": data["object_id"]} })
-            if not isAlreadyKnown:
+            if isAlreadyKnown == None:
                 return [data["owner_id"]]
             else :
                 return []
