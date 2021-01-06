@@ -59,7 +59,7 @@ class ActivityType:  # taken from RK API docs. The text values have no meaning e
 
 
 class Activity:
-    def __init__(self, startTime=None, endTime=None, actType=ActivityType.Other, distance=None, name=None, notes=None, tz=None, lapList=None, private=False, fallbackTz=None, stationary=None, gps=None, device=None):
+    def __init__(self, startTime=None, endTime=None, actType=ActivityType.Other, distance=None, name=None, notes=None, tz=None, lapList=None, private=False, fallbackTz=None, stationary=None, gps=None, device=None, fitFileUrl=None):
         self.StartTime = startTime
         self.EndTime = endTime
         self.Type = actType
@@ -74,6 +74,7 @@ class Activity:
         self.GPS = gps
         self.PrerenderedFormats = {}
         self.Device = device
+        self.FitFileUrl = fitFileUrl
 
     def CalculateUID(self):
         if not self.StartTime:
@@ -444,6 +445,7 @@ class ActivityStatisticUnit:
     KilometersPerHour = "km/h"
     HectometersPerHour = "hm/h" # Silly Garmin Connect!
     KilometersPerSecond = "km/s" # Silly (unnamed service)!
+    SecondsPerKilometer = "s/km" # Silly Coros!
     MetersPerSecond = "m/s"
     MilesPerHour = "mph"
     HundredYardsPerHour = "hydph" # Hundred instead of Hecto- because imperial :<
@@ -466,6 +468,7 @@ class ActivityStatistic:
         (ActivityStatisticUnit.KilometersPerSecond, ActivityStatisticUnit.KilometersPerHour): 60 * 60,
         (ActivityStatisticUnit.MilesPerHour, ActivityStatisticUnit.HundredYardsPerHour): 17.6,
         (ActivityStatisticUnit.MetersPerSecond, ActivityStatisticUnit.KilometersPerHour): 3.6,
+        (ActivityStatisticUnit.SecondsPerKilometer, ActivityStatisticUnit.KilometersPerHour): lambda SPK: 3600/SPK,
         (ActivityStatisticUnit.DegreesCelcius, ActivityStatisticUnit.DegreesFahrenheit): (lambda C: C*9/5 + 32, lambda F: (F-32) * 5/9),
         (ActivityStatisticUnit.Kilometers, ActivityStatisticUnit.Meters): 1000,
         (ActivityStatisticUnit.Meters, ActivityStatisticUnit.Feet): 3.281,

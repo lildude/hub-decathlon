@@ -87,6 +87,10 @@ FITBIT_DURATION = 28800# 8 hours in s
 GARMINHEALTH_KEY = "#####"
 GARMINHEALTH_SECRET = "#####"
 
+COROS_CLIENT_ID = "###"
+COROS_CLIENT_SECRET = "###"
+COROS_API_BASE_URL = "###"
+
 # Service available for first connection
 CONNECTION_SERVICES = [
     "serviceid#1",

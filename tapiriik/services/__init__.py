@@ -51,6 +51,9 @@ Fitbit = FitbitService()
 from tapiriik.services.GarminHealth import GarminHealthService
 GarminHealth = GarminHealthService()
 
+from tapiriik.services.Coros import CorosService
+Coros = CorosService()
+
 PRIVATE_SERVICES = []
 try:
     from private.tapiriik.services import *
