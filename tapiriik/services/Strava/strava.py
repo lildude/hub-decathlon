@@ -107,7 +107,6 @@ class StravaService(ServiceBase):
 
     def _requestWithAuth(self, reqLambda, serviceRecord):
         session = requests.Session()
-        self._rate_limit()
 
         if time.time() > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0) - 60:
             # Expired access token, or still running (now-deprecated) indefinite access token.
@@ -137,7 +136,6 @@ class StravaService(ServiceBase):
         code = req.GET.get("code")
         params = {"grant_type": "authorization_code", "code": code, "client_id": STRAVA_CLIENT_ID, "client_secret": STRAVA_CLIENT_SECRET, "redirect_uri": WEB_ROOT + reverse("oauth_return", kwargs={"service": "strava"})}
 
-        self._rate_limit()
         response = requests.post("https://www.strava.com/oauth/token", data=params)
         if response.status_code != 200:
             raise APIException("Invalid code")
@@ -170,7 +168,7 @@ class StravaService(ServiceBase):
             if resp.status_code == 401:
                 raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
             if 429 == resp.status_code:
-                raise APIException("Strava quota limit reached %s - %s" % (resp.status_code, resp.text))
+                raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
 
             earliestDate = None
 
