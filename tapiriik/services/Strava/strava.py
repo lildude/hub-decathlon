@@ -160,6 +160,8 @@ class StravaService(ServiceBase):
         exclusions = []
         before = earliestDate = None
 
+        exhaustive=False
+
         while True:
             if before is not None and before < 0:
                 break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
