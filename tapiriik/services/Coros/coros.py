@@ -286,3 +286,16 @@ class CorosService(ServiceBase):
                 results.append(tz_name)
 
         return results
+
+
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        data = json.loads(req.body.decode("UTF-8"))
+        # Get user id to sync
+        external_user_ids = []
+
+        for item in data['sportDataList'] :
+            if 'openId' in item:
+                external_user_ids.append(item['openId'])
+                return external_user_ids
+
+        return []
