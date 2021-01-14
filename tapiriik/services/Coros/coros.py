@@ -14,6 +14,7 @@ import logging
 import pytz
 import requests
 import time
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -296,6 +297,6 @@ class CorosService(ServiceBase):
         for item in data['sportDataList'] :
             if 'openId' in item:
                 external_user_ids.append(item['openId'])
+                logging.info("\t\t COROS USER ID : " + item['openId'])
                 return external_user_ids
-
         return []
