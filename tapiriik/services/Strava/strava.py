@@ -158,8 +158,6 @@ class StravaService(ServiceBase):
         exclusions = []
         before = earliestDate = None
 
-        exhaustive=False
-
         while True:
             if before is not None and before < 0:
                 break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
@@ -168,14 +166,14 @@ class StravaService(ServiceBase):
             if resp.status_code == 401:
                 raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
             if 429 == resp.status_code:
-                raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
+                raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited), trigger_exhaustive=False)
 
             earliestDate = None
 
             try:
                 reqdata = resp.json()
             except ValueError:
-                raise APIException("Failed parsing strava list response %s - %s" % (resp.status_code, resp.text))
+                raise APIException("Failed parsing strava list response %s - %s" % (resp.status_code, resp.text), trigger_exhaustive=False)
 
             if not len(reqdata):
                 break  # No more activities to see
@@ -269,10 +267,10 @@ class StravaService(ServiceBase):
         try:
             streamdata = streamdata.json()
         except:
-            raise APIException("Stream data returned is not JSON")
+            raise APIException("Stream data returned is not JSON", trigger_exhaustive=False)
 
         if "message" in streamdata and streamdata["message"] == "Record Not Found":
-            raise APIException("Could not find activity")
+            raise APIException("Could not find activity", trigger_exhaustive=False)
 
         ridedata = {}
         for stream in streamdata:
@@ -430,4 +428,4 @@ class StravaService(ServiceBase):
         try:
             RateLimit.Limit(self.ID)
         except RateLimitExceededException:
-            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
+            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited), trigger_exhaustive=False)

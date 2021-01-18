@@ -6,7 +6,7 @@ class ServiceExceptionScope:
     Activity = "activity"
 
 class ServiceException(Exception):
-    def __init__(self, message, scope=ServiceExceptionScope.Service, block=False, user_exception=None, trigger_exhaustive=True):
+    def __init__(self, message, scope=ServiceExceptionScope.Service, block=False, user_exception=None, trigger_exhaustive=False):
         Exception.__init__(self, message)
         self.Message = message
         self.UserException = user_exception
