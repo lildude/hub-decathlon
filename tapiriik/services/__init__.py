@@ -55,6 +55,9 @@ GarminHealth = GarminHealthService()
 from tapiriik.services.Coros import CorosService
 Coros = CorosService()
 
+from tapiriik.services.Suunto import SuuntoService
+Suunto = SuuntoService()
+
 PRIVATE_SERVICES = []
 try:
     from private.tapiriik.services import *
