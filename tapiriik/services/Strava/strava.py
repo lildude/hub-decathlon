@@ -106,8 +106,8 @@ class StravaService(ServiceBase):
            "https://www.strava.com/oauth/authorize?" + urlencode(params)
 
     def _requestWithAuth(self, reqLambda, serviceRecord):
-        self._globalRateLimit()
-        
+        self._rate_limit()
+
         session = requests.Session()
 
         if time.time() > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0) - 60:
@@ -159,6 +159,9 @@ class StravaService(ServiceBase):
         activities = []
         exclusions = []
         before = earliestDate = None
+        
+        # force breaking exhaustive
+        exhaustive=False
 
         while True:
             if before is not None and before < 0:
