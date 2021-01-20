@@ -141,7 +141,9 @@ class DecathlonService(ServiceBase):
         "speedaverage" : "9",
         "hrcurrent" : "1",
         "speedcurrent" : "6",
-        "hravg" : "4"
+        "hravg" : "4",
+        "cadence" : "10",
+        "rpm" : "100"
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -340,15 +342,35 @@ class DecathlonService(ServiceBase):
 
         return activities, exclusions
 
+    def SubscribeToPartialSyncTrigger(self, serviceRecord):
+        # There is no per-user webhook subscription with Strava.
+        serviceRecord.SetPartialSyncTriggerSubscriptionState(True)
+
+    def UnsubscribeFromPartialSyncTrigger(self, serviceRecord):
+        # As above.
+        serviceRecord.SetPartialSyncTriggerSubscriptionState(False)
+
     def ExternalIDsForPartialSyncTrigger(self, req):
         # BE CAREFUL Decathlon is sending only one elem
 
         data = json.loads(req.body.decode("UTF-8"))
         # Get user id to sync
         external_user_ids = []
-        external_user_ids.append(data['user_id'])
 
-        return external_user_ids
+        if "activity_create" == data["event"]["name"] :
+            #isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : data["event"]["ressource_id"] })
+            isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : {"$eq": data["event"]["ressource_id"]} })
+            
+            if isAlreadyKnown == None:
+                external_user_ids.append(data['user_id'])
+                return external_user_ids
+            else :
+                return []
+        else :
+            return []
+
+
+
 
     def DownloadActivity(self, svcRecord, activity):
         activityID = activity.ServiceData["ActivityID"]
@@ -402,6 +424,10 @@ class DecathlonService(ServiceBase):
                     ridedata[delta]['HR'] = int(root["datastream"][measure]["1"])
                 if "6" in root["datastream"][measure]:
                     ridedata[delta]['SPEED'] = int(root["datastream"][measure]["6"])
+                if self._unitMap["cadence"] in root["datastream"][measure]:
+                    ridedata[delta]['CADENCE'] = int(root["datastream"][measure]["10"])
+                if self._unitMap["rpm"] in root["datastream"][measure]:
+                    ridedata[delta]['CADENCE'] = int(root["datastream"][measure]["100"])
                 if "20" in root["datastream"][measure]:
                     ridedata[delta]['LAP'] = int(root["datastream"][measure]["20"])
 
@@ -436,6 +462,9 @@ class DecathlonService(ServiceBase):
 
                 if 'DISTANCE' in rd :
                     wp.Distance = rd['DISTANCE']
+
+                if 'CADENCE' in rd :
+                    wp.Cadence = rd['CADENCE']
 
                 lapWaypoints.append(wp)
 
@@ -520,6 +549,9 @@ class DecathlonService(ServiceBase):
                         oneMeasureLocation[self._unitMap["kcal"]] = int(wp.Calories)
                     if wp.Distance is not None:
                         oneMeasureLocation[self._unitMap["distance"]] = int(wp.Distance)
+                    if wp.Cadence is not None:
+                        oneMeasureLocation[self._unitMap["cadence"]] = int(wp.Cadence)
+                        oneMeasureLocation[self._unitMap["rpm"]] = int(wp.Cadence)
                     dataStream[elapsedTime] = oneMeasureLocation
             if addLap and oneMeasureLocation is not None:
                 oneMeasureLocation["20"] = 1
@@ -572,7 +604,7 @@ class DecathlonService(ServiceBase):
         try:
             RateLimit.Limit(self.ID)
         except RateLimitExceededException:
-            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited))
+            raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited), trigger_exhaustive=False)
 
     def DeleteCachedData(self, serviceRecord):
         cachedb.decathlon_cache.delete_many({"Owner": serviceRecord.ExternalID})
