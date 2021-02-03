@@ -378,7 +378,6 @@ class DecathlonService(ServiceBase):
         logging.info("\t\t DC LOADING  : " + str(activityID))
 
         headers = self._getAuthHeaders(svcRecord)
-        self._rate_limit()
         resp = requests.get(DECATHLON_API_BASE_URL + "/v2/activities/" + activityID , headers=headers)
 
         if resp.status_code == 401:
@@ -584,7 +583,6 @@ class DecathlonService(ServiceBase):
         activityJSON = json.dumps(root)
 
         headers = self._getAuthHeaders(svcRecord)
-        self._rate_limit()
         upload_resp = requests.post(DECATHLON_API_BASE_URL + "/v2/activities", data=activityJSON, headers=headers)
 
         if upload_resp.status_code != 201:
@@ -613,6 +611,5 @@ class DecathlonService(ServiceBase):
     
     def DeleteActivity(self, serviceRecord, uploadId):
         headers = self._getAuthHeaders(serviceRecord)
-        self._rate_limit()
         del_res = requests.delete(DECATHLON_API_BASE_URL + "/v2/activities/+d" % uploadId, headers=headers)
         del_res.raise_for_status()
