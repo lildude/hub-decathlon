@@ -1047,7 +1047,8 @@ class SynchronizationTask:
 
                     if not exhaustive and conn.Service.PartialSyncRequiresTrigger and "TriggerPartialSync" not in conn.__dict__ and not conn.Service.ShouldForcePartialSyncTrigger(conn):
                         self._global_logger.info("Service %s has not been triggered" % conn.Service.ID)
-                        self._deferredServices.append(conn._id)
+                        # Commented it over consume API calls without any visible benefits
+                        # self._deferredServices.append(conn._id)
                         continue
 
                     if not conn.Service.SuppliesActivities:
