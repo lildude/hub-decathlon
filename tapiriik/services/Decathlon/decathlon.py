@@ -559,26 +559,21 @@ class DecathlonService(ServiceBase):
         
         
         if len(activity.GetFlatWaypoints()) > 0:
-            if activity.GetFlatWaypoints()[0].Location is not None:
-                if activity.GetFlatWaypoints()[0].Location.Latitude is not None:
-                    locations = {}
-                    root["latitude"] = activity.GetFlatWaypoints()[0].Location.Latitude
-                    root["longitude"] = activity.GetFlatWaypoints()[0].Location.Longitude
-                    root["elevation"] = activity.GetFlatWaypoints()[0].Location.Altitude
+            act_located_wps = [wp for wp in activity.GetFlatWaypoints() if wp.Location != None and (wp.Location.Latitude != None or wp.Location.Longitude != None)]
 
-                    for wp in activity.GetFlatWaypoints():
-                        if wp.Location is None or wp.Location.Latitude is None or wp.Location.Longitude is None:
-                            continue  # drop the point
-                        oneLocation = {}
-                        oneLocation["latitude"] = wp.Location.Latitude
-                        oneLocation["longitude"] = wp.Location.Longitude
-                        if wp.Location.Altitude is not None:
-                            oneLocation["elevation"] = wp.Location.Altitude
-                        else:
-                            oneLocation["elevation"] = 0 
-                        elapsedTime = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
-                        locations[elapsedTime] = oneLocation
-                    root["locations"] = locations
+            locations = {}
+            root["latitude"] = act_located_wps[0].Location.Latitude
+            root["longitude"] = act_located_wps[0].Location.Longitude
+            root["elevation"] = act_located_wps[0].Location.Altitude
+
+            for wp in act_located_wps:
+                oneLocation = {}
+                oneLocation["latitude"] = wp.Location.Latitude
+                oneLocation["longitude"] = wp.Location.Longitude
+                oneLocation["elevation"] = wp.Location.Altitude if wp.Location.Altitude != None else 0
+                elapsedTime = str(duration - int((activity.EndTime - wp.Timestamp).total_seconds()))
+                locations[elapsedTime] = oneLocation
+            root["locations"] = locations
     
         activityJSON = json.dumps(root)
 
