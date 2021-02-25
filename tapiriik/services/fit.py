@@ -428,8 +428,12 @@ class FITIO:
 						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
                 		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
 						"altitude": msg_data["altitude"],
-						"hr": msg_data["heart_rate"] if "heart_rate" in msg_data_keys else None,
-						"cadence": msg_data["cadence"] if "cadence" in msg_data_keys else None
+						# The .get avoid the usage of conditions to ensure that the property exist in the dict
+						# If it does not exist it returns None instead of crashing
+						"hr": msg_data.get("heart_rate"),
+						"cadence": msg_data.get("cadence"),
+						"speed": msg_data.get("speed"),
+						"distance": msg_data.get("distance")
 					})
 
 				elif msg.name == "lap":
@@ -461,18 +465,26 @@ class FITIO:
 				# m/s to km/h conversion
 				avg_speed=actividata["avg_speed"]*3.6, 
 				max_speed=actividata["max_speed"]*3.6, 
-				avg_hr=actividata["avg_heart_rate"], 
-				max_hr=actividata["max_heart_rate"], 
-				avg_run_cadence=actividata["avg_running_cadence"], 
-				max_run_cadence=actividata["max_running_cadence"],
-				strides=actividata["total_strides"],
-				kcal=actividata["total_calories"],
-				avg_temp=actividata["avg_temperature"],
-				avg_power=actividata["avg_power"] if actividata["avg_power"] !=0 else None
+				avg_hr=actividata.get("avg_heart_rate"), 
+				max_hr=actividata.get("max_heart_rate"), 
+				avg_run_cadence=actividata.get("avg_running_cadence"), 
+				max_run_cadence=actividata.get("max_running_cadence"),
+				strides=actividata.get("total_strides"),
+				kcal=actividata.get("total_calories"),
+				avg_temp=actividata.get("avg_temperature"),
+				avg_power=actividata.get("avg_power") if actividata.get("avg_power") !=0 else None
 			)
 		else:
 			# TODO handle multiple sessions
 			raise NotImplementedError
+
+		# Adding pseudo lap with the start and the end of the activity
+		# Because there is no lap in polar fit files and they are needed to store the waypoints
+		if len(actividict["laps"]) == 0:
+			actividict["laps"].append({
+				"start_time":activity.StartTime,
+				"timestamp":activity.EndTime
+			})
 
 		# Time to fill the activity laps (and waypoints)
 		activity.Laps = [
@@ -480,6 +492,7 @@ class FITIO:
 			Lap(
 				startTime=lapData["start_time"], 
 				endTime=lapData["timestamp"],
+				stats=activity.Stats if len(actividict["laps"]) == 1 else None,
 				waypointList=[
 					# SELECT
 					Waypoint(
@@ -490,7 +503,8 @@ class FITIO:
 							alt=wp["altitude"]
 						),
 						hr=wp["hr"],
-						runCadence=wp["cadence"]
+						runCadence=wp["cadence"],
+						speed=wp.get("speed")
 					)
 					# FROM actividict["waypoints"] as wp
 					for wp in actividict["waypoints"]
