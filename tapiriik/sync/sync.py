@@ -257,6 +257,9 @@ class Sync:
             ("ForcingExhaustiveSyncErrorCount" in user and user["ForcingExhaustiveSyncErrorCount"] > 0):
             exhaustive = True
 
+        # Exhaustive mechanism deactivation
+        exhaustive = False
+
         result = None
         try:
             result = self.PerformUserSync(user, exhaustive, heartbeat_callback=heartbeat_callback)
