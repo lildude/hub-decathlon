@@ -4,6 +4,7 @@ from .devices import DeviceIdentifier, DeviceIdentifierType
 import struct
 import sys
 import pytz
+import json
 
 class FITFileType:
 	Activity = 4 # The only one we care about now.
@@ -370,10 +371,22 @@ class FITIO:
 		ActivityType.MountainBiking: 2,
 		ActivityType.Elliptical: 4,
 		ActivityType.Swimming: 5,
+		ActivityType.Walking: 11 
 	}
 	_subSportMap = {
 		# ActivityType.MountainBiking: 8 there's an issue with cadence upload and this type with GC, so...
 	}
+
+	# Still improvement to be done
+	_reverseSportMap = {
+		0: ActivityType.Other,
+		1: ActivityType.Running,
+		2: ActivityType.Cycling,
+		4: ActivityType.Elliptical,
+		5: ActivityType.Swimming,
+		11: ActivityType.Walking
+	}
+
 	def _calculateCRC(bytestring, crc=0):
 		crc_table = [0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401, 0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400]
 		for byte in bytestring:
@@ -397,6 +410,7 @@ class FITIO:
 	def Parse(fitData, activity=None):
 		import fitparse
 		from fitparse.records import DefinitionMessage, DataMessage
+		from fitparse.profile import FIELD_TYPES
 
 		# We create a new activity if it's not sent through that function
 		activity = activity if activity else UploadedActivity()
@@ -458,7 +472,13 @@ class FITIO:
 			# And we fill the activity data
 			activity.StartTime = actividata["start_time"]
 			activity.EndTime = actividata["timestamp"]
-			activity.Type = ActivityType.Running
+
+			# Forcing the Type to running is not good
+			sports_list = FIELD_TYPES['sport'].values
+			reversed_key_values_sport_list = json.loads("{"+",".join(['"'+str(sports_list[val])+'":"'+str(val)+'"' for val in sports_list.keys()])+"}")
+			activity_tapiriik_sport_name = FITIO._reverseSportMap.get(int(reversed_key_values_sport_list[actividata["sport"]]))
+			
+			activity.Type = activity_tapiriik_sport_name if activity_tapiriik_sport_name != None else ActivityType.Other
 			activity.Stats = ActivityStatistics(
 				distance=actividata["total_distance"], 
 				timer_time=actividata["total_timer_time"], 
