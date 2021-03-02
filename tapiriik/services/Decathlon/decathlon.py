@@ -64,7 +64,8 @@ class DecathlonService(ServiceBase):
         ActivityType.StrengthTraining: "98",
         ActivityType.Climbing: "153",
         ActivityType.Other: "121",
-        ActivityType.StandUpPaddling: "400"
+        ActivityType.StandUpPaddling: "400",
+        ActivityType.Yoga: "105"
     }
 
     # For mapping Decathlon sport id->common
@@ -124,7 +125,7 @@ class DecathlonService(ServiceBase):
         "357" : ActivityType.Other,#Tennis
         "32" : ActivityType.Other,#Volleyball
         "399" : ActivityType.Other,#Run & Bike
-        "105" : ActivityType.Other,#Yoga
+        "105" : ActivityType.Yoga,#Yoga
         "354" : ActivityType.Other,#Squash
         "358" : ActivityType.Other,#Table tennis
         "7" : ActivityType.Other,#paragliding
