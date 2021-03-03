@@ -294,6 +294,8 @@ class PolarFlowService(ServiceBase):
             raise APIException("No FIT available for exercise", user_exception=UserException(UserExceptionType.DownloadError))
 
         activity = FITIO.Parse(response.content, activity)
+        activity.TZ = pytz.timezone("UTC")
+        activity.AdjustTZ()
 
         if activity.Stationary == True :
             logging.info("Polar STATIONNARY")
