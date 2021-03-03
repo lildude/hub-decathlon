@@ -371,7 +371,16 @@ class FITIO:
 		ActivityType.MountainBiking: 2,
 		ActivityType.Elliptical: 4,
 		ActivityType.Swimming: 5,
-		ActivityType.Walking: 11 
+		ActivityType.Gym: 10,
+		ActivityType.Walking: 11,
+		ActivityType.CrossCountrySkiing: 12,
+		ActivityType.DownhillSkiing: 13,
+		ActivityType.Snowboarding: 14,
+		ActivityType.Rowing: 15,
+		ActivityType.Hiking: 17,
+		ActivityType.Climbing: 31,
+		ActivityType.Skating: 33,
+		ActivityType.StandUpPaddling: 37
 	}
 	_subSportMap = {
 		# ActivityType.MountainBiking: 8 there's an issue with cadence upload and this type with GC, so...
@@ -384,7 +393,16 @@ class FITIO:
 		2: ActivityType.Cycling,
 		4: ActivityType.Elliptical,
 		5: ActivityType.Swimming,
-		11: ActivityType.Walking
+		10: ActivityType.Gym,
+		11: ActivityType.Walking,
+		12: ActivityType.CrossCountrySkiing,
+		13: ActivityType.DownhillSkiing,
+		14: ActivityType.Snowboarding,
+		15: ActivityType.Rowing,
+		17: ActivityType.Hiking,
+		31: ActivityType.Climbing,
+		33: ActivityType.Skating,
+		37: ActivityType.StandUpPaddling
 	}
 
 	def _calculateCRC(bytestring, crc=0):
@@ -470,21 +488,21 @@ class FITIO:
 			actividata = actividict["sessions"][0]
 
 			# And we fill the activity data
-			activity.StartTime = actividata["start_time"]
-			activity.EndTime = actividata["timestamp"]
+			activity.StartTime = actividata.get("start_time")
+			activity.EndTime = actividata.get("timestamp")
 
 			# Forcing the Type to running is not good
 			sports_list = FIELD_TYPES['sport'].values
 			reversed_key_values_sport_list = json.loads("{"+",".join(['"'+str(sports_list[val])+'":"'+str(val)+'"' for val in sports_list.keys()])+"}")
-			activity_tapiriik_sport_name = FITIO._reverseSportMap.get(int(reversed_key_values_sport_list[actividata["sport"]]))
+			activity_tapiriik_sport_name = FITIO._reverseSportMap.get(int(reversed_key_values_sport_list[actividata.get("sport")]))
 			
 			activity.Type = activity_tapiriik_sport_name if activity_tapiriik_sport_name != None else ActivityType.Other
 			activity.Stats = ActivityStatistics(
-				distance=actividata["total_distance"], 
-				timer_time=actividata["total_timer_time"], 
+				distance=actividata.get("total_distance"), 
+				timer_time=actividata.get("total_timer_time"), 
 				# m/s to km/h conversion
-				avg_speed=actividata["avg_speed"]*3.6, 
-				max_speed=actividata["max_speed"]*3.6, 
+				avg_speed=actividata.get("avg_speed") if actividata.get("avg_speed") != None else 0 *3.6, 
+				max_speed=actividata.get("max_speed") if actividata.get("avg_speed") != None else 0 *3.6, 
 				avg_hr=actividata.get("avg_heart_rate"), 
 				max_hr=actividata.get("max_heart_rate"), 
 				avg_run_cadence=actividata.get("avg_running_cadence"), 
@@ -516,20 +534,20 @@ class FITIO:
 				waypointList=[
 					# SELECT
 					Waypoint(
-						timestamp=wp["timestamp"],
+						timestamp=wp.get("timestamp"),
 						location=Location(
-							lat=wp["lat"],
-							lon=wp["lon"],
-							alt=wp["altitude"]
+							lat=wp.get("lat"),
+							lon=wp.get("lon"),
+							alt=wp.get("altitude")
 						),
-						hr=wp["hr"],
-						runCadence=wp["cadence"],
+						hr=wp.get("hr"),
+						runCadence=wp.get("cadence"),
 						speed=wp.get("speed")
 					)
 					# FROM actividict["waypoints"] as wp
 					for wp in actividict["waypoints"]
 					# WHERE the wp timestamp is between the lap start and end timestamps.
-					if (wp["timestamp"] >= lapData["start_time"] and wp["timestamp"] < lapData["timestamp"])
+					if (wp.get("timestamp") >= lapData["start_time"] and wp.get("timestamp") < lapData["timestamp"])
 				]
 			)
 			# FROM actividict["laps"]
