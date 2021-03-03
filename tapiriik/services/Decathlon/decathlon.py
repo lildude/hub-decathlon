@@ -561,7 +561,7 @@ class DecathlonService(ServiceBase):
         
         if len(activity.GetFlatWaypoints()) > 0:
             act_located_wps = [wp for wp in activity.GetFlatWaypoints() if wp.Location != None and (wp.Location.Latitude != None or wp.Location.Longitude != None)]
-            if len(act_located_wps > 0):
+            if len(act_located_wps) > 0:
                 locations = {}
                 root["latitude"] = act_located_wps[0].Location.Latitude
                 root["longitude"] = act_located_wps[0].Location.Longitude
