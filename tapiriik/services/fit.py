@@ -524,6 +524,18 @@ class FITIO:
 				"timestamp":activity.EndTime
 			})
 
+		# Adding a lap because it seems that polar creates laps only every kms.
+		# So every wp between last round kilometer and the end of the activity are oprhans
+		# And they are not "activitified" so they wont appear in other services.
+		if len(actividict["laps"]) != 0:
+			last_wp = actividict["waypoints"][-1]
+			last_lap = actividict["laps"][-1]
+			if last_wp.get("timestamp") > last_lap.get("timestamp"):
+				actividict["laps"].append({
+					"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
+					"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
+				})
+
 		# Time to fill the activity laps (and waypoints)
 		activity.Laps = [
 			# A bit like the SELECT SQL clause
