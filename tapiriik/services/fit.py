@@ -501,8 +501,8 @@ class FITIO:
 				distance=actividata.get("total_distance"), 
 				timer_time=actividata.get("total_timer_time"), 
 				# m/s to km/h conversion
-				avg_speed=actividata.get("avg_speed") if actividata.get("avg_speed") != None else 0 *3.6, 
-				max_speed=actividata.get("max_speed") if actividata.get("avg_speed") != None else 0 *3.6, 
+				avg_speed=(actividata.get("avg_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
+				max_speed=(actividata.get("max_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
 				avg_hr=actividata.get("avg_heart_rate"), 
 				max_hr=actividata.get("max_heart_rate"), 
 				avg_run_cadence=actividata.get("avg_running_cadence"), 
