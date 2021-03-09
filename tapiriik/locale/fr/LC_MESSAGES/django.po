@@ -91,8 +91,16 @@ msgstr "(Aucune donnée ne sera supprimée - il n'y aura juste plus de synchroni
 msgid "Login"
 msgstr "Connexion"
 
+#: tapiriik/web/tempaltes/oauth-failure.html:10
+msgid "Error"
+msgstr "Erreur"
+
+#: tapiriik/web/tempaltes/oauth-failure.html:11
+msgid "Timestamp"
+msgstr "Horodatage"
+
 #: tapiriik/web/templates/auth/login.html:7
-#: tapiriik/web/templates/oauth-failure.html:5
+#: tapiriik/web/templates/oauth-failure.html:7
 msgid "There was a problem logging you into"
 msgstr "Il y a eu un problème pour se connecter à"
 

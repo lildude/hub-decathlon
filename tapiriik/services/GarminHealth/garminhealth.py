@@ -209,6 +209,9 @@ class GarminHealthService(ServiceBase):
         content = resp.content
         credentials = parse_qs(content)
 
+
+        # Can't reproduce garmin connection issue
+        # None.decode()
         self.token = credentials.get(b'oauth_token')[0].decode()
 
         self.token_secret = credentials.get(b'oauth_token_secret')[0].decode()
@@ -232,6 +235,9 @@ class GarminHealthService(ServiceBase):
         
         # first generation or TTL is done
         response = self._unauthorized_request()
+
+        # Can't reproduce garmin connection issue
+        # None.decode()
         self.token = response.get(b'oauth_token')[0].decode()
         self.token_secret = response.get(b'oauth_token_secret')[0].decode()
 
@@ -362,6 +368,19 @@ class GarminHealthService(ServiceBase):
         secret = redis.get(redis_token_key)
         redis.delete(redis_token_key)
 
+        # Error management to figure why this could be None
+        if secret == None:
+            var_state = {
+                "redis_token_key": redis_token_key,
+                "secret": secret.decode("utf-8") if secret != None else None,
+            }
+            logger.error("Unreseolved garmin connections problem is occurring")
+            logger.error("\tCannot retrieve \"secret\" in garminhealth.py:368")
+            logger.error("\tVariables state :"+ str(var_state))
+            raise AttributeError("Cannot retrieve \"s\"",var_state)
+
+        # Can reproduce garmin connection issue
+        # None.decode()
         oauth_token_secret = secret.decode("utf-8") 
         oauth_token_secret_encoded = urllib.parse.quote_plus(oauth_token_secret, safe='%')
         
@@ -458,6 +477,19 @@ class GarminHealthService(ServiceBase):
         content = resp.content
         credentials = parse_qs(content)
 
+        # Error management to figure why these could be None
+        if credentials.get(b'oauth_token_secret')[0] == None or credentials.get(b'oauth_token')[0] == None:
+            var_state = {
+                "resp_content": content.decode('utf-8'),
+                "credentials": str(credentials)
+            }
+            logger.error("Unreseolved garmin connections problem is occurring")
+            logger.error("\tCannot retrieve \"oauth_token_secret\" or \"oauth_token\" in garminhealth.py:477/478")
+            logger.error("\tVariables state :"+ str(var_state))
+            raise AttributeError("Cannot retrieve \"OT\" or \"OTS\" from credentials", var_state)
+
+        # Can reproduce garmin connection issue
+        # None.decode()
         access_token = credentials.get(b'oauth_token')[0].decode()
         access_token_secret = credentials.get(b'oauth_token_secret')[0].decode()
 
