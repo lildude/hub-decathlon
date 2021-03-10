@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from tapiriik.services import Service
 from tapiriik.auth import User
+from datetime import datetime
 import json
 
 
@@ -19,11 +20,30 @@ def authreturn(req, service, level=None):
         svc = Service.FromID(service)
         try:
             uid, authData = svc.RetrieveAuthorizationToken(req, level)
+        except AttributeError as e:
+            # Trapped "None.decode()"" but if it is not trapped this will crash 
+            # That's because of missing args in the default AttributeError exception.
+            if len(e.args) > 1:
+                from tapiriik.settings import HUBERT
+                HUBERT.message_with_template(
+                    service=svc.DisplayName, 
+                    ts=datetime.now(), 
+                    error=str(e.args[0]), 
+                    var_state=json.dumps(e.args[1],indent=4)
+                    )
+
+            return render(req, "oauth-failure.html", {
+                "service": svc,
+                "error": str(e.args[0] if e.args[0] != None else e),
+                "timestamp": datetime.now()
+            })
         except Exception as e:
             return render(req, "oauth-failure.html", {
                 "service": svc,
-                "error": str(e)
+                "error": str(e),
+                "timestamp": datetime.now()
             })
+
         serviceRecord = Service.EnsureServiceRecordWithAuth(svc, uid, authData)
 
         # auth by this service connection
