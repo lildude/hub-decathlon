@@ -102,7 +102,7 @@ class GarminHealthService(ServiceBase):
         "TRACK_CYCLING": ActivityType.Cycling,
         "FITNESS_EQUIPMENT": ActivityType.Gym,
         "ELLIPTICAL": ActivityType.Elliptical,
-        #"INDOOR_CARDIO"
+        "INDOOR_CARDIO": ActivityType.Gym,
         #"INDOOR_ROWING"
         "STAIR_CLIMBING": ActivityType.Climbing,
         "STRENGTH_TRAINING": ActivityType.StrengthTraining,
