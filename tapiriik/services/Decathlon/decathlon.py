@@ -62,7 +62,7 @@ class DecathlonService(ServiceBase):
         ActivityType.Elliptical: "397",
         ActivityType.RollerSkiing: "367",
         ActivityType.StrengthTraining: "98",
-        ActivityType.Climbing: "153",
+        ActivityType.Climbing: "161",
         ActivityType.Other: "121",
         ActivityType.StandUpPaddling: "400",
         ActivityType.Yoga: "105"
