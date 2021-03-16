@@ -58,6 +58,7 @@ class StravaService(ServiceBase):
         ActivityType.StrengthTraining: "WeightTraining",
         ActivityType.Climbing: "RockClimbing",
         ActivityType.StandUpPaddling: "StandUpPaddling",
+        ActivityType.Yoga: "Yoga"
     }
 
     # For mapping Strava->common
@@ -86,6 +87,7 @@ class StravaService(ServiceBase):
         "RollerSki": ActivityType.RollerSkiing,
         "WeightTraining": ActivityType.StrengthTraining,
         "RockClimbing" : ActivityType.Climbing,
+        "Yoga" : ActivityType.Yoga
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -153,7 +155,10 @@ class StravaService(ServiceBase):
     def RevokeAuthorization(self, serviceRecord):
         resp = self._requestWithAuth(lambda session: session.post("https://www.strava.com/oauth/deauthorize"), serviceRecord)
         if resp.status_code != 204 and resp.status_code != 200:
-            raise APIException("Unable to deauthorize Strava auth token, status " + str(resp.status_code) + " resp " + resp.text)
+            if resp.status_code == 429:
+                logger.warning("Rate limit exeception %s - %s" % (resp.status_code, resp.text))
+            else:
+                raise APIException("Unable to deauthorize Strava auth token, status " + str(resp.status_code) + " resp " + resp.text)
 
     def DownloadActivityList(self, svcRecord, exhaustive=False):
         activities = []
@@ -167,6 +172,7 @@ class StravaService(ServiceBase):
             if before is not None and before < 0:
                 break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
             logger.debug("Req with before=" + str(before) + "/" + str(earliestDate))
+            logger.info("STRAVA call download activities")
             resp = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/athletes/" + str(svcRecord.ExternalID) + "/activities", params={"before": before}), svcRecord)
             if resp.status_code == 401:
                 raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
@@ -259,6 +265,7 @@ class StravaService(ServiceBase):
         }))
 
     def DownloadActivity(self, svcRecord, activity):
+        logger.info("STRAVA call download activity")
         if activity.ServiceData["Manual"]:  # I should really add a param to DownloadActivity for this value as opposed to constantly doing this
             # We've got as much information as we're going to get - we need to copy it into a Lap though.
             activity.Laps = [Lap(startTime=activity.StartTime, endTime=activity.EndTime, stats=activity.Stats)]
@@ -349,6 +356,7 @@ class StravaService(ServiceBase):
 
     def UploadActivity(self, serviceRecord, activity):
         logger.info("Activity tz " + str(activity.TZ) + " dt tz " + str(activity.StartTime.tzinfo) + " starttime " + str(activity.StartTime))
+        logger.info("STRAVA call updload activity")
 
         if self.LastUpload is not None:
             while (datetime.now() - self.LastUpload).total_seconds() < 5:
@@ -388,6 +396,7 @@ class StravaService(ServiceBase):
             upload_id = response.json()["id"]
             upload_poll_wait = 8 # The mode of processing times
             while not response.json()["activity_id"]:
+                logger.info("STRAVA call updload activity SLEEP 8SEC")
                 time.sleep(upload_poll_wait)
                 response = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/uploads/%s" % upload_id), serviceRecord)
                 logger.debug("Waiting for upload - status %s id %s" % (response.json()["status"], response.json()["activity_id"]))
@@ -433,4 +442,5 @@ class StravaService(ServiceBase):
         try:
             RateLimit.Limit(self.ID)
         except RateLimitExceededException:
+            logger.info("STRAVA rate limit reached")
             raise ServiceException("Global rate limit reached", user_exception=UserException(UserExceptionType.RateLimited), trigger_exhaustive=False)

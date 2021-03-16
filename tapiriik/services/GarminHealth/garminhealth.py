@@ -141,13 +141,13 @@ class GarminHealthService(ServiceBase):
     def WebInit(self):
         self.UserAuthorizationURL = reverse("oauth_redirect", kwargs={"service": "garminhealth"})
 
+
     # Helper to initialize the Oauth v1 Session
     def _oauthSession(self, connection=None, **params):
         if connection:
             params["resource_owner_key"] = connection.Authorization["AccessToken"]
             params["resource_owner_secret"] = connection.Authorization["AccessTokenSecret"]
         return OAuth1Session(GARMINHEALTH_KEY, client_secret=GARMINHEALTH_SECRET, **params)
-
 
     def GenerateUserAuthorizationURL(self, session, level=None):
         # Generation of an Oauth v1 session (This should be empty at this point)

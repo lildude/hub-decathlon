@@ -2,7 +2,16 @@
 {% load i18n %}
 {% block title %}login failed{% endblock %}
 {% block content %}
-<div class="error"><p>{% trans "There was a problem logging you into" %} {{ service.DisplayName }}: <br/>
-<tt>{{ error }}</tt></p>
-<p>{% trans "Try logging in again - it might just be a temporary problem connecting to" %} {{ service.DisplayName }}. {% trans "If that doesn't help, try connecting this account using a different browser or device." %}</p></div>
+<div class="error">
+    <p>
+        {% trans "There was a problem logging you into" %} {{ service.DisplayName }}: 
+    </p>
+    <p style="margin-left: 30px;">
+        {% trans "Error" %} : <code>{{ error }}</code><br/>
+        {% trans "Timestamp" %} :  <code>{{timestamp}}</code>
+    </p>
+    <p>
+        {% trans "Try logging in again - it might just be a temporary problem connecting to" %} {{ service.DisplayName }}. {% trans "If that doesn't help, try connecting this account using a different browser or device." %}
+    </p>
+</div>
 {% endblock %}

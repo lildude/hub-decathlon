@@ -4,7 +4,7 @@ from tapiriik.settings import WEB_ROOT, POLAR_CLIENT_SECRET, POLAR_CLIENT_ID, PO
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
-from tapiriik.services.tcx import TCXIO
+from tapiriik.services.fit import FITIO
 
 from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
@@ -279,19 +279,24 @@ class PolarFlowService(ServiceBase):
         # https://www.polar.com/accesslink-api/?python#get-tcx
         #tcx_data_raw = requests.get(activity_link + "/tcx", headers=self._api_headers(serviceRecord))
         #tcx_data = gzip.GzipFile(fileobj=StringIO(tcx_data_raw)).read()
+
+        # TODO remove the above NOTE because now we use FIT
+
         logging.info("Polar DownloadActivity")
-        tcx_url = serviceRecord.ServiceData["Transaction-uri"] + "/exercises/{}/tcx".format(activity.ServiceData["ActivityID"])
-        response = requests.get(tcx_url, headers=self._api_headers(serviceRecord, {"Accept": "application/vnd.garmin.tcx+xml"}))
+
+        fit_url = serviceRecord.ServiceData["Transaction-uri"] + "/exercises/{}/fit".format(activity.ServiceData["ActivityID"])
+        response = requests.get(fit_url, headers=self._api_headers(serviceRecord, {"Accept": "*/*"}))
+
         if response.status_code == 404:
             # Transaction was disbanded, all data linked to it will be returned in next transaction
             raise APIException("Transaction disbanded", user_exception=UserException(UserExceptionType.DownloadError))
-        try:
-            tcx_data = response.text
-            activity = TCXIO.Parse(tcx_data.encode('utf-8'), activity)
-        except lxml.etree.XMLSyntaxError:
-            raise APIException("Cannot recieve training tcx at url: {}".format(tcx_url), user_exception=UserException(UserExceptionType.DownloadError))
+        elif response.status_code == 204:
+            raise APIException("No FIT available for exercise", user_exception=UserException(UserExceptionType.DownloadError))
 
-        logging.info("Polar DownloadActivity")        
+        activity = FITIO.Parse(response.content, activity)
+        activity.TZ = pytz.timezone("UTC")
+        activity.AdjustTZ()
+
         if activity.Stationary == True :
             logging.info("Polar STATIONNARY")
         else :

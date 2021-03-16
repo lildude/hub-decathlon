@@ -4,6 +4,7 @@ from .devices import DeviceIdentifier, DeviceIdentifierType
 import struct
 import sys
 import pytz
+import json
 
 class FITFileType:
 	Activity = 4 # The only one we care about now.
@@ -370,10 +371,40 @@ class FITIO:
 		ActivityType.MountainBiking: 2,
 		ActivityType.Elliptical: 4,
 		ActivityType.Swimming: 5,
+		ActivityType.Gym: 10,
+		ActivityType.Walking: 11,
+		ActivityType.CrossCountrySkiing: 12,
+		ActivityType.DownhillSkiing: 13,
+		ActivityType.Snowboarding: 14,
+		ActivityType.Rowing: 15,
+		ActivityType.Hiking: 17,
+		ActivityType.Climbing: 31,
+		ActivityType.Skating: 33,
+		ActivityType.StandUpPaddling: 37
 	}
 	_subSportMap = {
 		# ActivityType.MountainBiking: 8 there's an issue with cadence upload and this type with GC, so...
 	}
+
+	# Still improvement to be done
+	_reverseSportMap = {
+		0: ActivityType.Other,
+		1: ActivityType.Running,
+		2: ActivityType.Cycling,
+		4: ActivityType.Elliptical,
+		5: ActivityType.Swimming,
+		10: ActivityType.Gym,
+		11: ActivityType.Walking,
+		12: ActivityType.CrossCountrySkiing,
+		13: ActivityType.DownhillSkiing,
+		14: ActivityType.Snowboarding,
+		15: ActivityType.Rowing,
+		17: ActivityType.Hiking,
+		31: ActivityType.Climbing,
+		33: ActivityType.Skating,
+		37: ActivityType.StandUpPaddling
+	}
+
 	def _calculateCRC(bytestring, crc=0):
 		crc_table = [0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401, 0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400]
 		for byte in bytestring:
@@ -397,6 +428,7 @@ class FITIO:
 	def Parse(fitData, activity=None):
 		import fitparse
 		from fitparse.records import DefinitionMessage, DataMessage
+		from fitparse.profile import FIELD_TYPES
 
 		# We create a new activity if it's not sent through that function
 		activity = activity if activity else UploadedActivity()
@@ -428,8 +460,12 @@ class FITIO:
 						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
                 		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
 						"altitude": msg_data["altitude"],
-						"hr": msg_data["heart_rate"] if "heart_rate" in msg_data_keys else None,
-						"cadence": msg_data["cadence"] if "cadence" in msg_data_keys else None
+						# The .get avoid the usage of conditions to ensure that the property exist in the dict
+						# If it does not exist it returns None instead of crashing
+						"hr": msg_data.get("heart_rate"),
+						"cadence": msg_data.get("cadence"),
+						"speed": msg_data.get("speed"),
+						"distance": msg_data.get("distance")
 					})
 
 				elif msg.name == "lap":
@@ -452,27 +488,53 @@ class FITIO:
 			actividata = actividict["sessions"][0]
 
 			# And we fill the activity data
-			activity.StartTime = actividata["start_time"]
-			activity.EndTime = actividata["timestamp"]
-			activity.Type = ActivityType.Running
+			activity.StartTime = actividata.get("start_time")
+			activity.EndTime = actividata.get("timestamp")
+
+			# Forcing the Type to running is not good
+			sports_list = FIELD_TYPES['sport'].values
+			reversed_key_values_sport_list = json.loads("{"+",".join(['"'+str(sports_list[val])+'":"'+str(val)+'"' for val in sports_list.keys()])+"}")
+			activity_tapiriik_sport_name = FITIO._reverseSportMap.get(int(reversed_key_values_sport_list[actividata.get("sport")]))
+			
+			activity.Type = activity_tapiriik_sport_name if activity_tapiriik_sport_name != None else ActivityType.Other
 			activity.Stats = ActivityStatistics(
-				distance=actividata["total_distance"], 
-				timer_time=actividata["total_timer_time"], 
+				distance=actividata.get("total_distance"), 
+				timer_time=actividata.get("total_timer_time"), 
 				# m/s to km/h conversion
-				avg_speed=actividata["avg_speed"]*3.6, 
-				max_speed=actividata["max_speed"]*3.6, 
-				avg_hr=actividata["avg_heart_rate"], 
-				max_hr=actividata["max_heart_rate"], 
-				avg_run_cadence=actividata["avg_running_cadence"], 
-				max_run_cadence=actividata["max_running_cadence"],
-				strides=actividata["total_strides"],
-				kcal=actividata["total_calories"],
-				avg_temp=actividata["avg_temperature"],
-				avg_power=actividata["avg_power"] if actividata["avg_power"] !=0 else None
+				avg_speed=(actividata.get("avg_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
+				max_speed=(actividata.get("max_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
+				avg_hr=actividata.get("avg_heart_rate"), 
+				max_hr=actividata.get("max_heart_rate"), 
+				avg_run_cadence=actividata.get("avg_running_cadence"), 
+				max_run_cadence=actividata.get("max_running_cadence"),
+				strides=actividata.get("total_strides"),
+				kcal=actividata.get("total_calories"),
+				avg_temp=actividata.get("avg_temperature"),
+				avg_power=actividata.get("avg_power") if actividata.get("avg_power") !=0 else None
 			)
 		else:
 			# TODO handle multiple sessions
 			raise NotImplementedError
+
+		# Adding pseudo lap with the start and the end of the activity
+		# Because there is no lap in polar fit files and they are needed to store the waypoints
+		if len(actividict["laps"]) == 0:
+			actividict["laps"].append({
+				"start_time":activity.StartTime,
+				"timestamp":activity.EndTime
+			})
+
+		# Adding a lap because it seems that polar creates laps only every kms.
+		# So every wp between last round kilometer and the end of the activity are oprhans
+		# And they are not "activitified" so they wont appear in other services.
+		if len(actividict["laps"]) != 0:
+			last_wp = actividict["waypoints"][-1]
+			last_lap = actividict["laps"][-1]
+			if last_wp.get("timestamp") > last_lap.get("timestamp"):
+				actividict["laps"].append({
+					"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
+					"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
+				})
 
 		# Time to fill the activity laps (and waypoints)
 		activity.Laps = [
@@ -480,22 +542,24 @@ class FITIO:
 			Lap(
 				startTime=lapData["start_time"], 
 				endTime=lapData["timestamp"],
+				stats=activity.Stats if len(actividict["laps"]) == 1 else None,
 				waypointList=[
 					# SELECT
 					Waypoint(
-						timestamp=wp["timestamp"],
+						timestamp=wp.get("timestamp"),
 						location=Location(
-							lat=wp["lat"],
-							lon=wp["lon"],
-							alt=wp["altitude"]
+							lat=wp.get("lat"),
+							lon=wp.get("lon"),
+							alt=wp.get("altitude")
 						),
-						hr=wp["hr"],
-						runCadence=wp["cadence"]
+						hr=wp.get("hr"),
+						runCadence=wp.get("cadence"),
+						speed=wp.get("speed")
 					)
 					# FROM actividict["waypoints"] as wp
 					for wp in actividict["waypoints"]
 					# WHERE the wp timestamp is between the lap start and end timestamps.
-					if (wp["timestamp"] >= lapData["start_time"] and wp["timestamp"] < lapData["timestamp"])
+					if (wp.get("timestamp") >= lapData["start_time"] and wp.get("timestamp") < lapData["timestamp"])
 				]
 			)
 			# FROM actividict["laps"]
