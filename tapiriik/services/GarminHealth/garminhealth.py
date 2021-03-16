@@ -8,6 +8,8 @@ from django.core.urlresolvers import reverse
 from datetime import date, datetime, timezone, timedelta
 from urllib.parse import urlencode
 from tapiriik.database import redis
+from requests_oauthlib import OAuth1Session
+
 import requests
 import logging
 import pytz
@@ -26,25 +28,16 @@ class GarminHealthService(ServiceBase):
 
     API_URL = "https://healthapi.garmin.com/wellness-api/rest"
     # POST # URI to get a request token
-    REQUEST_TOKEN = "https://connectapi.garmin.com/oauth-service/oauth/request_token"
+    REQUEST_TOKEN_URL = "https://connectapi.garmin.com/oauth-service/oauth/request_token"
     # POST # URI to get user token/token_secret
-    ACCESS_TOKEN = "https://connectapi.garmin.com/oauth-service/oauth/access_token"
+    ACCESS_TOKEN_URL = "https://connectapi.garmin.com/oauth-service/oauth/access_token"
     # GET # URI to get user auth and verifier token
-    OAUTH_TOKEN ="http://connect.garmin.com/oauthConfirm"
+    OAUTH_TOKEN_URL ="http://connect.garmin.com/oauthConfirm"
     # GET # URI to get user ID
     URI_USER_ID = "https://healthapi.garmin.com/wellness-api/rest/user/id"
     # GET # URI to get user activities summary
     URI_ACTIVITIES_SUMMARY = "https://healthapi.garmin.com/wellness-api/rest/activities"
     URI_ACTIVITIES_DETAIL = "https://healthapi.garmin.com/wellness-api/rest/activityDetails"
-
-    token = None
-    token_secret = None
-
-    header_line = GARMINHEALTH_KEY + ":" + GARMINHEALTH_SECRET
-    header_byte = header_line.encode("utf-8")
-    header_encode = base64.b64encode(header_byte)
-    header_encode = header_encode.decode("utf-8")
-
 
     ID = "garminhealth"
     DisplayName = "Garmin Health"
@@ -80,6 +73,7 @@ class GarminHealthService(ServiceBase):
         #ActivityType.RollerSkiing: "RollerSkiing",
         ActivityType.StrengthTraining: "STRENGTH_TRAINING",
         ActivityType.StandUpPaddling: "STAND_UP_PADDLEBOARDING",
+        ActivityType.Yoga: "YOGA",
         ActivityType.Other: "UNCATEGORIZED"
     }
 
@@ -135,91 +129,10 @@ class GarminHealthService(ServiceBase):
         "STAND_UP_PADDLEBOARDING": ActivityType.StandUpPaddling,
         #"WHITEWATER_RAFTING_KAYAKING"
         #"WIND_KITE_SURFING"
+        "YOGA": ActivityType.Yoga
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
-
-    def _randomString(self, stringLength=10):
-        """Generate a random string of fixed length """
-        letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(stringLength))
-
-    def _unauthorized_request(self):
-
-        # Prepare some parameters (timestamp, strings, nonce)
-        date_now = datetime.now()
-        timestamp_now = str(int(date_now.timestamp()))
-        timestamp_now_encoded = urllib.parse.quote_plus(timestamp_now, safe='%')
-        oauth_nonce = self._randomString(32)
-        oauth_nonce_encoded = urllib.parse.quote_plus(oauth_nonce, safe='%')
-        garmin_key_encoded = urllib.parse.quote_plus(GARMINHEALTH_KEY, safe='%')
-        method = "HMAC-SHA1"
-        method_encoded = urllib.parse.quote_plus(method, safe='%')
-        version = "1.0"
-        version_encoded = urllib.parse.quote_plus(version, safe='%')
-
-        # Build signature
-        # 1) HTTP METHOD
-        http_method = "POST"
-        http_method_encoded = urllib.parse.quote(http_method, safe="%")
-        # 2) Path
-        path = self.REQUEST_TOKEN
-        path_encoded = urllib.parse.quote(path, safe="%")
-        # 3) Parameter string
-        parameter_string = "oauth_consumer_key=" + GARMINHEALTH_KEY \
-                           + "&oauth_nonce=" + oauth_nonce \
-                           + "&oauth_signature_method=" + method \
-                           + "&oauth_timestamp=" + timestamp_now \
-                           + "&oauth_version=" + version
-        parameter_string_encoded = urllib.parse.quote(parameter_string, safe="%")
-        # 4) Signature string
-        signature_string = http_method_encoded + "&" + path_encoded + "&" + parameter_string_encoded
-        # 5) Base string encode
-        base_string = signature_string.encode()
-        # 6) Key encode
-        key = GARMINHEALTH_SECRET + "&"
-        key = key.encode()
-        # 7) hashed
-        hashed = hmac.new(key, base_string, sha1)
-        hashed_encode = base64.b64encode(hashed.digest())
-        # 8) generate Signature
-        signature = urllib.parse.quote(hashed_encode, safe="%")
-
-        # Build header line
-        # 1) generate Header string
-        header_oauth_string = 'oauth_consumer_key="' + garmin_key_encoded \
-                              + '",oauth_nonce="' + oauth_nonce_encoded \
-                              + '",oauth_signature="' + signature \
-                              + '",oauth_signature_method="' + method_encoded \
-                              + '",oauth_timestamp="' + timestamp_now_encoded \
-                              + '",oauth_version="' + version_encoded + '"'
-        payload = ""
-        headers = {
-            'Authorization': 'OAuth ' + header_oauth_string
-        }
-
-        # Call request_token
-        resp = requests.request("POST", self.REQUEST_TOKEN, data=payload, headers=headers)
-
-        if resp.status_code != 200:
-            raise APIException("No authorization", block=True,
-                               user_exception=UserException(UserExceptionType.Authorization,
-                                                            intervention_required=True))
-
-        content = resp.content
-        credentials = parse_qs(content)
-
-
-        # Can't reproduce garmin connection issue
-        # None.decode()
-        self.token = credentials.get(b'oauth_token')[0].decode()
-
-        self.token_secret = credentials.get(b'oauth_token_secret')[0].decode()
-
-        redis_token_key = 'garminhealth:oauth:%s' % self.token
-        redis.setex(redis_token_key, self.token_secret, timedelta(hours=1))
-
-        return credentials
 
     def UserUploadedActivityURL(self, uploadId):
         return "https://connect.garmin.com/modern/activity/" + str(uploadId)
@@ -228,346 +141,62 @@ class GarminHealthService(ServiceBase):
     def WebInit(self):
         self.UserAuthorizationURL = reverse("oauth_redirect", kwargs={"service": "garminhealth"})
 
+
+    # Helper to initialize the Oauth v1 Session
+    def _oauthSession(self, connection=None, **params):
+        if connection:
+            params["resource_owner_key"] = connection.Authorization["AccessToken"]
+            params["resource_owner_secret"] = connection.Authorization["AccessTokenSecret"]
+        return OAuth1Session(GARMINHEALTH_KEY, client_secret=GARMINHEALTH_SECRET, **params)
+
     def GenerateUserAuthorizationURL(self, session, level=None):
-        # Get last used token
-        date_now = datetime.now()
-        token_ttl = date_now - timedelta(hours=1)
-        
-        # first generation or TTL is done
-        response = self._unauthorized_request()
+        # Generation of an Oauth v1 session (This should be empty at this point)
+        oauthSession = self._oauthSession(callback_uri=WEB_ROOT + reverse("oauth_return", kwargs={"service": "garminhealth"}))
+        # Fetching the tokens from the session
+        tokens = oauthSession.fetch_request_token(self.REQUEST_TOKEN_URL)
+        # The secret is saved in redis else it will be lost when we exit the function.
+        redis_token_key = "garminhealth:oauth:%s" % tokens["oauth_token"]
+        redis.setex(redis_token_key, tokens["oauth_token_secret"], timedelta(hours=24))
+        return oauthSession.authorization_url(self.OAUTH_TOKEN_URL)
 
-        # Can't reproduce garmin connection issue
-        # None.decode()
-        self.token = response.get(b'oauth_token')[0].decode()
-        self.token_secret = response.get(b'oauth_token_secret')[0].decode()
-
-        uri_parameters = {
-            'oauth_token': self.token, #credentials.get(b'oauth_token')[0],
-            'oauth_callback': WEB_ROOT + reverse("oauth_return", kwargs={"service": self.ID}),
-        }
-
-        url = self.OAUTH_TOKEN + "?" + urlencode(uri_parameters)
-        return url
-
-    # This function generate a new signature for api request
-    def _request_signin(self, http_method, path, user_tokens, parameters=None):
-
-        request_info = {
-            'path': path,
-            'header': None,
-            'signature': None
-        }
-        # Token parameters ----------
-        # OAuth token
-        oauth_token = user_tokens['oauth_token']
-        oauth_token_encoded = urllib.parse.quote_plus(oauth_token, safe='%')
-        # User access token
-        access_token = user_tokens['access_token']
-        access_token_encoded = urllib.parse.quote_plus(access_token, safe='%')
-        # User access token secret
-        access_token_secret = user_tokens['access_token_secret']
-        access_token_secret_encoded = urllib.parse.quote_plus(access_token_secret, safe='%')
-
-        # General parameters ------------
-        # Garmin key
-        garmin_key_encoded = urllib.parse.quote_plus(GARMINHEALTH_KEY, safe='%')
-        # Timestamp
-        date_now = datetime.now()
-        timestamp_now = str(int(date_now.timestamp()))
-        timestamp_now_encoded = urllib.parse.quote_plus(timestamp_now, safe='%')
-        # UploadEndTime & UploadStartTime
-        start_date = datetime.combine(date.today(), datetime.min.time())
-        end_date = datetime.combine(date.today(), datetime.max.time())
-
-        upload_end_time = str(int(start_date.timestamp()))
-        upload_start_time = str(int(end_date.timestamp()))
-        if parameters:
-            if parameters['upload_end_time']:
-                upload_end_time = parameters['upload_end_time']
-            if parameters['upload_start_time']:
-                upload_start_time = parameters['upload_start_time']
-
-        upload_end_time_encoded = urllib.parse.quote_plus(upload_end_time, safe='%')
-        upload_start_time_encoded = urllib.parse.quote_plus(upload_start_time, safe='%')
-
-        # Nonce
-        oauth_nonce = self._randomString(16)
-        oauth_nonce_encoded = urllib.parse.quote_plus(oauth_nonce, safe='%')
-        # Method
-        method = "HMAC-SHA1"
-        method_encoded = urllib.parse.quote_plus(method, safe='%')
-        # Version
-        version = "1.0"
-        version_encoded = urllib.parse.quote_plus(version, safe='%')
-
-        # Building header signature
-        # 1) HTTP METHOD
-        http_method_encoded = urllib.parse.quote(http_method, safe="%")
-
-        # 2) Path
-        path_encoded = urllib.parse.quote(path, safe="%")
-
-        # 3) Parameter string
-        parameter_string = "oauth_consumer_key=" + GARMINHEALTH_KEY \
-                           + "&oauth_nonce=" + oauth_nonce \
-                           + "&oauth_signature_method=" + method \
-                           + "&oauth_timestamp=" + timestamp_now \
-                           + "&oauth_token=" + access_token \
-                           + "&oauth_version=" + version \
-                           + "&uploadEndTimeInSeconds=" + upload_end_time \
-                           + "&uploadStartTimeInSeconds=" + upload_start_time
-        parameter_string_encoded = urllib.parse.quote(parameter_string, safe="%")
-
-        # 4) Signature string
-        signature_string = http_method_encoded + "&" + path_encoded + "&" + parameter_string_encoded
-
-        # 5) Base string encode
-        base_string = signature_string.encode()
-
-        # 6) Key encode
-        key = GARMINHEALTH_SECRET + "&" + access_token_secret
-        key = key.encode()
-
-        # 7) hashed
-        hashed = hmac.new(key, base_string, sha1)
-        hashed_encode = base64.b64encode(hashed.digest())
-
-        # 8) generate Signature
-        signature = urllib.parse.quote(hashed_encode, safe="%")
-        request_info['signature'] = signature
-
-        # Building header
-        # 1) generate Header string
-        header_oauth_string = 'oauth_consumer_key="' + garmin_key_encoded \
-                              + '",oauth_nonce="' + oauth_nonce_encoded \
-                              + '",oauth_signature="' + signature \
-                              + '",oauth_signature_method="' + method_encoded \
-                              + '",oauth_timestamp="' + timestamp_now_encoded \
-                              + '",oauth_token="' + access_token_encoded \
-                              + '",oauth_version="' + version_encoded + '"'
-
-        headers = {
-            'Authorization': 'OAuth ' + header_oauth_string
-        }
-
-        request_info['header'] = headers
-        # Build path construction with two required parameters
-        request_info['path'] = path + "?uploadStartTimeInSeconds=" + upload_start_time\
-                               + "&uploadEndTimeInSeconds=" + upload_end_time
-
-        return request_info
 
     # This function is used to set token info for a user, get expiration date, refresh and access token
     def RetrieveAuthorizationToken(self, req, level):
-
-        oauth_token = req.GET.get("oauth_token")
-        oauth_token_encoded = urllib.parse.quote_plus(oauth_token, safe='%')
-        
-        # find secret of this token
-        redis_token_key = "garminhealth:oauth:%s" % self.token
+        # Retrieving the previously saved secret
+        redis_token_key = "garminhealth:oauth:%s" % req.GET.get("oauth_token")
         secret = redis.get(redis_token_key)
         redis.delete(redis_token_key)
 
-        # Error management to figure why this could be None
-        if secret == None:
-            var_state = {
-                "redis_token_key": redis_token_key,
-                "secret": secret.decode("utf-8") if secret != None else None,
-            }
-            logger.error("Unreseolved garmin connections problem is occurring")
-            logger.error("\tCannot retrieve \"secret\" in garminhealth.py:368")
-            logger.error("\tVariables state :"+ str(var_state))
-            raise AttributeError("Cannot retrieve \"s\"",var_state)
+        # Now getting the access token
+        oauthSession = self._oauthSession(resource_owner_secret=secret)
+        oauthSession.parse_authorization_response(req.get_full_path())
+        tokens = oauthSession.fetch_access_token(self.ACCESS_TOKEN_URL)
 
-        # Can reproduce garmin connection issue
-        # None.decode()
-        oauth_token_secret = secret.decode("utf-8") 
-        oauth_token_secret_encoded = urllib.parse.quote_plus(oauth_token_secret, safe='%')
-        
-        oauth_verifier = req.GET.get("oauth_verifier")
-        oauth_verifier_encoded = urllib.parse.quote_plus(oauth_verifier, safe='%')
-
-        # Common parameters
-        date_now = datetime.now()
-        timestamp_now = str(int(date_now.timestamp()))
-        timestamp_now_encoded = urllib.parse.quote_plus(timestamp_now, safe='%')
-
-        oauth_nonce = self._randomString(16)
-        oauth_nonce_encoded = urllib.parse.quote_plus(oauth_nonce, safe='%')
-
-        garmin_key_encoded = urllib.parse.quote_plus(GARMINHEALTH_KEY, safe='%')
-
-        method = "HMAC-SHA1"
-        method_encoded = urllib.parse.quote_plus(method, safe='%')
-
-        version = "1.0"
-        version_encoded = urllib.parse.quote_plus(version, safe='%')
-
-        # 1) HTTP METHOD
-        http_method = "POST"
-        http_method_encoded = urllib.parse.quote(http_method, safe="%")
-
-        # 2) Path
-        path = self.ACCESS_TOKEN # "https://connectapi.garmin.com/oauth-service/oauth/access_token"
-        path_encoded = urllib.parse.quote(path, safe="%")
-
-        # 3) Parameter string
-        parameter_string = "oauth_consumer_key=" + GARMINHEALTH_KEY \
-                           + "&oauth_nonce=" + oauth_nonce \
-                           + "&oauth_signature_method=" + method \
-                           + "&oauth_timestamp=" + timestamp_now \
-                           + "&oauth_token=" + oauth_token \
-                           + "&oauth_verifier=" + oauth_verifier \
-                           + "&oauth_version=" + version
-        parameter_string_encoded = urllib.parse.quote(parameter_string, safe="%")
-
-        # 4) Signature string
-        signature_string = http_method_encoded + "&" + path_encoded + "&" + parameter_string_encoded
-
-        # 5) Base string encode
-        base_string = signature_string.encode()
-
-        # 6) Key encode (garmin secret & verifier)
-        key = GARMINHEALTH_SECRET + "&" + oauth_token_secret
-
-        # 7) hashed
-        key = key.encode()
-
-        # 7) hashed
-        hashed = hmac.new(key, base_string, sha1)
-        hashed_encode = base64.b64encode(hashed.digest())
-
-        # 8) generate Signature
-        signature = urllib.parse.quote(hashed_encode, safe="%")
-
-        # 9) generate Header string
-        header_oauth_string = 'oauth_nonce="' + oauth_nonce_encoded \
-                              + '", oauth_signature="' + signature \
-                              + '", oauth_consumer_key="' + garmin_key_encoded \
-                              + '", oauth_token="' + oauth_token_encoded \
-                              + '", oauth_timestamp="' + timestamp_now_encoded \
-                              + '", oauth_verifier="' + oauth_verifier_encoded \
-                              + '", oauth_signature_method="' + method_encoded \
-                              + '", oauth_version="' + version_encoded + '"'
-
-        payload = ""
-        headers = {
-            'Authorization': 'OAuth ' + header_oauth_string
+        # We are now ready to send auth request to the service so we get the user ID to save it in mongo
+        userInfo = oauthSession.get(self.URI_USER_ID)
+        OAuth_data = {
+            "OAuthToken": req.GET.get("oauth_token"),
+            "AccessToken": tokens["oauth_token"],
+            "AccessTokenSecret": tokens["oauth_token_secret"],
+            "AccessTokenRequestedAt": datetime.now(timezone.utc)
         }
+        return (userInfo.json()["userId"], OAuth_data)
 
-
-
-        # Call access_token
-        resp = requests.request("POST", self.ACCESS_TOKEN, data=payload, headers=headers)
-
-        if resp.status_code != 200:
-            data = resp.text
-            raise APIException(
-                "No authorization",
-                block=True,
-                user_exception=UserException(
-                    UserExceptionType.Authorization,
-                    intervention_required=True
-                 )
-            )
-
-        logging.info("Retrieve Garmin Health Authorization Token")
-
-        # Retrieve user access token
-        content = resp.content
-        credentials = parse_qs(content)
-
-        # Error management to figure why these could be None
-        if credentials.get(b'oauth_token_secret')[0] == None or credentials.get(b'oauth_token')[0] == None:
-            var_state = {
-                "resp_content": content.decode('utf-8'),
-                "credentials": str(credentials)
-            }
-            logger.error("Unreseolved garmin connections problem is occurring")
-            logger.error("\tCannot retrieve \"oauth_token_secret\" or \"oauth_token\" in garminhealth.py:477/478")
-            logger.error("\tVariables state :"+ str(var_state))
-            raise AttributeError("Cannot retrieve \"OT\" or \"OTS\" from credentials", var_state)
-
-        # Can reproduce garmin connection issue
-        # None.decode()
-        access_token = credentials.get(b'oauth_token')[0].decode()
-        access_token_secret = credentials.get(b'oauth_token_secret')[0].decode()
-
-        # Get user ID
-        now = datetime.now(timezone.utc)
-
-        # Build signin header
-        user_tokens = {
-            'access_token': access_token,
-            'access_token_secret': access_token_secret,
-            'oauth_token': oauth_token
-        }
-        signin_info = self._request_signin('GET', self.URI_USER_ID, user_tokens)
-
-        # Request garmin api to get user id
-        payload = ""
-        resp = requests.request("GET", signin_info['path'], data=payload, headers=signin_info['header'])
-        if resp.status_code != 200:
-            raise APIException(
-                "User not found",
-                block=True,
-                user_exception=UserException(
-                    UserExceptionType.Authorization,
-                    intervention_required=True
-                 )
-            )
-
-
-        json_data = json.loads(resp.text)
-        user_id = json_data['userId']
-
-        authorizationData = {
-            "OAuthToken": oauth_token,
-            "AccessToken": access_token,
-            "AccessTokenSecret": access_token_secret,
-            "AccessTokenRequestedAt": now,
-        }
-        response = self._unauthorized_request()
-        self.WebInit()
-
-
-        return (user_id, authorizationData)
 
     # This function is used to revoke access token
     def RevokeAuthorization(self, serviceRecord):
-
-        date_now = datetime.now()
-        now_tstmp = str(int(date_now.timestamp()))
-
-        signin_info = self._request_signin(
-            'GET',
-            self.URI_ACTIVITIES_SUMMARY,
-            {
-                'access_token': serviceRecord.Authorization.get('AccessToken'),
-                'access_token_secret': serviceRecord.Authorization.get('AccessTokenSecret'),
-                'oauth_token': serviceRecord.Authorization.get('OAuthToken')
-            },
-            parameters={
-                'upload_start_time': now_tstmp,
-                'upload_end_time': now_tstmp,
-            }
-        )
-
-        resp = requests.request("GET", signin_info['path'], headers=signin_info['header'])
-
-        # if resp.status_code != 204 and resp.status_code != 200:
-        #    raise APIException("Unable to deauthorize Garmin Health auth token, status " + str(resp.status_code) + " resp " + resp.text)
-
-        self.WebInit()
+        # Garmin has no revoke Auth endpoint. 
+        # Their doc says that users have to disconnect the app directly in garmin connect.
+        # https://connect.garmin.com/modern/account
         logging.info("Revoke Garmin Authorization")
+        pass
+  
 
     def DownloadActivityList(self, svcRecord, exhaustive=False):
+        oauthSession = self._oauthSession(svcRecord)
+
         activities = []
         exclusions = []
-        before = earliestDate = None
-
-        # define low parameter
-        # get Garmin info
 
         # WARNING : BE CAREFULL ABOUT DATE FILTER
         # date filter of this request will follow this process :
@@ -584,222 +213,167 @@ class GarminHealthService(ServiceBase):
 
         logging.info("\t\t Garmin thereIsActivities : " + str(thereIsActivities))
 
-
         if thereIsActivities == b"1":
-
             logging.info("\t\t Garmin thereIsActivities : PLOPLOP ")
 
             redis.delete(redis_token_key)
-            afterDateObj = datetime.now() - timedelta(days=1)
-
-            afterDate = afterDateObj.strftime("%Y-%m-%d")
-            afterDate_tstmp = str(int(afterDateObj.timestamp()))
-            date_now = datetime.now()
-            now_tstmp = str(int(date_now.timestamp()))
-
-            oauth_token = svcRecord.Authorization.get('OAuthToken')
-            user_access_token = svcRecord.Authorization.get('AccessToken')
-            user_access_token_secret = svcRecord.Authorization.get('AccessTokenSecret')
-
-            logging.info("\t Download Garmin Health activities since : " + afterDate)
-            logging.info("\t Building signin for activities summary")
-
-            user_tokens = {
-                'access_token': user_access_token,
-                'access_token_secret': user_access_token_secret,
-                'oauth_token': oauth_token
-            }
-            payload = ""
-            start_date = afterDateObj
             index_total = 0
-            while start_date < date_now:
-                end_date = start_date + timedelta(seconds=86400)
-                if end_date > date_now:
-                    end_date = date_now
 
-                start_date_tmstmp = str(int(start_date.timestamp()))
-                start_date_str = start_date.strftime("%Y-%m-%d")
-                end_date_tmstmp = str(int(end_date.timestamp()))
-                end_date_str = end_date.strftime("%Y-%m-%d")
+            # We check for the last 24 hours data
+            data = {
+                'uploadStartTimeInSeconds': (datetime.now()-timedelta(days=1)).strftime('%s'),
+                'uploadEndTimeInSeconds': datetime.now().strftime('%s'),
+            }
+            resp = oauthSession.get(self.URI_ACTIVITIES_SUMMARY +"?"+ urlencode(data))
 
-                logging.info("\t Download Garmin Health activities from %s to %s " % (start_date_str, end_date_str))
+            if resp.status_code != 204 and resp.status_code != 200:
+                logging.info("\t An error occured while downloading Garmin Health activities from %s to %s " % (
+                    (datetime.now()-timedelta(days=1)).strftime('%s'), datetime.now().strftime('%s')))
 
-                signin_parameters = {
-                    'upload_start_time': start_date_tmstmp,
-                    'upload_end_time': end_date_tmstmp,
-                }
-                signin_info = self._request_signin('GET', self.URI_ACTIVITIES_SUMMARY, user_tokens, parameters=signin_parameters)
+            json_data = resp.json()
 
-                resp = requests.request("GET", signin_info['path'], data=payload, headers=signin_info['header'])
+            if json_data:
+                for item in json_data:
+                    index_total = index_total + 1
+                    activity = UploadedActivity()
 
-                if resp.status_code != 204 and resp.status_code != 200:
-                    logging.info("\t An error occured while downloading Garmin Health activities from %s to %s " % (start_date_str, end_date_str))
+                    activity_name = item['activityType']
+                    if item['deviceName'] != 'unknown':
+                        activity_name = activity_name + " - " + item['deviceName']
 
-                json_data = resp.json()
+                    # parse date start to get timezone and date
+                    activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
+                    activity.TZ = pytz.utc
 
-                if json_data:
-                    for item in json_data:
-                        index_total = index_total + 1
-                        activity = UploadedActivity()
+                    logging.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
 
-                        activity_name = item['activityType']
-                        if item['deviceName'] is not 'unknown':
-                            activity_name = activity_name + " - " + item['deviceName']
+                    activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
 
-                        # parse date start to get timezone and date
-                        activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
-                        activity.TZ = pytz.utc
+                    activity.ServiceData = {"ActivityID": item["summaryId"]}
+                    if "manual" in item:
+                        activity.ServiceData['Manual'] = item["manual"]
+                    else:
+                        activity.ServiceData['Manual'] = False
+                    # check if activity type ID exists
+                    logger.info("Activity Type : "+str(item["activityType"]))
+                    if item["activityType"] not in self._reverseActivityTypeMappings:
+                        # TODO : Uncomment it when test are done
+                        #exclusions.append(
+                        #    APIExcludeActivity("Unsupported activity type %s" % item["activityType"],
+                        #                       activity_id=item["summaryId"],
+                        #                       user_exception=UserException(UserExceptionType.Other)))
+                        logger.info("\t\tUnknown activity")
+                        continue
 
-                        logging.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
+                    activity.Type = self._reverseActivityTypeMappings[item["activityType"]]
 
-                        activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
+                    if "distanceInMeters" in item :
+                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=item["distanceInMeters"])
 
-                        activity.ServiceData = {"ActivityID": item["summaryId"]}
-                        if "manual" in item:
-                            activity.ServiceData['Manual'] = item["manual"]
-                        else:
-                            activity.ServiceData['Manual'] = False
-                        # check if activity type ID exists
-                        if item["activityType"] not in self._reverseActivityTypeMappings:
-                            # TODO : Uncomment it when test are done
-                            #exclusions.append(
-                            #    APIExcludeActivity("Unsupported activity type %s" % item["activityType"],
-                            #                       activity_id=item["summaryId"],
-                            #                       user_exception=UserException(UserExceptionType.Other)))
-                            logger.info("\t\tUnknown activity")
-                            continue
-
-                        activity.Type = self._reverseActivityTypeMappings[item["activityType"]]
-
-                        if "distanceInMeters" in item :
-                            activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=item["distanceInMeters"])
-
-                        if "averageSpeedInMetersPerSecond" in item and "maxSpeedInMetersPerSecond" in item:
+                    if "averageSpeedInMetersPerSecond" in item and "maxSpeedInMetersPerSecond" in item:
+                        activity.Stats.Speed = ActivityStatistic(
+                            ActivityStatisticUnit.MetersPerSecond,
+                            avg=item["averageSpeedInMetersPerSecond"],
+                            max=item["maxSpeedInMetersPerSecond"]
+                        )
+                    else:
+                        if "averageSpeedInMetersPerSecond" in item:
                             activity.Stats.Speed = ActivityStatistic(
                                 ActivityStatisticUnit.MetersPerSecond,
-                                avg=item["averageSpeedInMetersPerSecond"],
+                                avg=item["averageSpeedInMetersPerSecond"]
+                            )
+                        if "maxSpeedInMetersPerSecond" in item:
+                            activity.Stats.Speed = ActivityStatistic(
+                                ActivityStatisticUnit.MetersPerSecond,
                                 max=item["maxSpeedInMetersPerSecond"]
                             )
-                        else:
-                            if "averageSpeedInMetersPerSecond" in item:
-                                activity.Stats.Speed = ActivityStatistic(
-                                    ActivityStatisticUnit.MetersPerSecond,
-                                    avg=item["averageSpeedInMetersPerSecond"]
-                                )
-                            if "maxSpeedInMetersPerSecond" in item:
-                                activity.Stats.Speed = ActivityStatistic(
-                                    ActivityStatisticUnit.MetersPerSecond,
-                                    max=item["maxSpeedInMetersPerSecond"]
-                                )
 
-                        # Todo: find Garmin data name
-                        # activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                        #                                          value=ftbt_activity["calories"])
-                        # Todo: find Garmin data name
-                        # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride[
-                        #    "moving_time"] if "moving_time" in ride and ride[
-                        #    "moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
-                        # Todo: find Garmin data name
-                        # if "average_watts" in ride:
-                        #    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,
-                        #                                             avg=ride["average_watts"])
+                    # Todo: find Garmin data name
+                    # activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
+                    #                                          value=ftbt_activity["calories"])
+                    # Todo: find Garmin data name
+                    # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride[
+                    #    "moving_time"] if "moving_time" in ride and ride[
+                    #    "moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
+                    # Todo: find Garmin data name
+                    # if "average_watts" in ride:
+                    #    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,
+                    #                                             avg=ride["average_watts"])
 
-                        # Todo: find Garmin data
-                        # activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
+                    # Todo: find Garmin data
+                    # activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
 
-                        if "averageHeartRateInBeatsPerMinute" in item and "maxHeartRateInBeatsPerMinute" in item:
+                    if "averageHeartRateInBeatsPerMinute" in item and "maxHeartRateInBeatsPerMinute" in item:
+                        activity.Stats.HR.update(
+                            ActivityStatistic(
+                                ActivityStatisticUnit.BeatsPerMinute,
+                                avg=item["averageHeartRateInBeatsPerMinute"],
+                                max=item["maxHeartRateInBeatsPerMinute"]
+                            )
+                        )
+                    else:
+                        if "averageHeartRateInBeatsPerMinute" in item:
                             activity.Stats.HR.update(
                                 ActivityStatistic(
                                     ActivityStatisticUnit.BeatsPerMinute,
-                                    avg=item["averageHeartRateInBeatsPerMinute"],
+                                    avg=item["averageHeartRateInBeatsPerMinute"]
+                                )
+                            )
+                        if "maxHeartRateInBeatsPerMinute" in item:
+                            activity.Stats.HR.update(
+                                ActivityStatistic(
+                                    ActivityStatisticUnit.BeatsPerMinute,
                                     max=item["maxHeartRateInBeatsPerMinute"]
                                 )
                             )
-                        else:
-                            if "averageHeartRateInBeatsPerMinute" in item:
-                                activity.Stats.HR.update(
-                                    ActivityStatistic(
-                                        ActivityStatisticUnit.BeatsPerMinute,
-                                        avg=item["averageHeartRateInBeatsPerMinute"]
-                                    )
-                                )
-                            if "maxHeartRateInBeatsPerMinute" in item:
-                                activity.Stats.HR.update(
-                                    ActivityStatistic(
-                                        ActivityStatisticUnit.BeatsPerMinute,
-                                        max=item["maxHeartRateInBeatsPerMinute"]
-                                    )
-                                )
 
-                        # Todo: find Garmin data name
-                        # if "average_cadence" in ride:
-                        #    activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.RevolutionsPerMinute,
-                        #                                                    avg=ride["average_cadence"]))
-                        # Todo: find Garmin data name
-                        # if "average_temp" in ride:
-                        #    activity.Stats.Temperature.update(
-                        #        ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
+                    # Todo: find Garmin data name
+                    # if "average_cadence" in ride:
+                    #    activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.RevolutionsPerMinute,
+                    #                                                    avg=ride["average_cadence"]))
+                    # Todo: find Garmin data name
+                    # if "average_temp" in ride:
+                    #    activity.Stats.Temperature.update(
+                    #        ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
 
-                        # Todo: find Garmin data name
-                        if "calories" in item:
-                            activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                                                                    value=item["calories"])
-                        elif "activeKilocalories" in item :
-                            activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                                                                    value=item["activeKilocalories"])
-                        activity.Name = activity_name
+                    # Todo: find Garmin data name
+                    if "calories" in item:
+                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
+                                                                value=item["calories"])
+                    elif "activeKilocalories" in item :
+                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
+                                                                value=item["activeKilocalories"])
+                    activity.Name = activity_name
 
-                        activity.Private = False
+                    activity.Private = False
 
-                        activity.Stationary = True
-                        activity.GPS = False
-                        if "startingLatitudeInDegree" in item :
-                            activity.Stationary = False
-                            activity.GPS = True
+                    activity.Stationary = True
+                    activity.GPS = False
+                    if "startingLatitudeInDegree" in item :
+                        activity.Stationary = False
+                        activity.GPS = True
 
-                        activity.AdjustTZ()
-                        activity.CalculateUID()
-                        activities.append(activity)
-                        logging.info("\t\t Garmin Activity ID : " + str(item["summaryId"]))
+                    activity.AdjustTZ()
+                    activity.CalculateUID()
+                    activities.append(activity)
+                    logging.info("\t\t Garmin Activity ID : " + str(item["summaryId"]))
 
-                start_date = end_date
 
             logging.info("\t\t total Garmin activities downloaded : " + str(index_total))
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
-        oauth_token = svcRecord.Authorization.get('OAuthToken')
-        user_access_token = svcRecord.Authorization.get('AccessToken')
-        user_access_token_secret = svcRecord.Authorization.get('AccessTokenSecret')
+        oauthSession = self._oauthSession(svcRecord)
 
-        logging.info("\t Building signin for activity detail")
-
-        user_tokens = {
-            'access_token': user_access_token,
-            'access_token_secret': user_access_token_secret,
-            'oauth_token': oauth_token
-        }
-        payload = ""
-
-        start_date = datetime.now() - timedelta(days=1)
-        end_date = start_date + timedelta(seconds=86400)
-        start_date_tmstmp = str(int(start_date.timestamp()))
-        end_date_tmstmp = str(int(end_date.timestamp()))
-        start_date_str = start_date.strftime("%Y-%m-%d")
-        end_date_str = end_date.strftime("%Y-%m-%d")
-
-        signin_parameters = {
-            'upload_start_time': start_date_tmstmp,
-            'upload_end_time': end_date_tmstmp,
-        }
-        signin_info = self._request_signin('GET', self.URI_ACTIVITIES_DETAIL, user_tokens,
-                                           parameters=signin_parameters)
-
-        resp = requests.request("GET", signin_info['path'], data=payload, headers=signin_info['header'])
+        data = {
+                'uploadStartTimeInSeconds': (datetime.now()-timedelta(days=1)).strftime('%s'),
+                'uploadEndTimeInSeconds': datetime.now().strftime('%s'),
+            }
+        resp = oauthSession.get(self.URI_ACTIVITIES_DETAIL +"?"+ urlencode(data))
 
         if resp.status_code != 204 and resp.status_code != 200:
             logging.info("\t An error occured while downloading Garmin Health activities from %s to %s " % (
-            start_date_str, end_date_str))
+                    (datetime.now()-timedelta(days=1)).strftime('%s'), datetime.now().strftime('%s')))
 
         json_data = resp.json()
         activity_id = activity.ServiceData["ActivityID"]
@@ -890,7 +464,6 @@ class GarminHealthService(ServiceBase):
     def ExternalIDsForPartialSyncTrigger(self, req):
         data = json.loads(req.body.decode("UTF-8"))
         logger.info("GARMIN CALLBACK POKE")
-        logging.info("GARMIN CALLBACK POKE")
         # Get user ids to sync
         external_user_ids = []
         if data['activityDetails'] is not None :
