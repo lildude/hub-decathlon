@@ -10,9 +10,14 @@
 	{% trans "Just connect to all the services you would like to sync between, click &quot;Synchronize now,&quot; then forget ever reading this sentence." %}
 </div>
 
+<div>
+	<h3>{% trans "Which services are uni-directional (do not support incoming activities) ?" %}</h3>
+	{% trans "Garmin Health, Coros and Polar only support retrieving activites." %}
+</div>
+
 <div class="right">
 	<h3>{% trans "Do I need to re-connect my accounts every time?" %}</h3>
-	{% trans "<strong>No!</strong> Just <strong>connect to any one of the services you have already connected</strong>, and you will be signed back into Hub by DECATHLON and ready to start another synchronization." %}
+	{% trans "<strong>No.</strong> Just <strong>connect to any one of the services you have already connected</strong>, and you will be signed back into Hub by DECATHLON and ready to start another synchronization." %}
 </div>
 
 <div>
@@ -22,22 +27,12 @@
 
 <div>
 	<h3>{% trans "Which activities get synchronized?" %}</h3>
-	{% trans "<b>All supported activities in your account are synchronized</b>, since the start date indicated. Garmin Health is the only exception, you could not sync your history and it is one way could only get activities from Garmin." %}
-</div>
-
-<div>
-	<h3>{% trans "What's the difference from" %} <a href="https://tapiriik.com">tapiriik.com</a>?</h3>
-	{% trans "It is pretty the same site but with free synchronization and some sport trackers tapiriik doesn't support." %}
+	{% trans "<b>All supported activities in your account are synchronized</b>. Garmin Health and Polar are two exceptions : it is one way could only get activities from Garmin and Polar." %}
 </div>
 
 <div class="right">
 	<h3>{% trans "Will Hub by DECATHLON create duplicate activities?" %}</h3>
-	{% trans "Nope - <b>even if you tracked the same activity on multiple devices, or with multiple apps,</b> Hub by DECATHLON will see that and <b>won't create any duplicate activities</b>." %}
-</div>
-
-<div class="right">
-	<h3>{% trans "What about activities I've marked as private?" %}</h3>
-	{% trans "By default, <b>Hub by DECATHLON will <u>not</u> sync private activities</b>." %}
+	{% trans "No - <b>even if you tracked the same activity on multiple devices, or with multiple apps,</b> Hub by DECATHLON will see that and <b>won't create any duplicate activities</b>." %}
 </div>
 
 <div>
@@ -55,10 +50,6 @@
 	{% trans "When logged in, you can <b>visit the " %}<a href="{% url 'activities_dashboard' %}">{% trans "activities dashboard" %}</a></b> {% trans "to see which activities were (or were not) synchronized, and to where." %}
 </div>
 
-<div>
-	<h3>{% trans "Can I sync in only one direction?" %}</h3>
-	{% trans "No: the Hub by DECATHLON tries to transfer all activities to others services (except Garmin Health)." %}
-</div>
 
 <div>
 	<h3>{% trans "Does Hub by DECATHLON ever modify or delete my activities?" %}</h3>
@@ -89,10 +80,6 @@
 	{% trans "Possibly. We are open to contribute to connected sport ecosystem." %}
 </div>
 
-<div>
-	<h3>{% trans "Can Hub by DECATHLON and CopyMySports or SyncMyTracks be used together?" %}</h3>
-	{% trans "<b>We wouldn't recommend it</b> - CopyMySports or SyncMyTracks will often create duplicates of activities Hub by DECATHLON has already synchronized." %}
-</div>
 
 </div>
 <div style="clear:both;"></div>
