@@ -165,8 +165,6 @@ class StravaService(ServiceBase):
         exclusions = []
         before = earliestDate = None
         
-        # force breaking exhaustive
-        exhaustive=False
 
         while True:
             if before is not None and before < 0:
