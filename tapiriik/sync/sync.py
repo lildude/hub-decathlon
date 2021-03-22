@@ -148,7 +148,8 @@ class Sync:
                                     'ID': {'$in': connection_ids}
                                 }
                             },
-                            "NextSynchronization": {'$gt': datetime.utcnow()}
+                            "$or": [{"NextSynchronization": {'$gt': datetime.utcnow()}},{"NextSynchronization": None} ]
+                            # "NextSynchronization": {'$gt': datetime.utcnow()}
                         }
                     }
                 ]
