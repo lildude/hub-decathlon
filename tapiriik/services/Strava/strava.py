@@ -165,13 +165,15 @@ class StravaService(ServiceBase):
         exclusions = []
         before = earliestDate = None
         
-
+        # We put an after date in the request because it might be exhaustive up to 30 activities
+        after_param = (datetime.now() - timedelta(days=7)).strftime('%s')
+        
         while True:
             if before is not None and before < 0:
                 break # Caused by activities that "happened" before the epoch. We generally don't care about those activities...
             logger.debug("Req with before=" + str(before) + "/" + str(earliestDate))
             logger.info("STRAVA call download activities")
-            resp = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/athletes/" + str(svcRecord.ExternalID) + "/activities", params={"before": before}), svcRecord)
+            resp = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/athletes/" + str(svcRecord.ExternalID) + "/activities", params={"after": after_param}), svcRecord)
             if resp.status_code == 401:
                 raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
             if 429 == resp.status_code:
