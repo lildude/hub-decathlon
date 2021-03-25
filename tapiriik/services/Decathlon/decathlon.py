@@ -260,10 +260,14 @@ class DecathlonService(ServiceBase):
         page_number = 0
         page_total = 1
 
+        #create date to get only activities from last 7 days
+        date_last_7_days = datetime.now() - timedelta(days=7)
+        s_date_last_7_days = "%s-%02d-%02d" % (date_last_7_days.year, date_last_7_days.month, date_last_7_days.day)
+
         while page_number < page_total:
             page_number += 1
             headers = self._getAuthHeaders(svcRecord)
-            resp = requests.get(DECATHLON_API_BASE_URL + "/v2/activities?user=" + str(svcRecord.ExternalID) + "&page=" + str(page_number), headers=headers)
+            resp = requests.get(DECATHLON_API_BASE_URL + "/v2/activities?user=" + str(svcRecord.ExternalID) + "&startdate[after]=" + s_date_last_7_days + "&page=" + str(page_number), headers=headers)
             if resp.status_code == 400:
                 logging.info(resp.content)
                 raise APIException("No authorization to retrieve activity list", block = True, user_exception = UserException(UserExceptionType.Authorization, intervention_required = True))
