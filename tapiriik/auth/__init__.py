@@ -16,7 +16,7 @@ class User:
     ConfigurationDefaults = {
         "suppress_auto_sync": False,
         "sync_upload_delay": 0,
-        "sync_skip_before": datetime.utcnow(),#None,
+        "sync_skip_before": datetime.utcnow() - timedelta(days=1),#None,
         "historical_sync": False
     }
     
