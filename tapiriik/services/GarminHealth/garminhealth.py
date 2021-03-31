@@ -221,14 +221,14 @@ class GarminHealthService(ServiceBase):
 
             # We check for the last 24 hours data
             data = {
-                'uploadStartTimeInSeconds': (datetime.now()-timedelta(days=1)).strftime('%s'),
-                'uploadEndTimeInSeconds': datetime.now().strftime('%s'),
+                'uploadStartTimeInSeconds': (datetime.now()-timedelta(hours=12)).strftime('%s'),
+                'uploadEndTimeInSeconds': (datetime.now()+timedelta(hours=2)).strftime('%s'),
             }
             resp = oauthSession.get(self.URI_ACTIVITIES_SUMMARY +"?"+ urlencode(data))
 
             if resp.status_code != 204 and resp.status_code != 200:
-                logging.info("\t An error occured while downloading Garmin Health activities from %s to %s " % (
-                    (datetime.now()-timedelta(days=1)).strftime('%s'), datetime.now().strftime('%s')))
+                logging.info("\t An error occured while downloading Garmin Health activities from %s to %s , status code %s, content %s" % (
+                    (datetime.now()-timedelta(days=1)).strftime('%s'), datetime.now().strftime('%s'), str(resp.status_code), resp.content ))
 
             json_data = resp.json()
 
@@ -255,7 +255,7 @@ class GarminHealthService(ServiceBase):
                     else:
                         activity.ServiceData['Manual'] = False
                     # check if activity type ID exists
-                    logger.info("Activity Type : "+str(item["activityType"]))
+                    logger.info("Activity Type Garmin : " + str(item["activityType"]) + " user_id " + svcRecord.ExternalID )
                     if item["activityType"] not in self._reverseActivityTypeMappings:
                         # TODO : Uncomment it when test are done
                         #exclusions.append(
