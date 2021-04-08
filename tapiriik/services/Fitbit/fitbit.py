@@ -1,4 +1,4 @@
-from tapiriik.settings import WEB_ROOT, FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET, FITBIT_DURATION
+from tapiriik.settings import WEB_ROOT, FITBIT_CLIENT_ID, FITBIT_CLIENT_SECRET, FITBIT_DURATION, FITBIT_WEBHOOK_VERIFICATION_CODE, FITBIT_SUBSCRIBER_ID
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb, db
@@ -22,6 +22,7 @@ import time
 import json
 import pprint
 import base64
+from requests_oauthlib import OAuth2Session
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,9 @@ class FitbitService(ServiceBase):
 
     AuthenticationType = ServiceAuthenticationType.OAuth
     AuthenticationNoFrame = True  # They don't prevent the iframe, it just looks really ugly.
-    PartialSyncRequiresTrigger = False
+    PartialSyncRequiresTrigger = True
+    PartialSyncTriggerRequiresSubscription = True
+    PartialSyncTriggerStatusCode = 204
     LastUpload = None
 
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = False
@@ -55,7 +58,7 @@ class FitbitService(ServiceBase):
         #ActivityType.Cycling: "Ride",
         #ActivityType.MountainBiking: "Ride",
         ActivityType.Hiking: 90012,
-        ActivityType.Running: 8,
+        ActivityType.Running: 90009,
         ActivityType.Walking: 27,
         #ActivityType.Snowboarding: "Snowboard",
         ActivityType.Skating: 15580,
@@ -108,7 +111,7 @@ class FitbitService(ServiceBase):
         5193: ActivityType.Walking, #	2	Walk/run, playing with animals, moderate, only active periods	Home activities
         5194: ActivityType.Walking, #	2	Walk/run, playing with animals, vigorous, only active periods	Home activities
         8: ActivityType.Walking, # Walking
-        90009: ActivityType.Walking,
+        90009: ActivityType.Running,
         90024: ActivityType.Swimming,
         90008: ActivityType.Walking, #	8	Walking while carrying things	Occupations
         32: ActivityType.Gym, # Gym
@@ -276,9 +279,10 @@ class FitbitService(ServiceBase):
     def _requestWithAuth(self, reqLambda, serviceRecord):
         session = requests.Session()
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
-        if now > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0):
+        # Must do the replace to make the datetime timezone aware else it will crash
+        if now > serviceRecord.Authorization.get("AccessTokenExpiresAt", 0).replace(tzinfo=pytz.utc):
             logging.info("Refresh Fitbit Authorization Token")
 
             # Expired access token, or still running (now-deprecated) indefinite access token.
@@ -355,6 +359,14 @@ class FitbitService(ServiceBase):
             "RefreshToken": data["refresh_token"],
             'TokenType': data['token_type']
         }
+
+        # Webhook subscrption mechanism
+        webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions/"+data["user_id"]+".json?subscriberId=" + FITBIT_SUBSCRIBER_ID
+        session = OAuth2Session(FITBIT_CLIENT_ID, token={"access_token":authorizationData.get("AccessToken")})
+        resp = session.request("POST", webhook_sub_URL)
+        if resp.status_code != 201:
+            logger.error("Can't subscribe user to Fitbit webhook {}".format(str(resp)))
+
         return (data["user_id"], authorizationData)
 
     # This function is used to revoke access token
@@ -395,7 +407,9 @@ class FitbitService(ServiceBase):
         user = db.users.find_one({'ConnectedServices': {'$elemMatch': {'ID': service_id, 'Service': 'fitbit'}}})
         afterDateObj = datetime.now() - timedelta(days=1)
 
-        if user['Config']['sync_skip_before'] is not None:
+        # Obscure setting only used by fitbit so forcing to false
+        # And for other obscure reason this date could be set couple of month before now so non exhaustive sync are sort of exhaustive.
+        if user['Config']['sync_skip_before'] is not None and False:
             afterDateObj = user['Config']['sync_skip_before']
         else:
             if exhaustive:
@@ -518,7 +532,7 @@ class FitbitService(ServiceBase):
 
 
                     activity.Private = False
-                    if ftbt_activity['logType'] is 'manual':
+                    if ftbt_activity['logType'] == 'manual':
                         activity.Stationary = True
                     else:
                         activity.Stationary = False
@@ -687,3 +701,26 @@ class FitbitService(ServiceBase):
         cachedb.fitbit_cache.remove({"Owner": serviceRecord.ExternalID})
         cachedb.fitbit_activity_cache.remove({"Owner": serviceRecord.ExternalID})
 
+    def PartialSyncTriggerGET(self, req):
+        # To verify the endpoint, fitbit send 2 verification codes.
+        # - One of it must match the verification code given in the app configuration page. 
+        #   It is stored in the local settings in the FITBIT_WEBHOOK_VERIFICATION_CODE var.
+        #   If the check succeed we have to return a 204 status code.
+
+        # - The second is voluntarily invalid.
+        #   So the check must fail and we have to send a 404 status code
+        from django.http import HttpResponse
+        if req.GET["verify"] == FITBIT_WEBHOOK_VERIFICATION_CODE:
+            return HttpResponse(status=204)
+        return HttpResponse(status=404)
+
+
+    def SubscribeToPartialSyncTrigger(self, serviceRecord):
+        # As the user is subscribe during the login process we just set this value to True
+        # This is due to the end of exhaustive sync support
+        serviceRecord.SetPartialSyncTriggerSubscriptionState(True)
+
+
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        data = json.loads(req.body.decode("UTF-8"))
+        return [notif.get("ownerId") for notif in data if notif.get('collectionType') == 'activities']
