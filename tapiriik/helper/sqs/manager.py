@@ -67,7 +67,7 @@ class SqsManager():
     # Function use to get a message from self._queue
     # Message will be available in self._messages
     def get_message(self, attributes_names):
-        self._messages = self._queue.receive_messages(AttributeNames=attributes_names, MaxNumberOfMessages=1)
+        self._messages = self._queue.receive_messages(AttributeNames=attributes_names, MaxNumberOfMessages=1, WaitTimeSeconds=20)
         if self._messages:
             #print("[Helper SQS]--- Getting message from queue")
             logger.info('Getting message from queue')
@@ -80,7 +80,7 @@ class SqsManager():
     # Function use to get a list of 1 message (1 by default, 10 max) from self._queue
     # Messages will be available in self._messages
     def get_messages(self, attributes_names):
-        self._messages = self._queue.receive_messages(AttributeNames=attributes_names)
+        self._messages = self._queue.receive_messages(AttributeNames=attributes_names, WaitTimeSeconds=20)
         if self._messages :
             #print("[Helper SQS]--- Getting some messages from queue")
             logger.info('Getitng message from queue')
