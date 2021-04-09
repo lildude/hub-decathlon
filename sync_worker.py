@@ -84,6 +84,25 @@ sync_heartbeat("ready")
 
 worker_message("ready")
 
+import time
+from tapiriik.services import Service
+from tapiriik.services.ratelimiting import RedisRateLimit
+from tapiriik.settings import WITHDRAWN_SERVICES
+
+watched_rate_limited_svc = [svc for svc in Service.List() if svc.ID not in WITHDRAWN_SERVICES and svc.GlobalRateLimits != []]
+holding_message_sent = False
+was_on_hold = False
+
+while RedisRateLimit.IsOneRateLimitReached(watched_rate_limited_svc):
+	was_on_hold = True
+	if not holding_message_sent:
+		logging.warning("ONE RATE LIMIT REACHED, HOLDING THE WORKER.")
+		holding_message_sent = True
+	time.sleep(30)
+
+if was_on_hold:
+	logging.info("Rate limits refreshed, the scheduler is back to work !")
+
 Sync = Sync()
 Sync.PerformGlobalSync(heartbeat_callback=sync_heartbeat, version=WorkerVersion)
 
