@@ -360,13 +360,6 @@ class FitbitService(ServiceBase):
             'TokenType': data['token_type']
         }
 
-        # Webhook subscrption mechanism
-        webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions/"+data["user_id"]+".json?subscriberId=" + FITBIT_SUBSCRIBER_ID
-        session = OAuth2Session(FITBIT_CLIENT_ID, token={"access_token":authorizationData.get("AccessToken")})
-        resp = session.request("POST", webhook_sub_URL)
-        if resp.status_code != 201:
-            logger.error("Can't subscribe user to Fitbit webhook {}".format(str(resp)))
-
         return (data["user_id"], authorizationData)
 
     # This function is used to revoke access token
@@ -716,9 +709,19 @@ class FitbitService(ServiceBase):
 
 
     def SubscribeToPartialSyncTrigger(self, serviceRecord):
-        # As the user is subscribe during the login process we just set this value to True
-        # This is due to the end of exhaustive sync support
-        serviceRecord.SetPartialSyncTriggerSubscriptionState(True)
+        webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions/"+serviceRecord.ExternalID+".json?subscriberId=" + FITBIT_SUBSCRIBER_ID
+        logging.info(webhook_sub_URL)
+
+        resp = self._requestWithAuth(lambda session: session.post(
+            webhook_sub_URL,
+            headers={
+                'Authorization': 'Bearer ' + serviceRecord.Authorization.get('AccessToken')
+        }), serviceRecord)
+
+        if resp.status_code != 201:
+            logger.error("Can't subscribe user to Fitbit webhook {}".format(str(resp)))
+        else:
+            serviceRecord.SetPartialSyncTriggerSubscriptionState(True)
 
 
     def ExternalIDsForPartialSyncTrigger(self, req):
