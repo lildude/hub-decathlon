@@ -44,7 +44,7 @@ class RedisRateLimit:
 				limit_key = svc.ID+":lm:"+str(limit_timedelta_seconds)
 				actual_limit = redis.get(limit_key)
 				if actual_limit != None:
-					if int(actual_limit.decode('utf-8')) >= limit_number:
+					if int(actual_limit.decode('utf-8')) >= (limit_number * 0.95):
 						return True
 		return False
 
