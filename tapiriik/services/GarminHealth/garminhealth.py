@@ -208,158 +208,106 @@ class GarminHealthService(ServiceBase):
         # the 01-01-2019 will be return
         # So we download activities from upload date
 
-        redis_token_key = 'garminhealth:activities:%s' % svcRecord.ExternalID
-        thereIsActivities = redis.get(redis_token_key)
+        redis_key = "garminhealth:webhook:"+str(svcRecord.ExternalID)
+        activity_urls_list = redis.lrange(redis_key, 0, -1)
+        pre_download_counter = post_download_counter = 0
 
-        logging.info("\t\t Garmin thereIsActivities : " + str(thereIsActivities))
+        for act_url in activity_urls_list:
+            # We delete it from the redis list to avoid syncing a second time
+            # For an strange reason we have to do :
+            #       redis.lrem(key, value)
+            # Even if redis, redis-py docs and the signature of the function in the container ask to do
+            #       redis.lrem(key, count ,value)
+            result = redis.lrem(redis_key, act_url)
+            if result == 0:
+                logger.warning("Cant delete the activity id from the redis key %s" % (redis_key))
+            elif result > 1 :
+                logger.warning("Found more than one time the activity id from the redis key %s" % (redis_key))
 
-        if thereIsActivities == b"1":
-            logging.info("\t\t Garmin thereIsActivities : PLOPLOP ")
-
-            redis.delete(redis_token_key)
-            index_total = 0
-
-            # We check for the last 24 hours data
-            data = {
-                'uploadStartTimeInSeconds': (datetime.now()-timedelta(hours=12)).strftime('%s'),
-                'uploadEndTimeInSeconds': (datetime.now()+timedelta(hours=2)).strftime('%s'),
-            }
-            resp = oauthSession.get(self.URI_ACTIVITIES_SUMMARY +"?"+ urlencode(data))
+            resp = oauthSession.get(act_url)
 
             if resp.status_code != 204 and resp.status_code != 200:
-                logging.info("\t An error occured while downloading Garmin Health activities from %s to %s , status code %s, content %s" % (
-                    (datetime.now()-timedelta(days=1)).strftime('%s'), datetime.now().strftime('%s'), str(resp.status_code), resp.content ))
+                logger.info("\tAn error occured while downloading Garmin Health activity, status code %s, content %s" % (
+                    (str(resp.status_code), resp.content)))
 
-            json_data = resp.json()
+            try:
+                json_data = resp.json()
+            except ValueError:
+                raise APIException("Failed parsing Garmin Health response %s - %s" % (resp.status_code, resp.text), trigger_exhaustive=False)
 
-            if json_data:
-                for item in json_data:
-                    index_total = index_total + 1
-                    activity = UploadedActivity()
+            logger.info(json_data)
+            item = json_data[0].get("summary")
+            itemID = json_data[0].get("summaryId")[:-7]
 
-                    activity_name = item['activityType']
-                    if item['deviceName'] != 'unknown':
-                        activity_name = activity_name + " - " + item['deviceName']
+            pre_download_counter += 1
+            activity = UploadedActivity()
+            activity_name = item['activityType'] + " - " + item['deviceName'] if item['deviceName'] != 'unknown' else item['activityType']
 
-                    # parse date start to get timezone and date
-                    activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
-                    activity.TZ = pytz.utc
+            # parse date start to get timezone and date
+            activity.TZ = pytz.utc
+            activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
+            activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
+            logger.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
 
-                    logging.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
+            activity.ServiceData = {"ActivityID": itemID}
+            activity.ServiceData['Manual'] = "manual" in item
 
-                    activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
+            # check if activity type ID exists
+            logger.info("\tActivity Type Garmin : " + str(item["activityType"]) + " - user_id " + svcRecord.ExternalID )
+            if item["activityType"] not in self._reverseActivityTypeMappings:
+                # TODO : Uncomment it when test are done
+                #exclusions.append(
+                #    APIExcludeActivity("Unsupported activity type %s" % item["activityType"],
+                #                       activity_id=item["summaryId"],
+                #                       user_exception=UserException(UserExceptionType.Other)))
+                logger.info("\t\tUnknown activity")
+                continue
 
-                    activity.ServiceData = {"ActivityID": item["summaryId"]}
-                    if "manual" in item:
-                        activity.ServiceData['Manual'] = item["manual"]
-                    else:
-                        activity.ServiceData['Manual'] = False
-                    # check if activity type ID exists
-                    logger.info("Activity Type Garmin : " + str(item["activityType"]) + " user_id " + svcRecord.ExternalID )
-                    if item["activityType"] not in self._reverseActivityTypeMappings:
-                        # TODO : Uncomment it when test are done
-                        #exclusions.append(
-                        #    APIExcludeActivity("Unsupported activity type %s" % item["activityType"],
-                        #                       activity_id=item["summaryId"],
-                        #                       user_exception=UserException(UserExceptionType.Other)))
-                        logger.info("\t\tUnknown activity")
-                        continue
+            activity.Type = self._reverseActivityTypeMappings[item["activityType"]]
 
-                    activity.Type = self._reverseActivityTypeMappings[item["activityType"]]
+            activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=item.get("distanceInMeters"))
+            activity.Stats.Speed = ActivityStatistic(
+                ActivityStatisticUnit.MetersPerSecond,
+                avg=item.get("averageSpeedInMetersPerSecond"),
+                max=item.get("maxSpeedInMetersPerSecond")
+            )
 
-                    if "distanceInMeters" in item :
-                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=item["distanceInMeters"])
+            activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=item.get("movingDurationInSeconds"))
+            activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,avg=item.get("powerInWatts"))
+            activity.Stats.HR = ActivityStatistic(
+                ActivityStatisticUnit.BeatsPerMinute,
+                avg=item.get("averageHeartRateInBeatsPerMinute"),
+                max=item.get("maxHeartRateInBeatsPerMinute"))
 
-                    if "averageSpeedInMetersPerSecond" in item and "maxSpeedInMetersPerSecond" in item:
-                        activity.Stats.Speed = ActivityStatistic(
-                            ActivityStatisticUnit.MetersPerSecond,
-                            avg=item["averageSpeedInMetersPerSecond"],
-                            max=item["maxSpeedInMetersPerSecond"]
-                        )
-                    else:
-                        if "averageSpeedInMetersPerSecond" in item:
-                            activity.Stats.Speed = ActivityStatistic(
-                                ActivityStatisticUnit.MetersPerSecond,
-                                avg=item["averageSpeedInMetersPerSecond"]
-                            )
-                        if "maxSpeedInMetersPerSecond" in item:
-                            activity.Stats.Speed = ActivityStatistic(
-                                ActivityStatisticUnit.MetersPerSecond,
-                                max=item["maxSpeedInMetersPerSecond"]
-                            )
+            activity.Stats.Cadence = ActivityStatistic(
+                ActivityStatisticUnit.RevolutionsPerMinute,
+                avg=item.get("averageBikeCadenceInRoundsPerMinute"),
+                max=item.get("maxBikeCadenceInRoundsPerMinute"))
 
-                    # Todo: find Garmin data name
-                    # activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                    #                                          value=ftbt_activity["calories"])
-                    # Todo: find Garmin data name
-                    # activity.Stats.MovingTime = ActivityStatistic(ActivityStatisticUnit.Seconds, value=ride[
-                    #    "moving_time"] if "moving_time" in ride and ride[
-                    #    "moving_time"] > 0 else None)  # They don't let you manually enter this, and I think it returns 0 for those activities.
-                    # Todo: find Garmin data name
-                    # if "average_watts" in ride:
-                    #    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts,
-                    #                                             avg=ride["average_watts"])
+            activity.Stats.RunCadence = ActivityStatistic(
+                ActivityStatisticUnit.StepsPerMinute,
+                avg=item.get("averageRunCadenceInStepsPerMinute"),
+                max=item.get("maxRunCadenceInStepsPerMinute"))
+            
+            # TODO: See if temperature should be body temperature or air temperature
+            #       Because Garmin provides "airTemperatureCelcius" in data
+            # if "average_temp" in ride:
+            #    activity.Stats.Temperature.update(
+            #        ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
 
-                    # Todo: find Garmin data
-                    # activity.GPS = ("start_latlng" in ride) and (ride["start_latlng"] is not None)
+            activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=item.get("activeKilocalories"))
+            activity.Stationary = not "startingLatitudeInDegree" in item
+            activity.GPS = "startingLatitudeInDegree" in item
 
-                    if "averageHeartRateInBeatsPerMinute" in item and "maxHeartRateInBeatsPerMinute" in item:
-                        activity.Stats.HR.update(
-                            ActivityStatistic(
-                                ActivityStatisticUnit.BeatsPerMinute,
-                                avg=item["averageHeartRateInBeatsPerMinute"],
-                                max=item["maxHeartRateInBeatsPerMinute"]
-                            )
-                        )
-                    else:
-                        if "averageHeartRateInBeatsPerMinute" in item:
-                            activity.Stats.HR.update(
-                                ActivityStatistic(
-                                    ActivityStatisticUnit.BeatsPerMinute,
-                                    avg=item["averageHeartRateInBeatsPerMinute"]
-                                )
-                            )
-                        if "maxHeartRateInBeatsPerMinute" in item:
-                            activity.Stats.HR.update(
-                                ActivityStatistic(
-                                    ActivityStatisticUnit.BeatsPerMinute,
-                                    max=item["maxHeartRateInBeatsPerMinute"]
-                                )
-                            )
+            activity.AdjustTZ()
+            activity.CalculateUID()
+            post_download_counter += 1
+            activities.append(activity)
+            logger.info("\tGarmin Activity ID : " + itemID)
 
-                    # Todo: find Garmin data name
-                    # if "average_cadence" in ride:
-                    #    activity.Stats.Cadence.update(ActivityStatistic(ActivityStatisticUnit.RevolutionsPerMinute,
-                    #                                                    avg=ride["average_cadence"]))
-                    # Todo: find Garmin data name
-                    # if "average_temp" in ride:
-                    #    activity.Stats.Temperature.update(
-                    #        ActivityStatistic(ActivityStatisticUnit.DegreesCelcius, avg=ride["average_temp"]))
-
-                    # Todo: find Garmin data name
-                    if "calories" in item:
-                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                                                                value=item["calories"])
-                    elif "activeKilocalories" in item :
-                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories,
-                                                                value=item["activeKilocalories"])
-                    activity.Name = activity_name
-
-                    activity.Private = False
-
-                    activity.Stationary = True
-                    activity.GPS = False
-                    if "startingLatitudeInDegree" in item :
-                        activity.Stationary = False
-                        activity.GPS = True
-
-                    activity.AdjustTZ()
-                    activity.CalculateUID()
-                    activities.append(activity)
-                    logging.info("\t\t Garmin Activity ID : " + str(item["summaryId"]))
-
-
-            logging.info("\t\t total Garmin activities downloaded : " + str(index_total))
+        logger.info("\t\t total Garmin activities downloaded : %i" % pre_download_counter)
+        logger.info("\t\t\t Listed activities by redis : %i" % len(activity_urls_list))
+        logger.info("\t\t\t Number of activities passed though download : %i" % post_download_counter)
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
@@ -466,14 +414,12 @@ class GarminHealthService(ServiceBase):
         logger.info("GARMIN CALLBACK POKE")
         # Get user ids to sync
         external_user_ids = []
-        if data['activityDetails'] is not None :
+        if data.get('activityDetails') != None :
             for activity in data['activityDetails']:
+                # Pushing the callback url in redis that will be used in downloadActivityList
+                redis.rpush("garminhealth:webhook:%s" % activity['userId'], activity["callbackURL"])
                 external_user_ids.append(activity['userId'])
-                logging.info("GARMIN CALLBACK user to sync "+ activity['userId'])
-
-                #add Flag in cache to only call when there is new activities
-                redis_token_key = 'garminhealth:activities:%s' % activity['userId']
-                redis.setex(redis_token_key, "1", timedelta(hours=24))
+                logging.info("\tGARMIN CALLBACK user to sync "+ activity['userId'])
 
         return external_user_ids
 
