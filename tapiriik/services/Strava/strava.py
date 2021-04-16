@@ -1,7 +1,7 @@
 from tapiriik.settings import WEB_ROOT, STRAVA_CLIENT_SECRET, STRAVA_CLIENT_ID, STRAVA_RATE_LIMITS
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
-from tapiriik.database import cachedb, db
+from tapiriik.database import cachedb, db, redis
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatistics, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
 from tapiriik.services.fit import FITIO
@@ -248,7 +248,7 @@ class StravaService(ServiceBase):
         data = json.loads(req.body.decode("UTF-8"))
         # we control if it is a new activity and if we don't know this activity to avoid resync
         if "create" == data["aspect_type"] and "activity" == data["object_type"]:
-            isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : {"$eq": data["object_id"]} })
+            isAlreadyKnown = redis.get("uploadedactivity:strava:%s" % data["object_id"])
             if isAlreadyKnown == None:
                 return [data["owner_id"]]
             else :
@@ -428,6 +428,10 @@ class StravaService(ServiceBase):
             upload_id = response.json()["id"]
 
         self.LastUpload = datetime.now()
+
+        # declare a redis to key to skip the webhook for this created activity
+        redis.setex("uploadedactivity:strava:%s" % upload_id, 1, 86400)
+
         return upload_id
 
     def DeleteCachedData(self, serviceRecord):

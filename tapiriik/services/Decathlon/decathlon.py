@@ -7,7 +7,7 @@ from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
-from tapiriik.database import db
+from tapiriik.database import db, redis
 
 from django.core.urlresolvers import reverse
 from datetime import datetime, timedelta
@@ -363,9 +363,9 @@ class DecathlonService(ServiceBase):
         external_user_ids = []
 
         if "activity_create" == data["event"]["name"] :
-            #isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : data["event"]["ressource_id"] })
-            isAlreadyKnown = db.uploaded_activities.find_one({"ExternalID" : {"$eq": data["event"]["ressource_id"]} })
-            
+            #test if the activity was uploaded by the hub
+            isAlreadyKnown = redis.get("uploadedactivity:decathlon:%s" % data["event"]["ressource_id"])
+
             if isAlreadyKnown == None:
                 external_user_ids.append(data['user_id'])
                 return external_user_ids
@@ -595,6 +595,9 @@ class DecathlonService(ServiceBase):
             upload_id = root["id"]
         except:
             raise APIException("Stream data returned is not JSON")
+
+        # declare a redis to key to skip the webhook for this created activity
+        redis.setex("uploadedactivity:decathlon:%s" % upload_id, 1, 86400)
 
         return upload_id
 
