@@ -250,6 +250,7 @@ class GarminHealthService(ServiceBase):
 
             activity.ServiceData = {"ActivityID": itemID}
             activity.ServiceData['Manual'] = "manual" in item
+            activity.ServiceData['DownloadURI'] = act_url
 
             # check if activity type ID exists
             logger.info("\tActivity Type Garmin : " + str(item["activityType"]) + " - user_id " + svcRecord.ExternalID )
@@ -311,12 +312,7 @@ class GarminHealthService(ServiceBase):
 
     def DownloadActivity(self, svcRecord, activity):
         oauthSession = self._oauthSession(svcRecord)
-
-        data = {
-                'uploadStartTimeInSeconds': (datetime.now()-timedelta(days=1)).strftime('%s'),
-                'uploadEndTimeInSeconds': datetime.now().strftime('%s'),
-            }
-        resp = oauthSession.get(self.URI_ACTIVITIES_DETAIL +"?"+ urlencode(data))
+        resp = oauthSession.get(activity.ServiceData["DownloadURI"])
 
         if resp.status_code != 204 and resp.status_code != 200:
             logging.info("\t An error occured while downloading Garmin Health activities from %s to %s " % (
