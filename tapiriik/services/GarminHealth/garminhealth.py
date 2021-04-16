@@ -235,19 +235,18 @@ class GarminHealthService(ServiceBase):
             except ValueError:
                 raise APIException("Failed parsing Garmin Health response %s - %s" % (resp.status_code, resp.text), trigger_exhaustive=False)
 
-            logger.info(json_data)
             item = json_data[0].get("summary")
             itemID = json_data[0].get("summaryId")[:-7]
 
             pre_download_counter += 1
             activity = UploadedActivity()
-            activity_name = item['activityType'] + " - " + item['deviceName'] if item['deviceName'] != 'unknown' else item['activityType']
+            activity.Name = item['activityType'] + " - " + item['deviceName'] if item['deviceName'] != 'unknown' else item['activityType']
 
             # parse date start to get timezone and date
             activity.TZ = pytz.utc
             activity.StartTime = datetime.utcfromtimestamp(item['startTimeInSeconds'])
             activity.EndTime = activity.StartTime + timedelta(seconds=item["durationInSeconds"])
-            logger.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity_name))
+            logger.debug("\tActivity start s/t %s: %s" % (activity.StartTime, activity.Name))
 
             activity.ServiceData = {"ActivityID": itemID}
             activity.ServiceData['Manual'] = "manual" in item
