@@ -528,13 +528,14 @@ class FITIO:
 		# So every wp between last round kilometer and the end of the activity are oprhans
 		# And they are not "activitified" so they wont appear in other services.
 		if len(actividict["laps"]) != 0:
-			last_wp = actividict["waypoints"][-1]
-			last_lap = actividict["laps"][-1]
-			if last_wp.get("timestamp") > last_lap.get("timestamp"):
-				actividict["laps"].append({
-					"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
-					"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
-				})
+			if len(actividict["waypoints"]) != 0:
+				last_wp = actividict["waypoints"][-1]
+				last_lap = actividict["laps"][-1]
+				if last_wp.get("timestamp") > last_lap.get("timestamp"):
+					actividict["laps"].append({
+						"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
+						"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
+					})
 
 		# Time to fill the activity laps (and waypoints)
 		activity.Laps = [
@@ -566,9 +567,10 @@ class FITIO:
 			for lapData in actividict["laps"]
 		]
 
-		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
-		activity.GPS=True
-		activity.Stationary=False
+		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed.
+		activity.GPS= True if len(actividict["waypoints"]) != 0 else False
+		activity.Stationary= False if len(actividict["waypoints"]) != 0 else True
+
 		activity.CheckSanity()
 
 		return activity
