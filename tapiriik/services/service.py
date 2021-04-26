@@ -109,7 +109,7 @@ class Service:
             db.connections.insert({"ExternalID": uid, "Service": service.ID, "SynchronizedActivities": [], "Authorization": authDetails, "ExtendedAuthorization": extendedAuthDetailsForStorage if persistExtendedAuthDetails else None})
             serviceRecord = ServiceRecord(db.connections.find_one({"ExternalID": uid, "Service": service.ID}))
             serviceRecord.ExtendedAuthorization = extendedAuthDetails # So SubscribeToPartialSyncTrigger can use it (we don't save the whole record after this point)
-            if service.PartialSyncTriggerRequiresPolling:
+            if service.PartialSyncTriggerRequiresPolling or service.PartialSyncTriggerRequiresSubscription:
                 service.SubscribeToPartialSyncTrigger(serviceRecord) # The subscription is attached more to the remote account than to the local one, so we subscribe/unsubscribe here rather than in User.ConnectService, etc.
         elif serviceRecord.Authorization != authDetails or (hasattr(serviceRecord, "ExtendedAuthorization") and serviceRecord.ExtendedAuthorization != extendedAuthDetailsForStorage):
             db.connections.update_one({"ExternalID": uid, "Service": service.ID}, {"$set": {"Authorization": authDetails, "ExtendedAuthorization": extendedAuthDetailsForStorage if persistExtendedAuthDetails else None}})
