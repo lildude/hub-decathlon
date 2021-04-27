@@ -383,26 +383,119 @@ class FITIO:
 		ActivityType.StandUpPaddling: 37
 	}
 	_subSportMap = {
-		# ActivityType.MountainBiking: 8 there's an issue with cadence upload and this type with GC, so...
+		'treadmill': ActivityType.Running,  # Run/Fitness Equipment
+		'street': ActivityType.Running,  # Run
+		'trail': ActivityType.Running,  # Run
+		'track': ActivityType.Running,  # Run
+		'spin': ActivityType.Cycling,  # Cycling
+		'indoor_cycling': ActivityType.Cycling,  # Cycling/Fitness Equipment
+		'road': ActivityType.Cycling,  # Cycling
+		'mountain': ActivityType.Cycling,  # Cycling
+		'downhill': ActivityType.Cycling,  # Cycling
+		'recumbent': ActivityType.Cycling,  # Cycling
+		'cyclocross': ActivityType.Cycling,  # Cycling
+		'hand_cycling': ActivityType.Cycling,  # Cycling
+		'track_cycling': ActivityType.Cycling,  # Cycling
+		'indoor_rowing': ActivityType.Rowing,  # Fitness Equipment
+		'elliptical': ActivityType.Elliptical,  # Fitness Equipment
+		'stair_climbing': ActivityType.StrengthTraining,  # Fitness Equipment
+		'lap_swimming': ActivityType.Swimming,  # Swimming
+		'open_water': ActivityType.Swimming,  # Swimming
+		'flexibility_training': ActivityType.Gym,  # Training
+		'strength_training': ActivityType.StrengthTraining,  # Training
+		'warm_up': ActivityType.Other,  # Tennis
+		'match': ActivityType.Other,  # Tennis
+		'exercise': ActivityType.Other,  # Tennis
+		'challenge': ActivityType.Other,
+		'indoor_skiing': ActivityType.DownhillSkiing,  # Fitness Equipment
+		'cardio_training': ActivityType.StrengthTraining,  # Training
+		'indoor_walking': ActivityType.Walking,  # Walking/Fitness Equipment
+		'e_bike_fitness': ActivityType.Cycling,  # E-Biking
+		'bmx': ActivityType.Cycling,  # Cycling
+		'casual_walking': ActivityType.Walking,  # Walking
+		'speed_walking': ActivityType.Walking,  # Walking
+		'bike_to_run_transition': ActivityType.Other,  # Transition
+		'run_to_bike_transition': ActivityType.Other,  # Transition
+		'swim_to_bike_transition': ActivityType.Other,  # Transition
+		'atv': ActivityType.Other,  # Motorcycling
+		'motocross': ActivityType.Other,  # Motorcycling
+		# This is voluntarly other as it removes specificity of Skiing or Snowboarding
+		'backcountry': ActivityType.Other,  # Alpine Skiing/Snowboarding
+		'resort': ActivityType.Other,  # Alpine Skiing/Snowboarding
+		'rc_drone': ActivityType.Other,  # Flying
+		'wingsuit': ActivityType.Other,  # Flying
+		'whitewater': ActivityType.Other,  # Kayaking/Rafting
+		'skate_skiing': ActivityType.CrossCountrySkiing,  # Cross Country Skiing
+		'yoga': ActivityType.Yoga,  # Training
+		'pilates': ActivityType.Yoga,  # Training
+		'indoor_running': ActivityType.Running,  # Run
+		'gravel_cycling': ActivityType.Cycling,  # Cycling
+		'e_bike_mountain': ActivityType.Cycling,  # Cycling
+		'commuting': ActivityType.Cycling,  # Cycling
+		'mixed_surface': ActivityType.Cycling,  # Cycling
+		'navigate': ActivityType.Other,
+		'track_me': ActivityType.Other,
+		'map': ActivityType.Other,
+		'single_gas_diving': ActivityType.Other,  # Diving
+		'multi_gas_diving': ActivityType.Other,  # Diving
+		'gauge_diving': ActivityType.Other,  # Diving
+		'apnea_diving': ActivityType.Other,  # Diving
+		'apnea_hunting': ActivityType.Other,  # Diving
+		'virtual_activity': ActivityType.Other,
+		'obstacle': ActivityType.Other,  # Used for events where participants run, crawl through mud, climb over walls, etc.
+		'all': ActivityType.Other,	
 	}
 
-	# Still improvement to be done
 	_reverseSportMap = {
-		0: ActivityType.Other,
-		1: ActivityType.Running,
-		2: ActivityType.Cycling,
-		4: ActivityType.Elliptical,
-		5: ActivityType.Swimming,
-		10: ActivityType.Gym,
-		11: ActivityType.Walking,
-		12: ActivityType.CrossCountrySkiing,
-		13: ActivityType.DownhillSkiing,
-		14: ActivityType.Snowboarding,
-		15: ActivityType.Rowing,
-		17: ActivityType.Hiking,
-		31: ActivityType.Climbing,
-		33: ActivityType.Skating,
-		37: ActivityType.StandUpPaddling
+		'running': ActivityType.Running,
+		'cycling': ActivityType.Cycling,
+		'transition': ActivityType.Other,  # Mulitsport transition
+		'fitness_equipment': ActivityType.StrengthTraining,
+		'swimming': ActivityType.Swimming,
+		'basketball': ActivityType.Other,
+		'soccer': ActivityType.Other,
+		'tennis': ActivityType.Other,
+		'american_football': ActivityType.Other,
+		'training': ActivityType.Gym,
+		'walking': ActivityType.Walking,
+		'cross_country_skiing': ActivityType.CrossCountrySkiing,
+		'alpine_skiing': ActivityType.DownhillSkiing,
+		'snowboarding': ActivityType.Snowboarding,
+		'rowing': ActivityType.Rowing,
+		'mountaineering': ActivityType.Climbing,
+		'hiking': ActivityType.Hiking,
+		'multisport': ActivityType.Other,
+		'paddling': ActivityType.StandUpPaddling,
+		'flying': ActivityType.Other,
+		'e_biking': ActivityType.Cycling,
+		'motorcycling': ActivityType.Other,
+		'boating': ActivityType.Other,
+		'driving': ActivityType.Other,
+		'golf': ActivityType.Other,
+		'hang_gliding': ActivityType.Other,
+		'horseback_riding': ActivityType.Other,
+		'hunting': ActivityType.Other,
+		'fishing': ActivityType.Other,
+		'inline_skating': ActivityType.Other, # TODO see if skating might be good ?
+		'rock_climbing': ActivityType.Climbing,
+		'sailing': ActivityType.Other,
+		'ice_skating': ActivityType.Skating,
+		'sky_diving': ActivityType.Other,
+		'snowshoeing': ActivityType.Hiking,
+		'snowmobiling': ActivityType.Other,
+		'stand_up_paddleboarding': ActivityType.StandUpPaddling,
+		'surfing': ActivityType.Other,
+		'wakeboarding': ActivityType.Other,
+		'water_skiing': ActivityType.Other,
+		'kayaking': ActivityType.Other,
+		'rafting': ActivityType.Other,
+		'windsurfing': ActivityType.Other,
+		'kitesurfing': ActivityType.Other,
+		'tactical': ActivityType.Other,
+		'jumpmaster': ActivityType.Other,
+		'boxing': ActivityType.Other,
+		'floor_climbing': ActivityType.Climbing,
+		'all': ActivityType.Other
 	}
 
 	def _calculateCRC(bytestring, crc=0):
@@ -453,19 +546,21 @@ class FITIO:
 				msg_data_keys = msg_data.keys()
 
 				# We check for the records (waypoints) and the minimal information needed
-				if msg.name == "record" and "position_lat" in msg_data_keys and "position_long" in msg_data_keys and "altitude" in msg_data_keys and "timestamp" in msg_data_keys:
+				if (msg.name == "record" and "position_lat" in msg_data_keys and "position_long" in msg_data_keys and
+						("altitude" in msg_data_keys or "enhanced_altitude" in msg_data_keys) and "timestamp" in msg_data_keys):
 					# We append the waypoint to a waypoints list
 					actividict["waypoints"].append({
 						"timestamp": msg_data["timestamp"],
 						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
                 		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
-						"altitude": msg_data["altitude"],
+						"altitude": msg_data.get("altitude") if "altitude" in msg_data_keys else msg_data.get("enhanced_altitude"),
 						# The .get avoid the usage of conditions to ensure that the property exist in the dict
 						# If it does not exist it returns None instead of crashing
 						"hr": msg_data.get("heart_rate"),
 						"cadence": msg_data.get("cadence"),
-						"speed": msg_data.get("speed"),
-						"distance": msg_data.get("distance")
+						"speed": msg_data.get("speed") if "speed" in msg_data_keys else msg_data.get("enhanced_speed"),
+						"distance": msg_data.get("distance"),
+						"temperature" : msg_data.get("temperature")
 					})
 
 				elif msg.name == "lap":
@@ -473,8 +568,22 @@ class FITIO:
 					actividict["laps"].append(msg_data)
 
 				elif msg.name == "session":
-					# We just push the lap data as it is, because it seems that there is no different defs
-					actividict["sessions"].append(msg_data)
+					# It seams that garmin fit files might have multiples "enhanced_speed" values in one sessions 
+					# 		(perhaps it's only the case for the instinct solar watch)
+					#
+					# The problem is python dict can't have more than one key with the same name. 
+					# 		So if an incorrect key/value is after the correct key/value in the "msg.as_dict()",
+					# 		the incorrect one will be chosen
+					#
+					# So i made a little patch in case it is occuring for other devices.
+					filtered_enhanced_speed_msg_data = {
+						field["name"]: field["value"] for field in msg.as_dict()["fields"] 
+						if not (
+							field["name"] == "enhanced_avg_speed" and field["value"] == None
+							or field["name"] == "enhanced_max_speed" and field["value"] == None
+						)
+					}
+					actividict["sessions"].append(filtered_enhanced_speed_msg_data)
 
 				elif msg.name == "activity":
 					# according to fit documentations there must be only one activity record
@@ -490,19 +599,51 @@ class FITIO:
 			# And we fill the activity data
 			activity.StartTime = actividata.get("start_time")
 			activity.EndTime = actividata.get("timestamp")
+			# TODO Verify all fit files timestamps from all services are in UTC
+			# It's the case for Garmin and Polar
+			activity.TZ = pytz.utc
 
-			# Forcing the Type to running is not good
-			sports_list = FIELD_TYPES['sport'].values
-			reversed_key_values_sport_list = json.loads("{"+",".join(['"'+str(sports_list[val])+'":"'+str(val)+'"' for val in sports_list.keys()])+"}")
-			activity_tapiriik_sport_name = FITIO._reverseSportMap.get(int(reversed_key_values_sport_list[actividata.get("sport")]))
+			# .get() fallback to "generic" to avoid a lot of conditional statement
+			subsport_name = actividata.get("sub_sport", "generic")
+			sport_name = actividata.get("sport", "generic")
+
+			# .get() fallback to ActivityType.Other : Same purpose as above
+			subsport_type = FITIO._subSportMap.get(subsport_name, ActivityType.Other)
+			sport_type = FITIO._reverseSportMap.get(sport_name, ActivityType.Other)
+
+			activity.Type = (subsport_type 
+				if subsport_type != ActivityType.Other
+				else sport_type
+			)
+
+			if activity.Name == None : 
+				activity.Name = (subsport_name 
+					if subsport_name != "generic" and subsport_name != "all"
+					else (sport_name
+						if sport_name != "generic" and sport_name != "all"
+						else "Activity"
+					)
+				)
+
+
 			
-			activity.Type = activity_tapiriik_sport_name if activity_tapiriik_sport_name != None else ActivityType.Other
 			activity.Stats = ActivityStatistics(
 				distance=actividata.get("total_distance"), 
 				timer_time=actividata.get("total_timer_time"), 
-				# m/s to km/h conversion
-				avg_speed=(actividata.get("avg_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
-				max_speed=(actividata.get("max_speed") if actividata.get("avg_speed") != None else 0) *3.6, 
+				# The *3.6 is the m/s to Km/h conversion.
+				# Also implemented the usage of "enhanced values" because Garmin prefer using them.
+				# Also made an last resort fallback to recalculate the speed if all values are None
+				#		and the "filtered_enhanced_speed_msg_data" patch can't get the speed.
+				# It's better than returning a 0 Km/h speed to the user.
+				# The major drawback is that the max speed will be equal to the average one.
+				avg_speed=(
+					actividata.get("avg_speed") if actividata.get("avg_speed") != None else 
+					actividata.get("enhanced_avg_speed") if actividata.get("enhanced_avg_speed") != None else 
+					actividata.get("total_distance") / actividata.get("total_timer_time")) *3.6, 
+				max_speed=(
+					actividata.get("max_speed") if actividata.get("max_speed") != None else
+					actividata.get("enhanced_max_speed") if actividata.get("enhanced_max_speed") != None else 
+					actividata.get("total_distance") / actividata.get("total_timer_time")) *3.6, 
 				avg_hr=actividata.get("avg_heart_rate"), 
 				max_hr=actividata.get("max_heart_rate"), 
 				avg_run_cadence=actividata.get("avg_running_cadence"), 
@@ -527,15 +668,14 @@ class FITIO:
 		# Adding a lap because it seems that polar creates laps only every kms.
 		# So every wp between last round kilometer and the end of the activity are oprhans
 		# And they are not "activitified" so they wont appear in other services.
-		if len(actividict["laps"]) != 0:
-			if len(actividict["waypoints"]) != 0:
-				last_wp = actividict["waypoints"][-1]
-				last_lap = actividict["laps"][-1]
-				if last_wp.get("timestamp") > last_lap.get("timestamp"):
-					actividict["laps"].append({
-						"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
-						"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
-					})
+		if len(actividict["laps"]) != 0 and len(actividict["waypoints"]) != 0:
+			last_wp = actividict["waypoints"][-1]
+			last_lap = actividict["laps"][-1]
+			if last_wp.get("timestamp") > last_lap.get("timestamp"):
+				actividict["laps"].append({
+					"start_time":last_lap.get("timestamp") + timedelta(seconds=1),
+					"timestamp":last_wp.get("timestamp")+ timedelta(seconds=1)
+				})
 
 		# Time to fill the activity laps (and waypoints)
 		activity.Laps = [
@@ -555,7 +695,9 @@ class FITIO:
 						),
 						hr=wp.get("hr"),
 						runCadence=wp.get("cadence"),
-						speed=wp.get("speed")
+						speed=wp.get("speed"),
+						distance=wp.get("distance"),
+						temp=wp.get("temperature")
 					)
 					# FROM actividict["waypoints"] as wp
 					for wp in actividict["waypoints"]
@@ -567,10 +709,9 @@ class FITIO:
 			for lapData in actividict["laps"]
 		]
 
-		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed.
-		activity.GPS= True if len(actividict["waypoints"]) != 0 else False
-		activity.Stationary= False if len(actividict["waypoints"]) != 0 else True
-
+		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
+		activity.GPS=len(actividict["waypoints"]) != 0
+		activity.Stationary=not len(actividict["waypoints"]) != 0
 		activity.CheckSanity()
 
 		return activity
