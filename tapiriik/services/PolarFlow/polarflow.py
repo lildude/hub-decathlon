@@ -5,6 +5,7 @@ from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBas
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit
 from tapiriik.services.fit import FITIO
+from tapiriik.database import redis
 
 from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
@@ -137,33 +138,6 @@ class PolarFlowService(ServiceBase):
         res = requests.delete(self._api_endpoint + "/v3/users/{userid}".format(userid=serviceRecord.ExternalID),
             headers=self._api_headers(serviceRecord))
 
-    def _create_transaction(self, serviceRecord):
-        # Transaction contains max 50 items and last 10 minutes and after that it would be no acces to data within its scope
-        # hope worker can download all data, otherwise still no issue - we will stop downloading  skipping exception
-        # and fetch missed data later in scope of another transaction
-        res = requests.post(self._api_endpoint +
-            "/v3/users/{userid}/exercise-transactions".format(userid=serviceRecord.ExternalID),
-            headers=self._api_headers(serviceRecord))
-        # No new training data status_code=204
-        if res.status_code == 401:
-            #TODO why it could happen
-            logger.debug("No authorization to create transaction")
-            raise APIException("No authorization to create transaction", block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
-        
-        transaction_uri = res.json()["resource-uri"] if res.status_code == 201 else None
-        serviceRecord.ServiceData = {"Transaction-uri": transaction_uri}
-        return transaction_uri
-
-    def _commit_transaction(self, serviceRecord):
-        if hasattr(serviceRecord, "ServiceData"):
-            transaction_uri = serviceRecord.ServiceData["Transaction-uri"]
-            if transaction_uri:
-                res = requests.put(transaction_uri, headers=self._api_headers(serviceRecord))
-        # TODO : should handle responce code?
-        # 200	OK	Transaction has been committed and data deleted	None
-        # 204	No Content	No content when there is no data available	None
-        # 404	Not Found	No transaction was found with given transaction id	None
-
     def _api_headers(self, serviceRecord, headers={}):
         headers.update({"Authorization": "Bearer {}".format(serviceRecord.Authorization["OAuthToken"])})
         return headers
@@ -210,114 +184,45 @@ class PolarFlowService(ServiceBase):
         # As above.
         serviceRecord.SetPartialSyncTriggerSubscriptionState(False)
 
-    def PollPartialSyncTrigger(self, multiple_index):
-        response = requests.get(self._api_endpoint + "/v3/notifications", auth=HTTPBasicAuth(POLAR_CLIENT_ID, POLAR_CLIENT_SECRET))
-
-        to_sync_ids = []
-        if response.status_code == 200:
-            for item in response.json()["available-user-data"]:
-                if item["data-type"] == "EXERCISE":
-                    to_sync_ids.append(item["user-id"])
-
-        return to_sync_ids
-
     def DownloadActivityList(self, serviceRecord, exhaustive=False):
         activities = []
         exclusions = []
 
-        logging.info("Polar Start DownloadActivityList")
+        logging.info("\tPolar Start DownloadActivityList")
 
+        redis_key = "polarflow:webhook:"+str(serviceRecord.ExternalID)
+        activity_urls_list = redis.lrange(redis_key, 0, -1)
+
+        for act_url in activity_urls_list:
+            # We delete it from the redis list to avoid syncing a second time
+            # For an strange reason we have to do :
+            #       redis.lrem(key, value)
+            # Even if redis, redis-py docs and the signature of the function in the container ask to do
+            #       redis.lrem(key, count ,value)
+            result = redis.lrem(redis_key, act_url)
+            if result == 0:
+                logger.warning("Cant delete the activity id from the redis key %s" % (redis_key))
+            elif result > 1 :
+                logger.warning("Found more than one time the activity id from the redis key %s" % (redis_key))
+
+            response = requests.get(act_url.decode('utf-8')+"/fit", headers=self._api_headers(serviceRecord, {"Accept": "*/*"}))
+            if response.status_code == 404:
+                # Transaction was disbanded, all data linked to it will be returned in next transaction
+                raise APIException("Transaction disbanded", user_exception=UserException(UserExceptionType.DownloadError))
+            elif response.status_code == 204:
+                raise APIException("No FIT available for exercise", user_exception=UserException(UserExceptionType.DownloadError))
+
+            activity = FITIO.Parse(response.content)
+            activity.ServiceData = {"ActivityID": act_url.decode('utf-8').split('/')[-1]}
+            activity.AdjustTZ()
+
+            activities.append(activity)
         
-        transaction_url = self._create_transaction(serviceRecord)
-        if transaction_url:
-            logging.info("Polar of transactionurl")
-            res = requests.get(transaction_url, headers=self._api_headers(serviceRecord))
-            
-            if res.status_code == 200: # otherwise no new data, skip
-                logging.info("Polar new data")
-                for activity_url in res.json()["exercises"]:
-                    data = requests.get(activity_url, headers=self._api_headers(serviceRecord))
-                    if data.status_code == 200:
-                        activity = self._create_activity(data.json())
-                        activities.append(activity)
-                    else:
-                        # may be just deleted, who knows, skip
-                        logger.debug("Cannot recieve training at url: {}".format(activity_url))
-
+        logger.info("\tNumber of polar activities %i" % len(activities))
         return activities, exclusions
 
-    def _create_activity(self, activity_data):
-        activity = UploadedActivity()
-
-        activity.GPS = not activity_data["has-route"]
-        if "detailed-sport-info" in activity_data and activity_data["detailed-sport-info"] in self._reverse_activity_type_mappings:
-            activity.Type = self._reverse_activity_type_mappings[activity_data["detailed-sport-info"]]
-        else:
-            activity.Type = ActivityType.Other
-
-        activity.StartTime = pytz.utc.localize(isodate.parse_datetime(activity_data["start-time"]))
-        activity.EndTime = activity.StartTime + isodate.parse_duration(activity_data["duration"])
-
-        distance = activity_data["distance"] if "distance" in activity_data else None
-        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=float(distance) if distance else None)
-        hr_data = activity_data["heart-rate"] if "heart-rate" in activity_data else None
-        avg_hr = hr_data["average"] if "average" in hr_data else None
-        max_hr = hr_data["maximum"] if "maximum" in hr_data else None
-        activity.Stats.HR.update(ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=float(avg_hr) if avg_hr else None, max=float(max_hr) if max_hr else None))
-        calories = activity_data["calories"] if "calories" in activity_data else None
-        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(calories) if calories else None)
-
-        activity.ServiceData = {"ActivityID": activity_data["id"]}
-
-        logger.debug("\tActivity s/t {}: {}".format(activity.StartTime, activity.Type))
-
-        activity.CalculateUID()
-        return activity
-
     def DownloadActivity(self, serviceRecord, activity):
-        # NOTE tcx have to be gzipped but it actually doesn't
-        # https://www.polar.com/accesslink-api/?python#get-tcx
-        #tcx_data_raw = requests.get(activity_link + "/tcx", headers=self._api_headers(serviceRecord))
-        #tcx_data = gzip.GzipFile(fileobj=StringIO(tcx_data_raw)).read()
-
-        # TODO remove the above NOTE because now we use FIT
-
-        logging.info("Polar DownloadActivity")
-
-        fit_url = serviceRecord.ServiceData["Transaction-uri"] + "/exercises/{}/fit".format(activity.ServiceData["ActivityID"])
-        response = requests.get(fit_url, headers=self._api_headers(serviceRecord, {"Accept": "*/*"}))
-
-        if response.status_code == 404:
-            # Transaction was disbanded, all data linked to it will be returned in next transaction
-            raise APIException("Transaction disbanded", user_exception=UserException(UserExceptionType.DownloadError))
-        elif response.status_code == 204:
-            raise APIException("No FIT available for exercise", user_exception=UserException(UserExceptionType.DownloadError))
-
-        activity = FITIO.Parse(response.content, activity)
-        activity.TZ = pytz.timezone("UTC")
-        activity.AdjustTZ()
-
-        if activity.Stationary == True :
-            logging.info("Polar STATIONNARY")
-        else :
-            logging.info("Polar NOT STATIONNARY")
-
-        if len(activity.GetFlatWaypoints()) == 0 :
-            logging.info("Polar No flat way point")
-
-        '''
-        for lap in activity.Laps:
-            for wp in lap.Waypoints:
-                    if wp.Location is not None :
-                        if wp.Location.Latitude is not None or wp.Location.Longitude is not None:
-                            logging.info("Polar LAT " + str(wp.Location.Latitude) )
-        '''
-
         return activity
-
-    def SynchronizationComplete(self, serviceRecord):
-        # Transaction should be commited to make access to next data possible
-        self._commit_transaction(serviceRecord)
 
     def DeleteCachedData(self, serviceRecord):
         # Nothing to delete
@@ -333,6 +238,11 @@ class PolarFlowService(ServiceBase):
 
     def ExternalIDsForPartialSyncTrigger(self, req):
         data = json.loads(req.body.decode("UTF-8"))
-        if data["event"] == "PING":
-            return []
-        return [data["user_id"]]
+        # Get user ids to sync
+        external_user_ids = []
+        if data.get("event") == "EXERCISE":
+            # Pushing the callback url in redis that will be used in downloadActivityList
+            redis.rpush("polarflow:webhook:%s" % data["user_id"], data["url"])
+            external_user_ids.append(data["user_id"])
+
+        return external_user_ids
