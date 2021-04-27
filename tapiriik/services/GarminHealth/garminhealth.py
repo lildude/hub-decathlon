@@ -226,17 +226,16 @@ class GarminHealthService(ServiceBase):
             if resp.status_code != 204 and resp.status_code != 200:
                 logger.info("\tAn error occured while downloading Garmin Health activity, status code %s, content %s" % (
                     (str(resp.status_code), resp.content)))
+            else:
+                pre_download_counter += 1
+                activity = FITIO.Parse(resp.content)
+                activity.Name = activity_file_name
 
-
-            pre_download_counter += 1
-            activity = FITIO.Parse(resp.content)
-            activity.Name = activity_file_name
-
-            activity.AdjustTZ()
-            activity.CalculateUID()
-            post_download_counter += 1
-            activities.append(activity)
-            logger.info("\tGarmin Activity ID : " + activity_id)
+                activity.AdjustTZ()
+                activity.CalculateUID()
+                post_download_counter += 1
+                activities.append(activity)
+                logger.info("\tGarmin Activity ID : " + activity_id)
 
         logger.info("\t\t total Garmin activities downloaded : %i" % pre_download_counter)
         logger.info("\t\t\t Listed activities by redis : %i" % len(activity_file_urls_list))
