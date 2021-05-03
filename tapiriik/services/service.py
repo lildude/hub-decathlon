@@ -2,6 +2,7 @@ from tapiriik.services import *
 from .service_record import ServiceRecord
 from tapiriik.database import db, cachedb
 from bson.objectid import ObjectId
+from pymongo import ReadPreference
 
 # Really don't know why I didn't make most of this part of the ServiceBase.
 class Service:
@@ -107,7 +108,8 @@ class Service:
         extendedAuthDetailsForStorage = CredentialStore.FlattenShadowedCredentials(extendedAuthDetails) if extendedAuthDetails else None
         if serviceRecord is None:
             db.connections.insert({"ExternalID": uid, "Service": service.ID, "SynchronizedActivities": [], "Authorization": authDetails, "ExtendedAuthorization": extendedAuthDetailsForStorage if persistExtendedAuthDetails else None})
-            serviceRecord = ServiceRecord(db.connections.find_one({"ExternalID": uid, "Service": service.ID}))
+            collConnections = db.get_collection('connections', read_preference=ReadPreference.PRIMARY)
+            serviceRecord = ServiceRecord(collConnections.find_one({"ExternalID": uid, "Service": service.ID}))
             serviceRecord.ExtendedAuthorization = extendedAuthDetails # So SubscribeToPartialSyncTrigger can use it (we don't save the whole record after this point)
             if service.PartialSyncTriggerRequiresPolling or service.PartialSyncTriggerRequiresSubscription:
                 service.SubscribeToPartialSyncTrigger(serviceRecord) # The subscription is attached more to the remote account than to the local one, so we subscribe/unsubscribe here rather than in User.ConnectService, etc.
