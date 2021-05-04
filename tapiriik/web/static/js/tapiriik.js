@@ -284,7 +284,6 @@ tapiriik.OpenDeauthDialog = function(svcId){
 	});
 
 	$("#disconnect", form).click(function(){
-		console.log("lol")
 		$(this).toggleClass("disabled").off()
 		window.location.href = "/auth/disconnect-do/" + svcId
 	})
