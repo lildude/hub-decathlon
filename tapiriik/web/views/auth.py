@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from tapiriik.services import Service
 from tapiriik.auth import User
 import json
+import logging
 
 
 def auth_login(req, service):
@@ -81,7 +82,12 @@ def auth_disconnect_do(req, service):
     svc = Service.FromID(service)
     svcId = [x["ID"] for x in req.user["ConnectedServices"] if x["Service"] == svc.ID]
     if len(svcId) == 0:
-        return
+        logging.error("The user %s can't disconnect %s service - Here is the list of his actual services %s" % (
+            req.user["_id"], 
+            service, 
+            str(req.user.get("ConnectedServices","Can't find services"))
+        ))
+        return redirect('/')
     else:
         svcId = svcId[0]
     svcRec = Service.GetServiceRecordByID(svcId)
