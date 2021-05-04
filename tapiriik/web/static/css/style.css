@@ -819,6 +819,10 @@ form .syncSettingsCloze .syncSettingsSaveButton{
 	text-align:center;
 }
 
+form button#disconnect.disabled{
+	background: linear-gradient(rgb(184, 184, 184), rgb(124, 124, 124)) !important;
+}
+
 .dialogWrap div.logout a.button,
 .dialogWrap div.logout button,
 .dialogWrap form.logout a.button,
