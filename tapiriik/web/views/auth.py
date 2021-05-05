@@ -99,7 +99,7 @@ def auth_disconnect_do(req, service):
 @csrf_exempt
 @require_POST
 def auth_disconnect_garmin_health(req):
-    if req.body.decode("UTF-8") is not "":
+    if req.body.decode("UTF-8") != "":
         data = json.loads(req.body.decode("UTF-8"))
         external_user_ids = data['deregistrations']
 
