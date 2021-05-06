@@ -474,7 +474,8 @@ class DecathlonService(ServiceBase):
 
                 if "LAP" in rd :
                     #build the lap
-                    lap = Lap(stats = activity.Stats, startTime = startTimeLap, endTime = formatedDate) 
+                    # No statistic added because we don't have a way to effectively get them
+                    lap = Lap(startTime = startTimeLap, endTime = formatedDate)
                     lap.Waypoints = lapWaypoints
                     activity.Laps.append(lap)
                     # re init a new lap
@@ -483,7 +484,7 @@ class DecathlonService(ServiceBase):
 
             #build last lap
             if len(lapWaypoints)>0 :
-                lap = Lap(stats = activity.Stats, startTime = startTimeLap, endTime = formatedDate) 
+                lap = Lap(startTime = startTimeLap, endTime = formatedDate) 
                 lap.Waypoints = lapWaypoints
                 activity.Laps.append(lap)
   
