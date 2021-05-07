@@ -487,7 +487,11 @@ class DecathlonService(ServiceBase):
                 lap = Lap(startTime = startTimeLap, endTime = formatedDate) 
                 lap.Waypoints = lapWaypoints
                 activity.Laps.append(lap)
-  
+
+            # avoiding 1 laps stats mismatch
+            if len(activity.Laps) == 1:
+                activity.Laps[0].Stats = activity.Stats
+
         return activity
 
     
