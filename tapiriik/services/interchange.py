@@ -684,7 +684,7 @@ class Waypoint:
         return {
             "Timestamp": self.Timestamp,
             "HasSensorData": self.HasSensorData,
-            "Location": self.Location.asdict(),
+            "Location": self.Location.asdict() if self.Location != None else None,
             "HR": self.HR,
             "Calories": self.Calories,
             "Power": self.Power,
