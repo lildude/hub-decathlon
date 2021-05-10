@@ -724,20 +724,3 @@ class FitbitService(ServiceBase):
     def ExternalIDsForPartialSyncTrigger(self, req):
         data = json.loads(req.body.decode("UTF-8"))
         return [notif.get("ownerId") for notif in data if notif.get('collectionType') == 'activities']
-
-    def _CheckSubscription(self, serviceRecord):
-        # logger.info(serviceRecord.Authorization)
-
-        webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions.json"
-        resp = self._requestWithAuth(lambda session: session.get(
-            webhook_sub_URL,
-            headers={
-                'Authorization': 'Bearer ' + serviceRecord.Authorization.get('AccessToken')
-        }), serviceRecord)
-
-        # logger.info(len([apiSub["ownerId"] for apiSub in resp.json()["apiSubscriptions"]]))
-
-        return len([apiSub["ownerId"] for apiSub in resp.json()["apiSubscriptions"]])
-        # webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions.json"
-        # session = OAuth2Session(FITBIT_CLIENT_ID, token={"access_token":authorizationData.get("AccessToken")})
-        # resp = session.request("GET", webhook_sub_URL)

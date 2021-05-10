@@ -6,7 +6,6 @@ from tapiriik.sync import Sync
 from tapiriik.auth import TOTP, DiagnosticsUser, User
 from tapiriik.services.service import Service
 from tapiriik.settings import WITHDRAWN_SERVICES
-import logging
 from tapiriik.services.service_record import ServiceRecord
 from bson.objectid import ObjectId
 from tapiriik.helper.common_use import *
@@ -35,15 +34,6 @@ def diag_stats(req):
     active_services_list = [svc for svc in Service.List() if svc.ID not in WITHDRAWN_SERVICES]
     mongo_count_webhook_subscribed_users = db.connections.count({"Service":"fitbit","PartialSyncTriggerSubscribed":True})
 
-    real_count_webhook_subscribed_users = sum([
-        ServiceRecord(conn).Service._CheckSubscription(ServiceRecord(conn)) 
-        for conn in db.connections.find() 
-        if conn["Service"] == "fitbit"
-    ]) if req.GET.get("get_real",None) != None else None
-    
-    context["need_real"] = req.GET.get("get_real",None) != None
-
-
     usr_only_connected_to_coach = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}]}, projection={"ConnectedServices": 1, "_id": 0})
 
 
@@ -55,11 +45,15 @@ def diag_stats(req):
                 "Service": active_service.ID
             }))),
             "MongoNbWebhookSubedUsers" : mongo_count_webhook_subscribed_users if active_service.ID == "fitbit" else None,
-            "RealNbWebhookSubedUsers" : real_count_webhook_subscribed_users if active_service.ID == "fitbit" else None,
             "OneSvcSubedUsers" : usr_only_connected_to_coach if active_service.ID == "decathlon" else None
         })
 
-    return render(req, "diag/main.html", context)
+    return render(req, "diag/services_diag.html", context)
+
+@diag_requireAuth
+def diag_list_uid(req):
+    dkt_and_strava_users = db.users.find({"$and": [{"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}, {"ConnectedServices":{"$elemMatch": {"Service":"strava"}}}]}, {"_id": True})
+    return HttpResponse("\n".join([str(dkt_and_strava_user.get("_id")) for dkt_and_strava_user in dkt_and_strava_users]), content_type='application/force-download')
 
 @diag_requireAuth
 def diag_dashboard(req):
