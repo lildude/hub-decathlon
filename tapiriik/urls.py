@@ -103,7 +103,6 @@ if 'DIAG_ENABLED' in os.environ and os.environ['DIAG_ENABLED'] == 'True':
     url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
     url(r'^diagnostics/stats$', 'tapiriik.web.views.diag_stats', {}, name='diagnostics_stats'),
     url(r'^diagnostics/login$', 'tapiriik.web.views.diag_login', {}, name='diagnostics_login'),
-    url(r'^diagnostics/list_strava_and_std_users.txt$', 'tapiriik.web.views.diag_list_uid', {}, name='list_strava_and_std_users'),
     )
 
     urlpatterns += urlpatterns_diag

@@ -51,11 +51,6 @@ def diag_stats(req):
     return render(req, "diag/services_diag.html", context)
 
 @diag_requireAuth
-def diag_list_uid(req):
-    dkt_and_strava_users = db.users.find({"$and": [{"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}, {"ConnectedServices":{"$elemMatch": {"Service":"strava"}}}]}, {"_id": True})
-    return HttpResponse("\n".join([str(dkt_and_strava_user.get("_id")) for dkt_and_strava_user in dkt_and_strava_users]), content_type='application/force-download')
-
-@diag_requireAuth
 def diag_dashboard(req):
     return redirect("diagnostics_queue_dashboard")
 
