@@ -396,7 +396,7 @@ class DecathlonService(ServiceBase):
 
         if "locations" in root and root["locations"] is not None:
             for pt in root["locations"]:
-                delta = int(pt)
+                delta = int(float(pt))
                 ridedataindex.append(delta)
                 ridedata[delta] = {}
                 ridedata[delta]['LATITUDE'] = float(root["locations"][pt]["latitude"])
@@ -409,7 +409,7 @@ class DecathlonService(ServiceBase):
 
         if "datastream" in root and root["datastream"] is not None:
             for measure in root["datastream"]:
-                delta = int(measure)
+                delta = int(float(measure))
                 if delta not in ridedataindex :
                     ridedataindex.append(delta)
                     ridedata[delta] = {}
