@@ -140,11 +140,14 @@ class DecathlonService(ServiceBase):
         "distance": "5",
         "kcal" : "23",
         "speedaverage" : "9",
+        "speedmax" : "7",
         "hrcurrent" : "1",
         "speedcurrent" : "6",
         "hravg" : "4",
         "cadence" : "10",
-        "rpm" : "100"
+        "rpm" : "100",
+        "powercurrent" : "178",
+        "poweraverage" : "180"
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -280,11 +283,9 @@ class DecathlonService(ServiceBase):
 
             resp_activities = json.loads(resp.content.decode('utf-8'))
 
-            #set page total
-            if "hydra:view" in resp_activities:
-                if "hydra:next" in resp_activities["hydra:view"] :
-                    if resp_activities["hydra:view"]["hydra:next"] is not None :
-                        page_total += 1
+            # Incrementing page_total if an activity has a reference to it.
+            # The first get return "{}" if "hydra:view" is None. It avoid "'NoneType' object has no attribute 'get'" error
+            page_total += 1 if resp_activities.get("hydra:view",{}).get("hydra:next") != None else 0
                     
             if "hydra:member" in resp_activities :
                 logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
@@ -293,8 +294,7 @@ class DecathlonService(ServiceBase):
                     activity = UploadedActivity()
                     activity.TZ = pytz.timezone("UTC")  
 
-                    startdate = ride["startdate"]
-                    datebase = parse(startdate)
+                    datebase = parse(ride["startdate"])
                     
 
                     activity.StartTime = datebase #pytz.utc.localize(datebase)
@@ -311,33 +311,25 @@ class DecathlonService(ServiceBase):
                         continue
         
                     activity.Type = self._reverseActivityTypeMappings[sport]
+                    ride_data = ride["dataSummaries"]
+
+                    activity.EndTime = activity.StartTime + timedelta(seconds=ride_data.get(self._unitMap["duration"]))
+                    activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=ride_data.get(self._unitMap["distance"]))
+                    activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=ride_data.get(self._unitMap["kcal"]))
+                    activity.Stats.HR = ActivityStatistic(ActivityStatisticUnit.BeatsPerMinute, avg=ride_data.get(self._unitMap["hravg"]))
+                    activity.Stats.Power = ActivityStatistic(ActivityStatisticUnit.Watts, avg=ride_data.get(self._unitMap["poweraverage"]))
                     
-                    val = ride["dataSummaries"]
-                    if self._unitMap["duration"] in val:
-                        activity.EndTime = activity.StartTime + timedelta(0, int(val[self._unitMap["duration"]]))
-                    if self._unitMap["distance"] in val:
-                        activity.Stats.Distance = ActivityStatistic(ActivityStatisticUnit.Meters, value=int(val[self._unitMap["distance"]]))
-                    if self._unitMap["kcal"] in val:
-                        activity.Stats.Energy = ActivityStatistic(ActivityStatisticUnit.Kilocalories, value=int(val[self._unitMap["kcal"]]))
-                    if self._unitMap["hravg"] in val:
-                        activity.Stats.HR.Average = int(val[self._unitMap["hravg"]])
-                    if self._unitMap["speedaverage"] in val:
-                        meterperhour = int(val[self._unitMap["speedaverage"]])
-                        kmperhour = float(meterperhour/1000)
-                        activity.Stats.Speed = ActivityStatistic(ActivityStatisticUnit.KilometersPerHour, avg=kmperhour, max= None)
-        
-                    if ride["name"] == "" or ride["name"] is None:
-                        txtdate = startdate.split(' ')
-                        activity.Name = "Sport Decathlon " + txtdate[0]
-                    else:
-                        activity.Name = ride["name"]
-                    
+                    activity.Stats.Speed = ActivityStatistic(
+                        ActivityStatisticUnit.MetersPerHour, 
+                        avg=ride_data.get(self._unitMap["speedaverage"]), 
+                        max=ride_data.get(self._unitMap["speedmax"])
+                    )
+
+                    activity.Name = ride.get("name","") if ride.get("name","") != "" else datebase.strftime("%Y-%m-%d")
                     activity.Private = False
-                    if ride["manual"] == True :
-                        activity.Stationary = True
-                    else :
-                        activity.Stationary = False
-                    activity.GPS = ride["trackFlag"]
+                    activity.Stationary = ride.get("manual")
+                    activity.GPS = ride.get("trackFlag")
+
                     activity.AdjustTZ()
                     activity.CalculateUID()
                     activities.append(activity)
@@ -432,6 +424,8 @@ class DecathlonService(ServiceBase):
                     ridedata[delta]['CADENCE'] = int(root["datastream"][measure]["10"])
                 if self._unitMap["rpm"] in root["datastream"][measure]:
                     ridedata[delta]['CADENCE'] = int(root["datastream"][measure]["100"])
+                if "178" in root["datastream"][measure]:
+                    ridedata[delta]["POWER"] = int(root["datastream"][measure]["178"])
                 if "20" in root["datastream"][measure]:
                     ridedata[delta]['LAP'] = int(root["datastream"][measure]["20"])
 
@@ -469,6 +463,9 @@ class DecathlonService(ServiceBase):
 
                 if 'CADENCE' in rd :
                     wp.Cadence = rd['CADENCE']
+
+                if 'POWER' in rd :
+                    wp.Power = rd['POWER']
 
                 lapWaypoints.append(wp)
 
