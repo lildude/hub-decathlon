@@ -443,6 +443,7 @@ class ActivityStatisticUnit:
     Miles = "mi"
     DegreesCelcius = "ºC"
     DegreesFahrenheit = "ºF"
+    MetersPerHour = "m/h"
     KilometersPerHour = "km/h"
     HectometersPerHour = "hm/h" # Silly Garmin Connect!
     KilometersPerSecond = "km/s" # Silly (unnamed service)!
@@ -465,6 +466,7 @@ class ActivityStatistic:
     _typeKeys = ("Value", "Average", "Min", "Max", "Gain", "Loss")
     _conversions = {
         (ActivityStatisticUnit.KilometersPerHour, ActivityStatisticUnit.HectometersPerHour): 10,
+        (ActivityStatisticUnit.KilometersPerHour, ActivityStatisticUnit.MetersPerHour): 1000,
         (ActivityStatisticUnit.KilometersPerHour, ActivityStatisticUnit.MilesPerHour): 0.621371,
         (ActivityStatisticUnit.KilometersPerSecond, ActivityStatisticUnit.KilometersPerHour): 60 * 60,
         (ActivityStatisticUnit.MilesPerHour, ActivityStatisticUnit.HundredYardsPerHour): 17.6,
