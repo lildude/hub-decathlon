@@ -325,7 +325,7 @@ class DecathlonService(ServiceBase):
                         max=ride_data.get(self._unitMap["speedmax"])
                     )
 
-                    activity.Name = ride.get("name","") if ride.get("name","") != "" else datebase.strftime("%Y-%m-%d")
+                    activity.Name = ride.get("name","") if ride.get("name","") != "" else "Sport Decathlon" + datebase.strftime("%Y-%m-%d")
                     activity.Private = False
                     activity.Stationary = ride.get("manual")
                     activity.GPS = ride.get("trackFlag")
