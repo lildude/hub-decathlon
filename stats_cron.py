@@ -1,7 +1,7 @@
 from tapiriik.database import db, close_connections
-from tapiriik.settings import RABBITMQ_USER_QUEUE_STATS_URL
+# from tapiriik.settings import RABBITMQ_USER_QUEUE_STATS_URL
 from datetime import datetime, timedelta
-import requests
+# import requests
 
 # total distance synced
 distanceSyncedAggr = list(db.sync_stats.aggregate([{"$group": {"_id": None, "total": {"$sum": "$Distance"}}}]))
@@ -34,10 +34,11 @@ if len(enqueueHead):
     enqueueTime /= len(enqueueHead)
 
 # Query rabbitMQ to get main queue throughput and length
-rmq_user_queue_stats = requests.get(RABBITMQ_USER_QUEUE_STATS_URL).json()
-rmq_user_queue_length = rmq_user_queue_stats["messages_ready_details"]["avg"]
-rmq_user_queue_rate = rmq_user_queue_stats["message_stats"]["ack_details"]["avg_rate"]
-rmq_user_queue_wait_time = rmq_user_queue_length / rmq_user_queue_rate
+# rmq_user_queue_stats = requests.get(RABBITMQ_USER_QUEUE_STATS_URL).json()
+# rmq_user_queue_length = rmq_user_queue_stats["messages_ready_details"]["avg"]
+# rmq_user_queue_rate = rmq_user_queue_stats["message_stats"]["ack_details"]["avg_rate"]
+# rmq_user_queue_wait_time = rmq_user_queue_length / rmq_user_queue_rate
+rmq_user_queue_wait_time = 0
 
 # sync time utilization
 db.sync_worker_stats.delete_many({"Timestamp": {"$lt": datetime.utcnow() - timedelta(hours=1)}})  # clean up old records
