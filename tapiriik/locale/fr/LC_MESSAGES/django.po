@@ -119,11 +119,11 @@ msgstr "synchronisez vos activités"
 msgid "Manage your services"
 msgstr "Services disponibles"
 
-msgid "Manage your input services"
-msgstr "Services fournisseurs d'activités"
+msgid "Retrieve your activities"
+msgstr "Récupérer vos activités"
 
-msgid "Manage your output services"
-msgstr "Services recevant des activités"
+msgid "Share your activities"
+msgstr "Partager vos activités"
 
 #: tapiriik/web/templates/dashboard.html:36
 #: tapiriik/web/templates/dashboard_old.html:38

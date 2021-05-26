@@ -8,7 +8,7 @@
 {% block content %}
 {% if user != none %}
 	<div class="block">
-		<div class="titleBlock">{% trans "Manage your input services" %}</div>
+		<div class="titleBlock">{% trans "Retrieve your activities" %}</div>
 		<div class="serviceButtonOuter">
 			<div class="serviceButtonWrap row">
 			{% for connection in user.ConnectedServices|svc_populate_input_conns %}
@@ -27,7 +27,7 @@
 		</div>
 	</div>
 	<div class="block">
-		<div class="titleBlock">{% trans "Manage your output services" %}</div>
+		<div class="titleBlock">{% trans "Share your activities" %}</div>
 		<div class="serviceButtonOuter">
 			<div class="serviceButtonWrap row">
 			{% for connection in user.ConnectedServices|svc_populate_output_conns %}
