@@ -1,6 +1,6 @@
 # Synchronization module for decathloncoach.com
 # (c) 2018 Charles Anssens, charles.anssens@decathlon.com
-from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_OAUTH_URL, DECATHLON_API_KEY, DECATHLON_API_BASE_URL, DECATHLON_RATE_LIMITS, DECATHLON_LOGIN_CLIENT_SECRET, DECATHLON_LOGIN_CLIENT_ID, DECATHLON_LOGIN_OAUTH_URL
+from tapiriik.settings import WEB_ROOT, DECATHLON_CLIENT_SECRET, DECATHLON_CLIENT_ID, DECATHLON_OAUTH_URL, DECATHLON_API_KEY, DECATHLON_API_BASE_URL, DECATHLON_RATE_LIMITS, DECATHLON_LOGIN_CLIENT_SECRET, DECATHLON_LOGIN_CLIENT_ID, DECATHLON_LOGIN_OAUTH_URL, DECATHLON_HUB_CONNECTOR_ID
 from tapiriik.services.ratelimiting import RateLimit, RateLimitExceededException, RedisRateLimit
 from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBase
 from tapiriik.services.service_record import ServiceRecord
@@ -290,7 +290,10 @@ class DecathlonService(ServiceBase):
             if "hydra:member" in resp_activities :
                 logging.info("\t\t nb activity : " + str(len(resp_activities["hydra:member"])))
                 for ride in resp_activities["hydra:member"]:
-        
+                    if ride["connector"] == "/v2/connectors/%s" % DECATHLON_HUB_CONNECTOR_ID:
+                        logging.info("\t\t Activity with ID %s is not native from STD and will be ignored" % ride["id"])
+                        continue
+
                     activity = UploadedActivity()
                     activity.TZ = pytz.timezone("UTC")  
 
