@@ -101,6 +101,7 @@ if 'DIAG_ENABLED' in os.environ and os.environ['DIAG_ENABLED'] == 'True':
     url(r'^diagnostics/user/(?P<user>.+)$', 'tapiriik.web.views.diag_user', {}, name='diagnostics_user'),
     url(r'^diagnostics/payments/$', 'tapiriik.web.views.diag_payments', {}, name='diagnostics_payments'),
     url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
+    url(r'^diagnostics/stats$', 'tapiriik.web.views.diag_stats', {}, name='diagnostics_stats'),
     url(r'^diagnostics/login$', 'tapiriik.web.views.diag_login', {}, name='diagnostics_login'),
     )
 

@@ -40,3 +40,39 @@
 .footers {
 	display: none;
 }
+
+.diagTable{
+	margin-top: 20px;
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+}
+
+table.diagTable tbody th{
+	color: white;
+	background-color: #0071b9;
+	padding: 11px 0;
+}
+
+
+table.diagTable tbody td, table.diagTable tbody th {
+	border: 3px solid white;
+	text-align: left;
+	padding: 8px;
+}
+
+table.diagTable tbody tr:nth-child(even) {
+	background-color: #daf2ff;
+}
+
+table.diagTable tbody tr:nth-child(odd) {
+	background-color: #aae1fc;
+}
+
+table.diagTable.bfc tbody td:nth-child(n+1) {
+	font-weight: 350;
+}
+
+table.diagTable.bfc tbody td:nth-child(1) {
+	font-weight: 550;
+}

@@ -4,6 +4,9 @@ from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD, SITE_V
 from tapiriik.database import *
 from tapiriik.sync import Sync
 from tapiriik.auth import TOTP, DiagnosticsUser, User
+from tapiriik.services.service import Service
+from tapiriik.settings import WITHDRAWN_SERVICES
+from tapiriik.services.service_record import ServiceRecord
 from bson.objectid import ObjectId
 from tapiriik.helper.common_use import *
 import hashlib
@@ -20,6 +23,32 @@ def diag_requireAuth(view):
             return redirect("diagnostics_login")
         return view(req, *args, **kwargs)
     return authWrapper
+
+@diag_requireAuth
+def diag_stats(req):
+    context = {}
+
+    context["userCt"] = db.users.count()
+    context["connCt"] = db.connections.count()
+
+    active_services_list = [svc for svc in Service.List() if svc.ID not in WITHDRAWN_SERVICES]
+    mongo_count_webhook_subscribed_users = db.connections.count({"Service":"fitbit","PartialSyncTriggerSubscribed":True})
+
+    usr_only_connected_to_coach = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}]}, projection={"ConnectedServices": 1, "_id": 0})
+
+
+    context["services_stats"] = []
+    for active_service in active_services_list:
+        context["services_stats"].append({
+            "Name": active_service.DisplayName,
+            "NbUsers" : len(list(db.connections.find({
+                "Service": active_service.ID
+            }))),
+            "MongoNbWebhookSubedUsers" : mongo_count_webhook_subscribed_users if active_service.ID == "fitbit" else None,
+            "OneSvcSubedUsers" : usr_only_connected_to_coach if active_service.ID == "decathlon" else None
+        })
+
+    return render(req, "diag/services_diag.html", context)
 
 @diag_requireAuth
 def diag_dashboard(req):
