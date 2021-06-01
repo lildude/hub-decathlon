@@ -77,6 +77,25 @@ class Activity:
         self.Device = device
         self.FitFileUrl = fitFileUrl
 
+    def asdict(self):
+        return {
+            "StartTime": self.StartTime,
+            "EndTime": self.EndTime,
+            "Type": self.Type,
+            "Laps": [lap.asdict() for lap in self.Laps],
+            "Stats": self.Stats.asdict(),
+            "TZ": self.TZ,
+            "FallbackTZ": self.FallbackTZ,
+            "Name": self.Name,
+            "Notes": self.Notes,
+            "Private": self.Private,
+            "Stationary": self.Stationary,
+            "GPS": self.GPS,
+            "PrerenderedFormats": self.PrerenderedFormats,
+            "Device": self.Device,
+            "FitFileUrl": self.FitFileUrl
+        }
+
     def CalculateUID(self):
         if not self.StartTime:
             return  # don't even try
@@ -388,6 +407,16 @@ class Lap:
         self.Stats = stats if stats else ActivityStatistics()
         self.Waypoints = waypointList if waypointList else []
 
+    def asdict(self):
+        return {
+            "StartTime": self.StartTime,
+            "EndTime": self.EndTime,
+            "Trigger": self.Trigger,
+            "Intensity": self.Intensity,
+            "Stats": self.Stats.asdict(),
+            "Waypoints": [wp.asdict() for wp in self.Waypoints]
+        }
+
     def __str__(self):
         return str(self.StartTime) + "-" + str(self.EndTime) + " " + str(self.Intensity) + " (" + str(self.Trigger) + ") " + str(len(self.Waypoints)) + " wps"
     __repr__ = __str__
@@ -431,6 +460,15 @@ class ActivityStatistics:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def asdict(self, display_none=False):
+        # import logging
+        # logging.info(len(getattr(self, "Speed").attributes(display_none)))
+        return {
+            stat: getattr(self, stat).asdict(display_none) 
+            for stat in self._statKeys 
+            if len(getattr(self, stat).asdict(display_none)) > 1
+        }
 
 
 class ActivityStatisticUnit:
@@ -613,6 +651,13 @@ class ActivityStatistic:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def asdict(self, display_none=False):
+        return {
+            attr: getattr(self, attr) for attr in self._typeKeys+("Units",)
+            } if display_none else {
+                attr: getattr(self, attr) for attr in self._typeKeys+("Units",) if getattr(self, attr) != None
+            }
+
 
 class WaypointType:
     Start = 0   # Start of activity
@@ -637,6 +682,22 @@ class Waypoint:
         self.Speed = speed # m/sec. neghhhhh
         self.Type = ptType
 
+    def asdict(self):
+        return {
+            "Timestamp": self.Timestamp,
+            "HasSensorData": self.HasSensorData,
+            "Location": self.Location.asdict() if self.Location != None else None,
+            "HR": self.HR,
+            "Calories": self.Calories,
+            "Power": self.Power,
+            "Temp": self.Temp,
+            "Cadence": self.Cadence,
+            "RunCadence": self.RunCadence,
+            "Distance": self.Distance,
+            "Speed": self.Speed,
+            "Type": self.Type,
+        }
+
     def __eq__(self, other):
         return self.Timestamp == other.Timestamp and self.Location == other.Location and self.HR == other.HR and self.Calories == other.Calories and self.Temp == other.Temp and self.Cadence == other.Cadence and self.Type == other.Type and self.Power == other.Power and self.RunCadence == other.RunCadence and self.Distance == other.Distance and self.Speed == other.Speed
 
@@ -654,6 +715,13 @@ class Location:
         self.Latitude = lat
         self.Longitude = lon
         self.Altitude = alt
+
+    def asdict(self):
+        return{
+            "Latitude": self.Latitude,
+            "Longitude": self.Longitude,
+            "Altitude": self.Altitude
+        }
 
     def __eq__(self, other):
         if not other:
