@@ -99,7 +99,7 @@ def device_support(req):
         device_support = req.COOKIES.get('device_support')
     else:
         if 'mobile' in req.GET:
-            if req.GET['mobile'] is True or req.GET['mobile'] is 1 or req.GET['mobile'] is '1' or req.GET['mobile'] is 'true':
+            if req.GET['mobile'] is True or req.GET['mobile'] == 1 or req.GET['mobile'] == '1' or req.GET['mobile'] == 'true':
                 device_support = 'mobile'
     return {"device_support": device_support}
 

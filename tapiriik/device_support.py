@@ -7,7 +7,7 @@ class DeviceSupportMiddleware(object):
 
         support = "web"
         if 'mobile' in request.GET:
-            if request.GET['mobile'] is True or request.GET['mobile'] is 1 or request.GET['mobile'] is '1' or request.GET['mobile'] is 'true':
+            if request.GET['mobile'] is True or request.GET['mobile'] == 1 or request.GET['mobile'] == '1' or request.GET['mobile'] == 'true':
                 support = 'mobile'
                 if not request.COOKIES.get('device_support'):
 
