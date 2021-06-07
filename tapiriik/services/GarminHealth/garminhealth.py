@@ -229,7 +229,9 @@ class GarminHealthService(ServiceBase):
             else:
                 pre_download_counter += 1
                 activity = FITIO.Parse(resp.content)
-                activity.Name = activity_file_name
+                # As the name can be None in the webhook we could have empty string as a fallback to avoid redis crash.
+                # In this case it's better to set the activity.Name to None as the FITIO.Parse have an activity name guess behaviour.
+                activity.Name = activity_file_name if activity_file_name != "" else None
 
                 activity.AdjustTZ()
                 activity.CalculateUID()
@@ -263,7 +265,9 @@ class GarminHealthService(ServiceBase):
         if data.get('activityFiles') != None:
             for activity in data['activityFiles']:
                 # Pushing the callback url in redis that will be used in downloadActivityList
-                redis.rpush("garminhealth:webhook:%s" % activity['userId'], activity["callbackURL"]+"::"+activity["activityName"]+"::"+str(activity["activityId"]))
+                # The "activityName" sent by Garmin could be None and it is very bad. 
+                # So if the case happen, we just set an empty string ("") in the redis key to avoid crash.
+                redis.rpush("garminhealth:webhook:%s" % activity['userId'], activity["callbackURL"]+"::"+activity.get("activityName","")+"::"+str(activity["activityId"]))
                 external_user_ids.append(activity['userId'])
                 logging.info("\tGARMIN CALLBACK user to sync "+ activity['userId'])
 
