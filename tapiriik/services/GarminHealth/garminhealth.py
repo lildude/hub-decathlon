@@ -229,7 +229,9 @@ class GarminHealthService(ServiceBase):
             else:
                 pre_download_counter += 1
                 activity = FITIO.Parse(resp.content)
-                activity.Name = activity_file_name
+                # As the name can be None in the webhook we could have empty string as a fallback to avoid redis crash.
+                # In this case it's better to set the activity.Name to None as the FITIO.Parse have an activity name guess behaviour.
+                activity.Name = activity_file_name if activity_file_name != "" else None
 
                 activity.AdjustTZ()
                 activity.CalculateUID()
@@ -256,16 +258,28 @@ class GarminHealthService(ServiceBase):
 
 
     def ExternalIDsForPartialSyncTrigger(self, req):
-        data = json.loads(req.body.decode("UTF-8"))
+        # Even if no occurence of this error has happened in "normal conditions" for the moment.
+        # It's still better to handle possible errors to avoid sending 500 to Garmin
+        #       and possibly losse a lot of good activities.
+        try:
+            data = json.loads(req.body.decode("UTF-8"))
+        except json.JSONDecodeError:
+            logging.warning("No JSON detected in garmin webhook. Here is what the body looks like : \"%s\"" % req.body.decode("UTF-8"))
+            data = {}
         logger.info("GARMIN CALLBACK POKE")
         # Get user ids to sync
         external_user_ids = []
         if data.get('activityFiles') != None:
             for activity in data['activityFiles']:
                 # Pushing the callback url in redis that will be used in downloadActivityList
-                redis.rpush("garminhealth:webhook:%s" % activity['userId'], activity["callbackURL"]+"::"+activity["activityName"]+"::"+str(activity["activityId"]))
-                external_user_ids.append(activity['userId'])
-                logging.info("\tGARMIN CALLBACK user to sync "+ activity['userId'])
+                #       The "activityName" sent by Garmin could be None and it is very bad. 
+                #       So if the case happen, we just set an empty string ("") in the redis key to avoid crash.
+                try:
+                    redis.rpush("garminhealth:webhook:%s" % activity['userId'], activity["callbackURL"]+"::"+activity.get("activityName","")+"::"+str(activity["activityId"]))
+                    external_user_ids.append(activity['userId'])
+                    logging.info("\tGARMIN CALLBACK user to sync "+ activity['userId'])
+                except KeyError as e:
+                    logging.warning("Garmin sent through the webhook an activityFile with no %s defined in the metadata" % e)
 
         return external_user_ids
 
