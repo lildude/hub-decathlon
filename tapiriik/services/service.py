@@ -30,7 +30,6 @@ class Service:
             Aerobia,
             RunKeeper,
             Strava,
-            GarminConnect,
             PolarFlow,
             Endomondo,
             SportTracks,
@@ -60,7 +59,6 @@ class Service:
         # So, I think this will do for now
         return [
             TrainerRoad, # Special case, since TR has a lot more data in some very specific areas
-            GarminConnect, # The reference
             PolarFlow,
             Smashrun,  # TODO: not sure if this is the right place, but it seems to have a lot of data
             SportTracks, # Pretty much equivalent to GC, no temperature (not that GC temperature works all thar well now, but I digress)
