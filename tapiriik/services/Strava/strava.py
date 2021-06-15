@@ -37,7 +37,6 @@ class StravaService(ServiceBase):
 
     SupportsHR = SupportsCadence = SupportsTemp = SupportsPower = True
 
-    SuppliesActivities = False
     SupportsActivityDeletion = True
 
     # For mapping common->Strava; no ambiguity in Strava activity type

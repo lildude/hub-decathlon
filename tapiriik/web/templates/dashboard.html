@@ -11,15 +11,19 @@
 		<div class="titleBlock">{% trans "Retrieve your activities" %}</div>
 		<div class="serviceButtonOuter">
 			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_input_conns %}
+			{% for connection in user.ConnectedServices|svc_populate_conns %}
 				{% with svc=connection.Service %}
-					{% if svc.ID not in config.withdrawn_services %}
+					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
+					<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
+					{% if svc.ID not in config.withdrawn_services and svc.ID != "strava" and svc.ID != "decathlon" %}
 						{% include "service-button.html" with provider=svc connection=connection %}
 					{% endif %}
 				{% endwith %}
 			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_input_providers_except %}
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
+			{% for provider in user.ConnectedServices|svc_providers_except %}
+				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
+				<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
+				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services and provider.ID != "strava" and provider.ID != "decathlon" %}
 					{% include "service-button.html" with provider=provider inactive=True %}
 				{% endif %}
 			{% endfor %}
@@ -30,15 +34,17 @@
 		<div class="titleBlock">{% trans "Share your activities" %}</div>
 		<div class="serviceButtonOuter">
 			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_output_conns %}
+			{% for connection in user.ConnectedServices|svc_populate_conns %}
 				{% with svc=connection.Service %}
-					{% if svc.ID not in config.withdrawn_services %}
+					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
+					{% if svc.ID == "strava" %}
 						{% include "service-button.html" with provider=svc connection=connection %}
 					{% endif %}
 				{% endwith %}
 			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_output_providers_except %}
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
+			{% for provider in user.ConnectedServices|svc_providers_except %}
+				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
+				{% if provider.ID == "strava" %}
 					{% include "service-button.html" with provider=provider inactive=True %}
 				{% endif %}
 			{% endfor %}
