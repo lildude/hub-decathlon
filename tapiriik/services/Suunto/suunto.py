@@ -4,11 +4,12 @@ from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBas
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatisticUnit, ActivityStatistic, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity
 from tapiriik.services.fit import FITIO
-from tapiriik.database import db
+from tapiriik.database import db, redis
+
 
 from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qsl
 
 import logging
 import pytz
@@ -25,14 +26,13 @@ class SuuntoService(ServiceBase):
     DisplayAbbreviation = "SUN"
     AuthenticationType = ServiceAuthenticationType.OAuth
     AuthenticationNoFrame = True  # Because all services does that
+    PartialSyncRequiresTrigger = True
 
     # Does it?
     ReceivesActivities = True  # Any at all?
     ReceivesStationaryActivities = True  # Manually-entered?
-    ReceivesNonGPSActivitiesWithOtherSensorData = False  # Trainer-ish?
     SuppliesActivities = True
 
-    SupportsExhaustiveListing = True
     SupportsActivityDeletion = False
 
     _activityTypeMappings = {
@@ -160,8 +160,6 @@ class SuuntoService(ServiceBase):
         return (data["user"], authorizationData)
 
     def DeleteCachedData(self, serviceRecord):
-        # cachedb.suunto_cache.delete_many({"Owner": serviceRecord.ExternalID})
-        # cachedb.suunto_activity_cache.delete_many({"Owner": serviceRecord.ExternalID})
         pass
 
     def RevokeAuthorization(self, serviceRecord):
@@ -213,84 +211,37 @@ class SuuntoService(ServiceBase):
         activities = []
         exclusions = []
 
-        # We make a date string epoch (with ms) of 2 years or 7 days before now for the exhaustive mechanism.
-        beginDate = str((datetime.today()- timedelta(days=730 if exhaustive else 7)).strftime("%s")) + "000"
+        redis_key = "suunto:webhook:"+str(svcRecord.ExternalID)
+        activity_ids_list = redis.lrange(redis_key, 0, -1)
 
-        resp = self._requestWithAuth(lambda session: session.get(
-            "https://cloudapi.suunto.com/v2/workouts?since="+beginDate), svcRecord)
+        for act_id in activity_ids_list:
+            # We delete it from the redis list to avoid syncing a second time
+            # For an strange reason we have to do :
+            #       redis.lrem(key, value)
+            # Even if redis, redis-py docs and the signature of the function in the container ask to do
+            #       redis.lrem(key, count ,value)
+            result = redis.lrem(redis_key, act_id)
+            if result == 0:
+                logger.warning("Cant delete the activity id from the redis key %s" % (redis_key))
+            elif result > 1 :
+                logger.warning("Found more than one time the activity id from the redis key %s" % (redis_key))
 
-        if resp.status_code == 401:
-            raise APIException("No authorization to retrieve activity list", block=True, user_exception=UserException(
-                UserExceptionType.Authorization, intervention_required=True))
-        elif resp.status_code != 200:
-            raise APIException("Can't get user activity list")
+            response = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/workout/exportFit/"+act_id.decode('utf-8')), svcRecord)
+            if response.status_code == 404:
+                raise APIException("Suunto can't find the activity : %s" % act_id, user_exception=UserException(UserExceptionType.DownloadError))
+            elif response.status_code == 403:
+                raise APIException("Access forbiden to Sunnto activity : %s" % act_id, user_exception=UserException(UserExceptionType.DownloadError))
+            elif response.status_code == 400:
+                raise APIException("Apparently a bad request has been made to suunto this must be examined", user_exception=UserException(UserExceptionType.DownloadError))
 
-        reqdata = resp.json()
-        for ride in reqdata["payload"]:
-            activity = UploadedActivity()
-
-            activity.TZ = pytz.timezone("UTC")
-            activity.StartTime = datetime.fromtimestamp(
-                int(ride["startTime"]/1000))
-            activity.EndTime = datetime.fromtimestamp(
-                int(ride["startTime"]/1000)+ride["totalTime"])
-            # Dont confuse the ActivityID in the activity's object instance in "ServiceData"
-            #   and the Suunto API response "activityId" wich represent the sports type.
-            # I know someone has messed up ^^.
-            activity.ServiceData = {"ActivityID": ride["workoutKey"]}
-
-            if ride["activityId"] not in self._reverseActivityTypeMappings:
-                exclusions.append(
-                    APIExcludeActivity("Unsupported activity type %s" %
-                    ride["activityId"], 
-                    activity_id=ride["workoutKey"], 
-                    user_exception=UserException(UserExceptionType.Other))
-                )
-                logger.debug("\t\tUnknown activity")
-                continue
-
-            activity.Type = self._reverseActivityTypeMappings[ride["activityId"]]
-
-            activity.Stats.Distance = ActivityStatistic(
-                ActivityStatisticUnit.Meters, value=ride["totalDistance"])
-            activity.Stats.Speed = ActivityStatistic(
-                ActivityStatisticUnit.MetersPerSecond, avg=ride["avgSpeed"] if "avgSpeed" in ride else None, max=None)
-            if "extensions" in ride.keys() and "SUMMARY" in ride["extensionTypes"]:
-                activity.Stats.RunCadence.update(ActivityStatistic(
-                    ActivityStatisticUnit.StepsPerMinute, avg=ride["extensions"][0]["avgCadence"]))
-            activity.Stats.Energy = ActivityStatistic(
-                ActivityStatisticUnit.Kilocalories, value=(ride["energyConsumption"]/1000))
-
-            activity.Name = ride["description"] if "description" in ride.keys(
-            ) else activity.Type
-
-            isStationary = ride["isManuallyAdded"] or (ride["totalDistance"] == 0 and ride["startPosition"]
-                ["x"] == ride["startPosition"]["x"] and ride["stopPosition"]["y"] == ride["stopPosition"]["y"])
-            activity.Stationary = isStationary
-            activity.GPS = not isStationary
-            activity.Laps = [
-                Lap(activity.StartTime, activity.EndTime, stats=activity.Stats)]
-
+            activity = FITIO.Parse(response.content)
+            activity.ServiceData = {"ActivityID": act_id}
             activity.AdjustTZ()
-            activity.CalculateUID()
-            activities.append(activity)
 
+            activities.append(activity)
         return activities, exclusions
 
     def DownloadActivity(self, svcRecord, activity):
-        # If it's tagged stationnary, the fit file will exist but it will contain nothing except the file header
-        if not activity.Stationary:
-            # We don't redownload the activities but only the fit file thanks to the fitURL
-            resp = self._requestWithAuth(lambda session: session.get(
-                "https://cloudapi.suunto.com/v2/workout/exportFit/"+str(activity.ServiceData["ActivityID"])), svcRecord)
-            fitFileBinary = resp.content
-            activity = FITIO.Parse(fitFileBinary, activity)
-        else:
-            activity.GPS = False
-            activity.Laps = [
-                Lap(activity.StartTime, activity.EndTime, stats=activity.Stats)
-            ]
-
         return activity
 
     def UploadActivity(self, svcRecord, activity):
@@ -334,3 +285,30 @@ class SuuntoService(ServiceBase):
             raise APIException("Initialisation OK but the data was not sent " + activity.UID + " response " + uploadStatus.text)
 
         return uploadStatus.json()["workoutKey"]
+
+
+    def SubscribeToPartialSyncTrigger(self, serviceRecord):
+        # There is no per-user webhook subscription with Suunto.
+        serviceRecord.SetPartialSyncTriggerSubscriptionState(True)
+
+    def UnsubscribeFromPartialSyncTrigger(self, serviceRecord):
+        # As above.
+        serviceRecord.SetPartialSyncTriggerSubscriptionState(False)
+
+
+    def ExternalIDsForPartialSyncTrigger(self, req):
+        # Parsing the urlencoded string to python dict.
+        data = dict(parse_qsl(req.body.decode('UTF-8')))
+
+        # Checking the values even if nothing in Suunto API documentation says it is possible to have None values.
+        if data.get('username') == None:
+            logger.warning("Suunto has sent a notification without username")
+            return []
+        elif data.get('workoutid') == None:
+            logger.warning("Suunto has sent a notification without workoutid for %s the trigger will not be activated" % data.get('username'))
+            return []
+
+        # It should not have error management here as it has been done in the first condition.
+        redis.rpush("suunto:webhook:%s" % data['username'], data["workoutid"])
+        logger.info("\tSUUNTO CALLBACK user to sync "+ data['username'])
+        return [data['username']]
