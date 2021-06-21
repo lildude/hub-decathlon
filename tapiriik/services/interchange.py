@@ -509,7 +509,7 @@ class ActivityStatistic:
         (ActivityStatisticUnit.KilometersPerSecond, ActivityStatisticUnit.KilometersPerHour): 60 * 60,
         (ActivityStatisticUnit.MilesPerHour, ActivityStatisticUnit.HundredYardsPerHour): 17.6,
         (ActivityStatisticUnit.MetersPerSecond, ActivityStatisticUnit.KilometersPerHour): 3.6,
-        (ActivityStatisticUnit.SecondsPerKilometer, ActivityStatisticUnit.KilometersPerHour): lambda SPK: 3600/SPK,
+        (ActivityStatisticUnit.SecondsPerKilometer, ActivityStatisticUnit.KilometersPerHour): lambda SPK: 3600/SPK if SPK !=0 else 1,
         (ActivityStatisticUnit.DegreesCelcius, ActivityStatisticUnit.DegreesFahrenheit): (lambda C: C*9/5 + 32, lambda F: (F-32) * 5/9),
         (ActivityStatisticUnit.Kilometers, ActivityStatisticUnit.Meters): 1000,
         (ActivityStatisticUnit.Meters, ActivityStatisticUnit.Feet): 3.281,
