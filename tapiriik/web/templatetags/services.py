@@ -14,8 +14,6 @@ def exceptSvc(value):
     connections = [y["Service"] for y in value]
     return [x for x in Service.List() if x.ID not in connections]
 
-
-
 @register.filter(name="svc_populate_conns")
 def fullRecords(conns):
     return [ServiceRecord(x) for x in db.connections.find({"_id": {"$in": [x["ID"] for x in conns]}})]
