@@ -52,6 +52,7 @@ class DecathlonService(ServiceBase):
         ActivityType.Hiking: "153",
         ActivityType.Running: "121",
         ActivityType.Walking: "113",
+        ActivityType.Snowshoeing: "173",
         ActivityType.Snowboarding: "185",
         ActivityType.Skating: "20",
         ActivityType.CrossCountrySkiing: "183",
@@ -60,10 +61,14 @@ class DecathlonService(ServiceBase):
         ActivityType.Gym: "91",
         ActivityType.Rowing: "398",
         ActivityType.Elliptical: "397",
-        ActivityType.RollerSkiing: "367",
+        ActivityType.InlineSkating: "367",
         ActivityType.StrengthTraining: "98",
         ActivityType.Climbing: "161",
         ActivityType.Other: "121",
+        ActivityType.Surfing: "296",
+        ActivityType.KiteSurfing: "273",
+        ActivityType.WindSurfing: "280",
+        ActivityType.Kayaking: "265",
         ActivityType.StandUpPaddling: "400",
         ActivityType.Yoga: "105"
     }
@@ -91,24 +96,24 @@ class DecathlonService(ServiceBase):
         "98": ActivityType.StrengthTraining,
         "161" : ActivityType.Climbing,
         "397" : ActivityType.Elliptical,
-        "367" : ActivityType.RollerSkiing,
+        "367" : ActivityType.InlineSkating,
         "99" : ActivityType.Other,
         "168": ActivityType.Walking,
         #"402": ActivityType.Walking,
-        "109":ActivityType.Gym,#pilates
+        "109":ActivityType.Yoga,#pilates
         "174": ActivityType.DownhillSkiing,
         "264" : ActivityType.Other, #bodyboard
-        "296" : ActivityType.Other, #Surf
+        "296" : ActivityType.Surfing, #Surf
         "301" : ActivityType.Other, #sailling
-        "173": ActivityType.Walking, #ski racket
+        "173": ActivityType.Snowshoeing, #ski racket
         "110": ActivityType.Cycling,#bike room
         "395": ActivityType.Running,
         "79" : ActivityType.Other, #dansing
-        "265" : ActivityType.Other,#Canoë kayak
+        "265" : ActivityType.Kayaking,#Canoë kayak
         "77" : ActivityType.Other,#Triathlon
         "200" : ActivityType.Other,#horse riding
-        "273" : ActivityType.Other,#Kite surf
-        "280" : ActivityType.Other,#sailbard
+        "273" : ActivityType.KiteSurfing,#Kite surf
+        "280" : ActivityType.WindSurfing,#sailbard
         "360" : ActivityType.Other,#BMX"
         "374" : ActivityType.Other,#Skate board
         "260" : ActivityType.Other,#Aquagym
