@@ -50,7 +50,8 @@ class Service:
             PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
-            Coros
+            Coros,
+            Suunto
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -81,7 +82,8 @@ class Service:
             PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
-            Coros
+            Coros,
+            Suunto
         ] + PRIVATE_SERVICES
 
     def WebInit():
