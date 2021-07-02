@@ -748,19 +748,36 @@ class FITIO:
 		# So it is usefull to reverse keys and values
 		reversed_key_val_manufacturer = {FIELD_TYPES["manufacturer"].values[man_key]: man_key for man_key in FIELD_TYPES["manufacturer"].values.keys()}
 
-		creatorInfo = {
-			# If we can't reverse the manufacturer (because of an old profile), i put the dev Manufacturer
-			"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
-			# Looks like it can be anything we want but must be set so fallback to 0 if None
-			"serial_number": act.Device.Serial if act.Device.Serial != None else 0,
-			# Same here but it was previously 15706 by default and it worked well
-			"product": act.Device.Product if act.Device.Product != None else 15706
-		}
-		devInfo = {
-			"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
-			"product": act.Device.Product if act.Device.Product != None else 15706,
-			"device_index": 0
-		}
+		if act.Device != None:
+			creatorInfo = {
+				# If we can't reverse the manufacturer (because of an old profile), i put the dev Manufacturer
+				"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
+				# Looks like it can be anything we want but must be set so fallback to 0 if None
+				"serial_number": act.Device.Serial if act.Device.Serial != None else 0,
+				# Same here but it was previously 15706 by default and it worked well
+				"product": act.Device.Product if act.Device.Product != None else 15706
+			}
+			devInfo = {
+				"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
+				"product": act.Device.Product if act.Device.Product != None else 15706,
+				"device_index": 0
+			}
+
+		else:
+			creatorInfo = {
+				# If we can't reverse the manufacturer (because of an old profile), i put the dev Manufacturer
+				"manufacturer": FITManufacturer.DEVELOPMENT,
+				# Looks like it can be anything we want but must be set so fallback to 0 if None
+				"serial_number": 0,
+				# Same here but it was previously 15706 by default and it worked well
+				"product": 15706
+			}
+			devInfo = {
+				"manufacturer": FITManufacturer.DEVELOPMENT,
+				"product": 15706,
+				"device_index": 0
+			}
+		
 
 		################################ 
 		# Just keeping the old Device management in case of bug
