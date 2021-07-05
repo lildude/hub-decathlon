@@ -55,9 +55,13 @@ def privacy(request):
     if "decathlon" in services :
         services["decathlon"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
     if "fitbit" in services :
-        services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
+        services["fitbit"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":YES})
     if "garminhealth" in services :
-        services["garminhealth"].update({"email": NO, "password": NO, "tokens": YES, "metadata": NO, "data":YES})
+        services["garminhealth"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":YES})
+    if "coros" in services :
+        services["coros"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
+    if "suunto" in services :
+        services["suunto"].update({"email": NO, "password": NO, "tokens": YES, "metadata": YES, "data":NO})
 
     for svc_id in SOFT_LAUNCH_SERVICES:
         if svc_id in services:

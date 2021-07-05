@@ -6,13 +6,20 @@
 <h1>{% trans "Questions: Answers" %}</h1>
 
 <div>
+	<h3>{% trans "What is HUB by DECATHLON?" %}</h3>
+	{% trans "We have created this service to facilitate the portability of sports data from our DECATHLON products to Strava, for example, but also to be able to group sports activities from other manufacturers (Garmin, Polar, Fitbit...) within your DECATHLON applications." %}
+</div>
+
+<div>
 	<h3>{% trans "What do I have to do to use Hub by DECATHLON?" %}</h3>
 	{% trans "Just connect to all the services you would like to sync between, click &quot;Synchronize now,&quot; then forget ever reading this sentence." %}
 </div>
 
 <div>
-	<h3>{% trans "Which services are uni-directional (do not support incoming activities) ?" %}</h3>
+	<h3>{% trans "Which services are uni-directional ?" %}</h3>
 	{% trans "Garmin Health, Coros and Polar only support retrieving activites." %}
+	<br />
+	{% trans "Strava only accepts new activities, it is not possible to retrieve activities from Strava." %}
 </div>
 
 <div class="right">
