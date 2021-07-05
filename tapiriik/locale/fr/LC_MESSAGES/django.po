@@ -234,12 +234,12 @@ msgstr "Vous pouvez synchroniser avec d'autres services"
 #: tapiriik/web/templates/dashboard_old.html:67
 msgid ""
 "Hub by DECATHLON synchronizes your activities between Garmin Health, Polar "
-"Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and "
+"Flow, Strava, RideWithGPS, Dropbox, Smashrun and "
 "BeginnerTriathlete<br/>\t(your heart rate, cadence, power, and temperature "
 "data syncs too)"
 msgstr ""
 "Le Hub by DECATHLON synchronise vos activités entre Garmin Connect, Polar "
-"Flow, PolarPersonalTrainer, Strava, RideWithGPS, BeginnerTriathlete et "
+"Flow, Strava, RideWithGPS, BeginnerTriathlete et "
 "DecathlonCoach <br/>\t(Vos données cardiaques, température, cadence...)"
 
 #: tapiriik/web/templates/donation.html:4
@@ -817,10 +817,10 @@ msgstr "pour les contributions sur site"
 
 #: tapiriik/web/templates/static/credits.html:10
 msgid ""
-"Aerobia, Polar, Strava et al.</b> for creating and supporting the APIs that "
+"Polar, Garmin and Strava</b> for creating and supporting the APIs that "
 "make this site possible"
 msgstr ""
-"Aerobia, Garmin, Strava pour créer et maintenir des APIs qui rendent "
+"Polar, Garmin et Strava</b> pour créer et maintenir des APIs qui rendent "
 "possible ce service."
 
 #: tapiriik/web/templates/static/credits.html:11
@@ -1228,9 +1228,6 @@ msgstr ""
 
 #~ msgid "For system status updates"
 #~ msgstr "Pour les mises à jour systèmes"
-
-#~ msgid "exercisync group on aerobia.ru"
-#~ msgstr "exercisync groupe sur aerobia.ru"
 
 #, fuzzy
 #~| msgid ""

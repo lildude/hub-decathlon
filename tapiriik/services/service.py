@@ -27,7 +27,6 @@ class Service:
 
     def List():
         return [
-            Aerobia,
             RunKeeper,
             Strava,
             PolarFlow,
@@ -47,7 +46,6 @@ class Service:
             Setio,
             Singletracker,
             Decathlon,
-            PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
             Coros,
@@ -77,9 +75,7 @@ class Service:
             Pulsstory,
             Setio,
             Singletracker,
-            Aerobia,
             Decathlon,
-            PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
             Coros,

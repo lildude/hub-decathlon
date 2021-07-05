@@ -64,7 +64,7 @@
 	{% endfor %}
 
 {% else %}
-<p class="splashPreamble">{% trans "Hub by DECATHLON synchronizes your activities between Garmin Health, Polar Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
+<p class="splashPreamble">{% trans "Hub by DECATHLON synchronizes your activities between Garmin Health, Polar Flow, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
 	{% for provider in service_providers %}
 		{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services %}
 			{% include "service-button.html" with provider=provider %}

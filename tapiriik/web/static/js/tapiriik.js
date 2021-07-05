@@ -147,12 +147,6 @@ tapiriik.AddressChanged=function(){
 			}
 			return;
 		}
-		if (components[1]=="aerobia" && components[2]=="setup"){
-			//TODO dirty hack
-			//going to separate view to make react work
-			document.location = "../../aerobiaConfig"
-			return;
-		}
 		tapiriik.DoDismissServiceDialog();
 		tapiriik.OpenServiceConfigPanel(components[1]);
 		return;
