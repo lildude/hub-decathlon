@@ -53,33 +53,3 @@ def dropbox(req):
         conf = conn.GetConfiguration()
         form = DropboxConfigForm({"path": conf["SyncRoot"], "syncUntagged": conf["UploadUntagged"]})
     return render(req, "config/dropbox.html", {"form": form})
-
-
-class AerobiaConfigForm(forms.Form):
-    pass
-
-def aerobia(req):
-    if not req.user:
-        return HttpResponse(status=403)
-    conn = User.GetConnectionRecord(req.user, "aerobia")
-
-    config = conn.GetConfiguration()
-    gearRules = config["gearRules"] if "gearRules" in config else []
-    props = {
-        'aerobiaId': conn.ExternalID,
-        'userToken': conn.Authorization["OAuthToken"],
-        'sportTypes': conn.Service.SupportedActivities,
-        'config': {
-                'gearRules': gearRules
-            }
-    }
-
-    if req.method == "POST":
-        form = AerobiaConfigForm(req.POST)
-        if form.is_valid():
-            configRaw = req.POST.get('config')
-            config = json.loads(configRaw)
-            conn.SetConfiguration(config)
-            return redirect("dashboard")
-
-    return render(req, "config/aerobia.html", {'props': props})
