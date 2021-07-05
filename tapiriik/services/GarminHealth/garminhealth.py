@@ -5,6 +5,7 @@ from tapiriik.database import cachedb, db
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatistics, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
 from tapiriik.services.api import APIException, UserException, UserExceptionType
 from tapiriik.services.fit import FITIO
+from fitparse.utils import FitEOFError
 from django.core.urlresolvers import reverse
 from datetime import date, datetime, timezone, timedelta
 from urllib.parse import urlencode
@@ -224,11 +225,15 @@ class GarminHealthService(ServiceBase):
             # Downlaoding the activity fit file
             resp = oauthSession.get(activity_file_url)
             if resp.status_code != 204 and resp.status_code != 200:
-                logger.info("\tAn error occured while downloading Garmin Health activity, status code %s, content %s" % (
+                logger.warning("\tAn error occured while downloading Garmin Health activity, status code %s, content %s" % (
                     (str(resp.status_code), resp.content)))
             else:
                 pre_download_counter += 1
-                activity = FITIO.Parse(resp.content)
+                try:
+                    activity = FITIO.Parse(resp.content)
+                except FitEOFError as e:
+                    logger.warning("Can't parse the file from %s. Skipping this activity." % activity_file_url)
+                    continue
                 # As the name can be None in the webhook we could have empty string as a fallback to avoid redis crash.
                 # In this case it's better to set the activity.Name to None as the FITIO.Parse have an activity name guess behaviour.
                 activity.Name = activity_file_name if activity_file_name != "" else None
