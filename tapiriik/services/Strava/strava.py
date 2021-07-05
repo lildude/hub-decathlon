@@ -168,6 +168,8 @@ class StravaService(ServiceBase):
         if resp.status_code != 204 and resp.status_code != 200:
             if resp.status_code == 429:
                 logger.warning("Rate limit exeception %s - %s" % (resp.status_code, resp.text))
+            elif resp.status_code == 401:
+                logger.warning("The user has already revoked his account from strava's UI, deleting the service record anyway")
             else:
                 raise APIException("Unable to deauthorize Strava auth token, status " + str(resp.status_code) + " resp " + resp.text)
 
