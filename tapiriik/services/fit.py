@@ -608,6 +608,14 @@ class FITIO:
 			# We create a temp var for simplicity
 			actividata = actividict["sessions"][0]
 
+			# As the fit parsing library loves converting the digital data into string,
+			#		i have to reverse that conversion or the dumper will crash
+			reversed_key_val_garmin_product = {FIELD_TYPES["garmin_product"].values[gp_key]: gp_key for gp_key in FIELD_TYPES["garmin_product"].values.keys()}
+			if actividict["file_id"].get("garmin_product") != None:
+				if reversed_key_val_garmin_product.get(actividict["file_id"].get("garmin_product")) != None:
+					# TODO make this more readable and more concise, but this needed to be hotfixed ASAP
+					actividict["file_id"].update({"product": reversed_key_val_garmin_product.get(actividict["file_id"].get("garmin_product"))})
+
 			#We init the Device object
 			activity.Device = Device(
 				manufacturer=actividict["file_id"].get("manufacturer"),
