@@ -745,6 +745,26 @@ class FITIO:
 		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
 		activity.GPS=len(actividict["waypoints"]) != 0
 		activity.Stationary=not len(actividict["waypoints"]) != 0
+
+
+		# It is sure that fit send all its timestamps in UCT.
+		# So i have to make them all non TZ naives
+		# 		else adjustTZ() will assume that the naives DTs are already on local TZ 
+		# 		wich leads to time shifts later in the processing. 
+		# 		For example :
+		#				With a TZ=FixedOffset(120)
+		#				A real 2020/01/01 14:30 (In UTC but naive) 
+		# 				Can become 2020/01/01 14:30+02:00 after AdjustTZ() (Equivalent to 12:30+00:00) 
+		# 				So the FIT dumper will assume it is : 2020/01/01 12:30 after putting it in UTC and making it naive again.
+		activity.StartTime = activity.StartTime.replace(tzinfo=pytz.utc)
+		activity.EndTime = activity.EndTime.replace(tzinfo=pytz.utc)
+		for lap in activity.Laps:
+			lap.StartTime = lap.StartTime.replace(tzinfo=pytz.utc)
+			lap.EndTime = lap.EndTime.replace(tzinfo=pytz.utc)
+			for wp in lap.Waypoints:
+				wp.Timestamp = wp.Timestamp.replace(tzinfo=pytz.utc)
+
+
 		activity.CheckSanity()
 
 		return activity
