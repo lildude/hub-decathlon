@@ -869,8 +869,7 @@ class FITIO:
 				rec_contents = {"timestamp": toUtc(wp.Timestamp)}
 				if wp.Location:
 					rec_contents.update({"position_lat": wp.Location.Latitude, "position_long": wp.Location.Longitude})
-					if wp.Location.Altitude is not None:
-						rec_contents.update({"altitude": wp.Location.Altitude})
+					rec_contents.update({"altitude": wp.Location.Altitude})
 				if wp.HR is not None:
 					rec_contents.update({"heart_rate": wp.HR})
 				if wp.RunCadence is not None:
