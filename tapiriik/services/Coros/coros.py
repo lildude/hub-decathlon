@@ -249,7 +249,6 @@ class CorosService(ServiceBase):
             # As coros don't provide name in activity summary I temporarly put the activity name
             activity.Name = activity.Type
 
-            activity.AdjustTZ()
             activity.CalculateUID()
             activities.append(activity)
         return activities, exclusions

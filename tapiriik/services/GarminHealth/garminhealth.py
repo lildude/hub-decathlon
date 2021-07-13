@@ -238,7 +238,6 @@ class GarminHealthService(ServiceBase):
                 # In this case it's better to set the activity.Name to None as the FITIO.Parse have an activity name guess behaviour.
                 activity.Name = activity_file_name if activity_file_name != "" else None
 
-                activity.AdjustTZ()
                 activity.CalculateUID()
                 post_download_counter += 1
                 activities.append(activity)

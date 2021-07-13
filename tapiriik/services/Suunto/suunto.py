@@ -236,7 +236,6 @@ class SuuntoService(ServiceBase):
 
             activity = FITIO.Parse(response.content)
             activity.ServiceData = {"ActivityID": act_id}
-            activity.AdjustTZ()
 
             activities.append(activity)
         return activities, exclusions
