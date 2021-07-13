@@ -627,9 +627,14 @@ class FITIO:
 			# And we fill the activity data
 			activity.StartTime = actividata.get("start_time")
 			activity.EndTime = actividata.get("timestamp")
-			# TODO Verify all fit files timestamps from all services are in UTC
-			# It's the case for Garmin and Polar
-			activity.TZ = pytz.utc
+
+			# Getting timezone from offset between the TS and local TS.
+			# If local TS does not exist UTC is used
+			act_data = actividict.get("activity")
+			offset_in_minutes = 0
+			if act_data != None:
+				offset_in_minutes = int((act_data.get("local_timestamp",act_data.get("timestamp"))-act_data.get("timestamp")).total_seconds()/60)
+			activity.TZ = pytz.FixedOffset(offset_in_minutes) if offset_in_minutes != 0 else pytz.utc
 
 			# .get() fallback to "generic" to avoid a lot of conditional statement
 			subsport_name = actividata.get("sub_sport", "generic")
