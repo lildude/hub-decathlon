@@ -297,14 +297,9 @@ class DecathlonService(ServiceBase):
                 for ride in resp_activities["hydra:member"]:
         
                     activity = UploadedActivity()
-                    activity.TZ = pytz.timezone("UTC")  
-
-                    datebase = parse(ride["startdate"])
-                    
-
-                    activity.StartTime = datebase #pytz.utc.localize(datebase)
-                    
-                    activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"], "Origin": "decathlon"}
+                    activity.StartTime = parse(ride["startdate"])
+                    activity.TZ = pytz.FixedOffset(int(datetime.utcoffset(activity.StartTime).total_seconds()/60))
+                    activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
                     
                     logging.info("\t\t Decathlon Activity ID : " + ride["id"])
         
