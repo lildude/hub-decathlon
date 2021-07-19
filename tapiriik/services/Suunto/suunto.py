@@ -274,17 +274,30 @@ class SuuntoService(ServiceBase):
         if putResp.status_code != 201:
             raise APIException("Unable to upload activity " + activity.UID + " response " + putResp.text + " status " + str(putResp.status_code))
 
-        # We must sleep because the status that bring the workout ID is not instant
-        # During test 1 sec is enough but to prevent some overload in suunto side we put 5 sec
-        time.sleep(5)
-        
+        # We must sleep because the status that bring the workout ID might not be instantaneous
+        # During test 1 sec is enough so we try this
+        time.sleep(1)
         uploadStatus = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
-        if uploadStatus.json()["workoutKey"] == "":
-            if uploadStatus.json()["status"] == "ERROR":
-                raise APIException("Error: Suunto can't process the activity " + activity.UID + " response " + uploadStatus.text)
-            raise APIException("Initialisation OK but the data was not sent " + activity.UID + " response " + uploadStatus.text)
+        max_retry_count = 4
 
-        return uploadStatus.json()["workoutKey"]
+        # But suunto might be busy so we add a retry mechanism
+        for retries in range(max_retry_count):
+            if uploadStatus.json()["workoutKey"] != "":
+                # If we have the expected answer we return it
+                return uploadStatus.json()["workoutKey"]
+            
+            if uploadStatus.json()["status"] == "ERROR":
+                # If there is an error we raise en exception
+                raise APIException("Error: Suunto can't process the activity " + activity.UID + " response " + uploadStatus.text)
+
+            if retries == max_retry_count - 1:
+                # If the max_retry_count is reached and we have nothing, it raises an exception
+                raise APIException("Initialisation OK but the data was not sent after %i tries. UID : %s Response : %s" % (max_retry_count, activity.UIDuploadStatus.text))
+
+            # Else it makes a little break to let the time to Suunto to process and then we retry
+            logger.info("SUUNTO call updload activity SLEEP 8SEC")
+            time.sleep(8)
+            uploadStatus = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
 
 
     def SubscribeToPartialSyncTrigger(self, serviceRecord):
