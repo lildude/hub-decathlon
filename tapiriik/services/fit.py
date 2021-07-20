@@ -746,6 +746,9 @@ class FITIO:
 		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
 		activity.GPS=len(actividict["waypoints"]) != 0
 		activity.Stationary=not len(actividict["waypoints"]) != 0
+		
+		
+		activity.AdjustTZ()
 		activity.CheckSanity()
 
 		return activity
