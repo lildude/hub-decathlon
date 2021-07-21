@@ -277,16 +277,22 @@ class SuuntoService(ServiceBase):
         # We must sleep because the status that bring the workout ID might not be instantaneous
         # During test 1 sec is enough so we try this
         time.sleep(1)
-        uploadStatus = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
+        response = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
+        try:
+            uploadStatus = response.json()
+        except ValueError:
+            raise APIException("Failed parsing suunto upload response %s - %s" % (response.status_code, response.text), trigger_exhaustive=False)
+        
         max_retry_count = 4
+
 
         # But suunto might be busy so we add a retry mechanism
         for retries in range(max_retry_count):
-            if uploadStatus.json()["workoutKey"] != "":
+            if uploadStatus.get("workoutKey","") != "":
                 # If we have the expected answer we return it
-                return uploadStatus.json()["workoutKey"]
+                return uploadStatus.get("workoutKey")
             
-            if uploadStatus.json()["status"] == "ERROR":
+            if uploadStatus.get("status") == "ERROR":
                 # If there is an error we raise en exception
                 raise APIException("Error: Suunto can't process the activity " + activity.UID + " response " + uploadStatus.text)
 
@@ -297,7 +303,11 @@ class SuuntoService(ServiceBase):
             # Else it makes a little break to let the time to Suunto to process and then we retry
             logger.info("SUUNTO call updload activity SLEEP 8SEC")
             time.sleep(8)
-            uploadStatus = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
+            response = self._requestWithAuth(lambda session: session.get("https://cloudapi.suunto.com/v2/upload/"+initResp.json()["id"]), svcRecord)
+            try:
+                uploadStatus = response.json()
+            except ValueError:
+                raise APIException("Failed parsing suunto upload response %s - %s" % (response.status_code, response.text), trigger_exhaustive=False)
 
 
     def SubscribeToPartialSyncTrigger(self, serviceRecord):
