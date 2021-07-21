@@ -7,6 +7,12 @@ import sys
 import pytz
 import json
 
+# This const has been added to avoid using different values for the parser and the dumper.
+# Previously it was this one for the dumper and it was a rounded value for the parser.
+# This difference has caused lat/long shifts of few centimeters during the parsing or dumping process.
+# The other goal is to avoid doing this calculation thousands of times (each point lat and long 2 times for parsing and dumping)
+SEMI_CIRCLE_CONST = (2 ** 31 / 180)
+
 class FITFileType:
 	Activity = 4 # The only one we care about now.
 
@@ -122,7 +128,7 @@ class FITMessageGenerator:
 			# SINT32
 			if input is None:
 				return struct.pack("<i", 0x7FFFFFFF) # FIT-defined invalid value
-			return struct.pack("<i", round(input * (2 ** 31 / 180)))
+			return struct.pack("<i", round(input * SEMI_CIRCLE_CONST))
 		def versionFormatter(input):
 			# UINT16
 			if input is None:
@@ -559,8 +565,8 @@ class FITIO:
 					# We append the waypoint to a waypoints list
 					actividict["waypoints"].append({
 						"timestamp": msg_data["timestamp"],
-						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
-                		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
+						"lat": msg_data["position_lat"] / SEMI_CIRCLE_CONST if msg_data["position_lat"] != None else None,
+                		"lon": msg_data["position_long"] / SEMI_CIRCLE_CONST if msg_data["position_long"] != None else None,
 						"altitude": msg_data.get("altitude") if "altitude" in msg_data_keys else msg_data.get("enhanced_altitude"),
 						# The .get avoid the usage of conditions to ensure that the property exist in the dict
 						# If it does not exist it returns None instead of crashing
@@ -746,7 +752,7 @@ class FITIO:
 		activity.GPS=len(actividict["waypoints"]) != 0
 		activity.Stationary=not len(actividict["waypoints"]) != 0
 
-
+    
 		# It is sure that fit send all its timestamps in UCT.
 		# So i have to make them all non TZ naives
 		# 		else adjustTZ() will assume that the naives DTs are already on local TZ 
@@ -763,8 +769,11 @@ class FITIO:
 			lap.EndTime = lap.EndTime.replace(tzinfo=pytz.utc)
 			for wp in lap.Waypoints:
 				wp.Timestamp = wp.Timestamp.replace(tzinfo=pytz.utc)
+		
+		
+		activity.AdjustTZ()
 
-
+    
 		activity.CheckSanity()
 
 		return activity
@@ -894,8 +903,7 @@ class FITIO:
 				rec_contents = {"timestamp": toUtc(wp.Timestamp)}
 				if wp.Location:
 					rec_contents.update({"position_lat": wp.Location.Latitude, "position_long": wp.Location.Longitude})
-					if wp.Location.Altitude is not None:
-						rec_contents.update({"altitude": wp.Location.Altitude})
+					rec_contents.update({"altitude": wp.Location.Altitude})
 				if wp.HR is not None:
 					rec_contents.update({"heart_rate": wp.HR})
 				if wp.RunCadence is not None:

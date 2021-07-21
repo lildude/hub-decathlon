@@ -204,8 +204,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tapiriik.web',
-    'pipeline',
-    'webpack_loader'
+    'pipeline'
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -255,14 +254,9 @@ LOGGING = {
     }
 }
 
-WEBPACK_LOADER = {
-    'DEFAULT': {
-            'BUNDLE_DIR_NAME': 'js/bundles/',
-            'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
-        }
-}
 
-TEST_RUNNER = 'tapiriik.testing.MongoDBTestRunner'
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+#'tapiriik.testing.MongoDBTestRunner'
 
 MONGO_HOST_API = "localhost"
 MONGO_REPLICA_SET = None

@@ -4,7 +4,7 @@ tapiriik.database.cachedb = tapiriik.database._connection["tapiriik_cache_test"]
 
 from tapiriik.testing import *
 import unittest
-unittest.main()
+unittest.main(verbosity=2)
 
 tapiriik.database._connection.drop_database("tapiriik_test")
 tapiriik.database._connection.drop_database("tapiriik_cache_test")
