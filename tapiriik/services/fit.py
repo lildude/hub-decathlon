@@ -696,6 +696,11 @@ class FITIO:
 			# TODO handle multiple sessions
 			raise NotImplementedError
 
+		# Garmin, on their connect app, can create a manual activity with the same Start/End Time but with a non 0 timer_time
+		if activity.StartTime == activity.EndTime and activity.Stats.TimerTime.Value != 0:
+			# In that case we update the EndTime to avoid a 0 duration error during the sanity check.
+			activity.EndTime = activity.StartTime + timedelta(seconds=activity.Stats.TimerTime.Value)
+
 		# Adding pseudo lap with the start and the end of the activity
 		# Because there is no lap in polar fit files and they are needed to store the waypoints
 		if len(actividict["laps"]) == 0:
