@@ -218,6 +218,7 @@ class GarminHealthService(ServiceBase):
             
             # Spliting the URL from the Activity Name
             decoded_activity_file_url_and_name_and_id = activity_file_url_and_name_and_id.decode('UTF-8')
+            logger.info("\t redis key Garmin : %s" % decoded_activity_file_url_and_name_and_id)
             activity_file_url = decoded_activity_file_url_and_name_and_id.split("::")[0]
             activity_file_name = decoded_activity_file_url_and_name_and_id.split("::")[1]
             activity_id = decoded_activity_file_url_and_name_and_id.split("::")[2]
