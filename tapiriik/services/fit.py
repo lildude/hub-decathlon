@@ -856,6 +856,13 @@ class FITIO:
 
 		inPause = False
 		for lap in act.Laps:
+
+			# Little trick to handle static activities mostly for Strava
+			# If there not at least a record msg, Strava will say empty upload ...
+			if len(lap.Waypoints) == 0:
+				rec_contents = {"timestamp": toUtc(act.StartTime)}
+				fmg.GenerateMessage("record", **rec_contents)
+
 			for wp in lap.Waypoints:
 				if wp.Type == WaypointType.Resume and inPause:
 					fmg.GenerateMessage("event", timestamp=toUtc(wp.Timestamp), event=FITEvent.Timer, event_type=FITEventType.Start)
