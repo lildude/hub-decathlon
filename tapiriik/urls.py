@@ -35,7 +35,6 @@ urlpatterns = patterns('',
 
     url(r'^configure/save/(?P<service>.+)?$', 'tapiriik.web.views.config.config_save', {}, name='config_save', ),
     url(r'^configure/dropbox$', 'tapiriik.web.views.config.dropbox', {}, name='dropbox_config', ),
-    url(r'^aerobiaConfig$', 'tapiriik.web.views.config.aerobia', {}, name='aerobia_config', ),
     url(r'^configure/flow/save/(?P<service>.+)?$', 'tapiriik.web.views.config.config_flow_save', {}, name='config_flow_save', ),
     url(r'^settings/?$', 'tapiriik.web.views.settings.settings', {}, name='settings_panel', ),
 
@@ -54,6 +53,8 @@ urlpatterns = patterns('',
 
     url(r'^status/$', 'tapiriik.web.views.server_status', {}, name='server_status'),
     url(r'^status_elb/$', 'tapiriik.web.views.server_status_elb', {}, name='server_status_elb'),
+
+    url(".well-known/security.txt", 'tapiriik.web.views.server_securitytxt', {}, name='server_securitytxt'),
 
     url(r'^supported-activities$', 'tapiriik.web.views.supported_activities', {}, name='supported_activities'),
     # url(r'^supported-services-poll$', 'tapiriik.web.views.supported_services_poll', {}, name='supported_services_poll'),

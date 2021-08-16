@@ -63,11 +63,33 @@ class DeviceIdentifier:
 					return altIdentifier
 
 class Device:
-	def __init__(self, identifier, serial=None, verMaj=None, verMin=None):
-		self.Identifier = identifier
+	# It's quite a non-sense to instanciate an "Identifier" object as there is no "Identifier" label in the FIT specification.
+	# Moreover, the FIT format is the main format used by the Hub (So if "Identifier" is part of TCX ot GC format we don't care anymore).
+	# But in order to preserve backward compatibility, 
+	# 		it is important to preserve the order of the first 4 params for the calls which don't use named parameters.
+	def __init__(self, identifier=None, serial=None, verMaj=None, verMin=None, manufacturer=None, product=None):
+		self.Identifier = identifier if identifier != None else FITDeviceIdentifier(manufacturer, product)
 		self.Serial = serial
 		self.VersionMajor = verMaj
 		self.VersionMinor = verMin
+	
+	# Making Manufacturer and Product looks like Device attributes to be more FIT look alike.
+	# But they are still Identifier attributes to preserve backward compatibility.
+	@property
+	def Manufacturer(self):
+		return self.Identifier.Manufacturer
+
+	@property
+	def Product(self):
+		return self.Identifier.Product
+
+	# A device should be instanciated into an activity, so it may be necessary to print it for debug purposes
+	def asdict(self):
+		return {
+			"Manufacturer": self.Manufacturer,
+			"Product": self.Product,
+			"Serial": self.Serial,
+		}
 
 
 # I think Garmin devices' TCX ProductID match their FIT garmin_product id

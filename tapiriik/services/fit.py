@@ -1,10 +1,17 @@
 from datetime import datetime, timedelta
 from .interchange import WaypointType, ActivityStatisticUnit, ActivityType, LapIntensity, LapTriggerMethod, Activity, Lap, UploadedActivity, Waypoint, Location, ActivityStatistics
-from .devices import DeviceIdentifier, DeviceIdentifierType
+from .devices import DeviceIdentifier, DeviceIdentifierType, Device
+from fitparse.profile import FIELD_TYPES
 import struct
 import sys
 import pytz
 import json
+
+# This const has been added to avoid using different values for the parser and the dumper.
+# Previously it was this one for the dumper and it was a rounded value for the parser.
+# This difference has caused lat/long shifts of few centimeters during the parsing or dumping process.
+# The other goal is to avoid doing this calculation thousands of times (each point lat and long 2 times for parsing and dumping)
+SEMI_CIRCLE_CONST = (2 ** 31 / 180)
 
 class FITFileType:
 	Activity = 4 # The only one we care about now.
@@ -121,7 +128,7 @@ class FITMessageGenerator:
 			# SINT32
 			if input is None:
 				return struct.pack("<i", 0x7FFFFFFF) # FIT-defined invalid value
-			return struct.pack("<i", round(input * (2 ** 31 / 180)))
+			return struct.pack("<i", round(input * SEMI_CIRCLE_CONST))
 		def versionFormatter(input):
 			# UINT16
 			if input is None:
@@ -378,9 +385,16 @@ class FITIO:
 		ActivityType.Snowboarding: 14,
 		ActivityType.Rowing: 15,
 		ActivityType.Hiking: 17,
+		ActivityType.InlineSkating: 30,
 		ActivityType.Climbing: 31,
 		ActivityType.Skating: 33,
-		ActivityType.StandUpPaddling: 37
+		ActivityType.Snowshoeing: 35,
+		ActivityType.StandUpPaddling: 37,
+		ActivityType.Surfing: 38,
+		ActivityType.Kayaking: 41,
+		ActivityType.WindSurfing: 43,
+		ActivityType.KiteSurfing: 44,
+
 	}
 	_subSportMap = {
 		'treadmill': ActivityType.Running,  # Run/Fitness Equipment
@@ -465,7 +479,7 @@ class FITIO:
 		'mountaineering': ActivityType.Climbing,
 		'hiking': ActivityType.Hiking,
 		'multisport': ActivityType.Other,
-		'paddling': ActivityType.StandUpPaddling,
+		'paddling': ActivityType.Kayaking,
 		'flying': ActivityType.Other,
 		'e_biking': ActivityType.Cycling,
 		'motorcycling': ActivityType.Other,
@@ -476,21 +490,21 @@ class FITIO:
 		'horseback_riding': ActivityType.Other,
 		'hunting': ActivityType.Other,
 		'fishing': ActivityType.Other,
-		'inline_skating': ActivityType.Other, # TODO see if skating might be good ?
+		'inline_skating': ActivityType.InlineSkating,
 		'rock_climbing': ActivityType.Climbing,
 		'sailing': ActivityType.Other,
 		'ice_skating': ActivityType.Skating,
 		'sky_diving': ActivityType.Other,
-		'snowshoeing': ActivityType.Hiking,
+		'snowshoeing': ActivityType.Snowshoeing,
 		'snowmobiling': ActivityType.Other,
 		'stand_up_paddleboarding': ActivityType.StandUpPaddling,
-		'surfing': ActivityType.Other,
+		'surfing': ActivityType.Surfing,
 		'wakeboarding': ActivityType.Other,
 		'water_skiing': ActivityType.Other,
-		'kayaking': ActivityType.Other,
+		'kayaking': ActivityType.Kayaking,
 		'rafting': ActivityType.Other,
-		'windsurfing': ActivityType.Other,
-		'kitesurfing': ActivityType.Other,
+		'windsurfing': ActivityType.WindSurfing,
+		'kitesurfing': ActivityType.KiteSurfing,
 		'tactical': ActivityType.Other,
 		'jumpmaster': ActivityType.Other,
 		'boxing': ActivityType.Other,
@@ -521,7 +535,6 @@ class FITIO:
 	def Parse(fitData, activity=None):
 		import fitparse
 		from fitparse.records import DefinitionMessage, DataMessage
-		from fitparse.profile import FIELD_TYPES
 
 		# We create a new activity if it's not sent through that function
 		activity = activity if activity else UploadedActivity()
@@ -531,6 +544,7 @@ class FITIO:
 		fitfile.parse()
 
 		actividict = {
+			"file_id": None,
 			"waypoints": [],
 			"laps": [],
 			"sessions": [],
@@ -551,8 +565,8 @@ class FITIO:
 					# We append the waypoint to a waypoints list
 					actividict["waypoints"].append({
 						"timestamp": msg_data["timestamp"],
-						"lat": msg_data["position_lat"] / 11930465 if msg_data["position_lat"] != None else None,
-                		"lon": msg_data["position_long"] / 11930465 if msg_data["position_long"] != None else None,
+						"lat": msg_data["position_lat"] / SEMI_CIRCLE_CONST if msg_data["position_lat"] != None else None,
+                		"lon": msg_data["position_long"] / SEMI_CIRCLE_CONST if msg_data["position_long"] != None else None,
 						"altitude": msg_data.get("altitude") if "altitude" in msg_data_keys else msg_data.get("enhanced_altitude"),
 						# The .get avoid the usage of conditions to ensure that the property exist in the dict
 						# If it does not exist it returns None instead of crashing
@@ -590,18 +604,43 @@ class FITIO:
 					# For multisport the activity will be tagged multisport and the sessions will tell the subsports
 					actividict["activity"] = msg_data
 
+				elif msg.name == "file_id":
+					# according to fit documentations there must be only one file_id record
+					actividict["file_id"] = msg_data
+
 
 		# We check if there is only one session for the moment
 		if len(actividict["sessions"]) == 1:
 			# We create a temp var for simplicity
 			actividata = actividict["sessions"][0]
 
+			# As the fit parsing library loves converting the digital data into string,
+			#		i have to reverse that conversion or the dumper will crash
+			reversed_key_val_garmin_product = {FIELD_TYPES["garmin_product"].values[gp_key]: gp_key for gp_key in FIELD_TYPES["garmin_product"].values.keys()}
+			if actividict["file_id"].get("garmin_product") != None:
+				if reversed_key_val_garmin_product.get(actividict["file_id"].get("garmin_product")) != None:
+					# TODO make this more readable and more concise, but this needed to be hotfixed ASAP
+					actividict["file_id"].update({"product": reversed_key_val_garmin_product.get(actividict["file_id"].get("garmin_product"))})
+
+			#We init the Device object
+			activity.Device = Device(
+				manufacturer=actividict["file_id"].get("manufacturer"),
+				# If there is a product we take it else we take the garmin_product or None
+				product=actividict["file_id"].get("product",actividict["file_id"].get("garmin_product")),
+				serial=actividict["file_id"].get("serial_number")
+			)
+
 			# And we fill the activity data
 			activity.StartTime = actividata.get("start_time")
 			activity.EndTime = actividata.get("timestamp")
-			# TODO Verify all fit files timestamps from all services are in UTC
-			# It's the case for Garmin and Polar
-			activity.TZ = pytz.utc
+
+			# Getting timezone from offset between the TS and local TS.
+			# If local TS does not exist UTC is used
+			act_data = actividict.get("activity")
+			offset_in_minutes = 0
+			if act_data != None:
+				offset_in_minutes = int((act_data.get("local_timestamp",act_data.get("timestamp"))-act_data.get("timestamp")).total_seconds()/60)
+			activity.TZ = pytz.FixedOffset(offset_in_minutes) if offset_in_minutes != 0 else pytz.utc
 
 			# .get() fallback to "generic" to avoid a lot of conditional statement
 			subsport_name = actividata.get("sub_sport", "generic")
@@ -666,6 +705,11 @@ class FITIO:
 			# TODO handle multiple sessions
 			raise NotImplementedError
 
+		# Garmin, on their connect app, can create a manual activity with the same Start/End Time but with a non 0 timer_time
+		if activity.StartTime == activity.EndTime and activity.Stats.TimerTime.Value != 0:
+			# In that case we update the EndTime to avoid a 0 duration error during the sanity check.
+			activity.EndTime = activity.StartTime + timedelta(seconds=activity.Stats.TimerTime.Value)
+
 		# Adding pseudo lap with the start and the end of the activity
 		# Because there is no lap in polar fit files and they are needed to store the waypoints
 		if len(actividict["laps"]) == 0:
@@ -721,6 +765,29 @@ class FITIO:
 		# I set the GPS and the Stationary as they are mandatory for the Sanity Check to succeed. 
 		activity.GPS=len(actividict["waypoints"]) != 0
 		activity.Stationary=not len(actividict["waypoints"]) != 0
+
+    
+		# It is sure that fit send all its timestamps in UCT.
+		# So i have to make them all non TZ naives
+		# 		else adjustTZ() will assume that the naives DTs are already on local TZ 
+		# 		wich leads to time shifts later in the processing. 
+		# 		For example :
+		#				With a TZ=FixedOffset(120)
+		#				A real 2020/01/01 14:30 (In UTC but naive) 
+		# 				Can become 2020/01/01 14:30+02:00 after AdjustTZ() (Equivalent to 12:30+00:00) 
+		# 				So the FIT dumper will assume it is : 2020/01/01 12:30 after putting it in UTC and making it naive again.
+		activity.StartTime = activity.StartTime.replace(tzinfo=pytz.utc)
+		activity.EndTime = activity.EndTime.replace(tzinfo=pytz.utc)
+		for lap in activity.Laps:
+			lap.StartTime = lap.StartTime.replace(tzinfo=pytz.utc)
+			lap.EndTime = lap.EndTime.replace(tzinfo=pytz.utc)
+			for wp in lap.Waypoints:
+				wp.Timestamp = wp.Timestamp.replace(tzinfo=pytz.utc)
+		
+		
+		activity.AdjustTZ()
+
+    
 		activity.CheckSanity()
 
 		return activity
@@ -733,35 +800,63 @@ class FITIO:
 				raise ValueError("Need TZ data to produce FIT file")
 		fmg = FITMessageGenerator()
 
-		creatorInfo = {
-			"manufacturer": FITManufacturer.DEVELOPMENT,
-			"serial_number": 0,
-			"product": 15706
-		}
-		devInfo = {
-			"manufacturer": FITManufacturer.DEVELOPMENT,
-			"product": 15706,
-			"device_index": 0
-		}
-		if act.Device:
-			# GC can get along with out this, Strava needs it
-			devId = DeviceIdentifier.FindEquivalentIdentifierOfType(DeviceIdentifierType.FIT, act.Device.Identifier)
-			if devId:
-				creatorInfo = {
-					"manufacturer": devId.Manufacturer,
-					"product": devId.Product,
-				}
-				devInfo = {
-					"manufacturer": devId.Manufacturer,
-					"product": devId.Product,
-					"device_index": 0 # Required for GC
-				}
-				if act.Device.Serial:
-					creatorInfo["serial_number"] = int(act.Device.Serial) # I suppose some devices might eventually have alphanumeric serial #s
-					devInfo["serial_number"] = int(act.Device.Serial)
-				if act.Device.VersionMajor is not None:
-					assert act.Device.VersionMinor is not None
-					devInfo["software_version"] = act.Device.VersionMajor + act.Device.VersionMinor / 100
+		# As the keys are the IDs and not the names.
+		# So it is usefull to reverse keys and values
+		reversed_key_val_manufacturer = {FIELD_TYPES["manufacturer"].values[man_key]: man_key for man_key in FIELD_TYPES["manufacturer"].values.keys()}
+
+		if act.Device != None:
+			creatorInfo = {
+				# If we can't reverse the manufacturer (because of an old profile), i put the dev Manufacturer
+				"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
+				# Looks like it can be anything we want but must be set so fallback to 0 if None
+				"serial_number": act.Device.Serial if act.Device.Serial != None else 0,
+				# Same here but it was previously 15706 by default and it worked well
+				"product": act.Device.Product if act.Device.Product != None else 15706
+			}
+			devInfo = {
+				"manufacturer": reversed_key_val_manufacturer.get(act.Device.Manufacturer, FITManufacturer.DEVELOPMENT),
+				"product": act.Device.Product if act.Device.Product != None else 15706,
+				"device_index": 0
+			}
+
+		else:
+			creatorInfo = {
+				# If we can't reverse the manufacturer (because of an old profile), i put the dev Manufacturer
+				"manufacturer": FITManufacturer.DEVELOPMENT,
+				# Looks like it can be anything we want but must be set so fallback to 0 if None
+				"serial_number": 0,
+				# Same here but it was previously 15706 by default and it worked well
+				"product": 15706
+			}
+			devInfo = {
+				"manufacturer": FITManufacturer.DEVELOPMENT,
+				"product": 15706,
+				"device_index": 0
+			}
+		
+
+		################################ 
+		# Just keeping the old Device management in case of bug
+		################################
+		# if act.Device:
+		# 	# GC can get along with out this, Strava needs it
+		# 	devId = DeviceIdentifier.FindEquivalentIdentifierOfType(DeviceIdentifierType.FIT, act.Device.Identifier)
+		# 	if devId:
+		# 		creatorInfo = {
+		# 			"manufacturer": devId.Manufacturer,
+		# 			"product": devId.Product,
+		# 		}
+		# 		devInfo = {
+		# 			"manufacturer": devId.Manufacturer,
+		# 			"product": devId.Product,
+		# 			"device_index": 0 # Required for GC
+		# 		}
+		# 		if act.Device.Serial:
+		# 			creatorInfo["serial_number"] = int(act.Device.Serial) # I suppose some devices might eventually have alphanumeric serial #s
+		# 			devInfo["serial_number"] = int(act.Device.Serial)
+		# 		if act.Device.VersionMajor is not None:
+		# 			assert act.Device.VersionMinor is not None
+		# 			devInfo["software_version"] = act.Device.VersionMajor + act.Device.VersionMinor / 100
 
 		fmg.GenerateMessage("file_id", type=FITFileType.Activity, time_created=toUtc(act.StartTime), **creatorInfo)
 		fmg.GenerateMessage("device_info", **devInfo)
@@ -809,6 +904,13 @@ class FITIO:
 
 		inPause = False
 		for lap in act.Laps:
+
+			# Little trick to handle static activities mostly for Strava
+			# If there not at least a record msg, Strava will say empty upload ...
+			if len(lap.Waypoints) == 0:
+				rec_contents = {"timestamp": toUtc(act.StartTime)}
+				fmg.GenerateMessage("record", **rec_contents)
+
 			for wp in lap.Waypoints:
 				if wp.Type == WaypointType.Resume and inPause:
 					fmg.GenerateMessage("event", timestamp=toUtc(wp.Timestamp), event=FITEvent.Timer, event_type=FITEventType.Start)
@@ -822,12 +924,11 @@ class FITIO:
 				rec_contents = {"timestamp": toUtc(wp.Timestamp)}
 				if wp.Location:
 					rec_contents.update({"position_lat": wp.Location.Latitude, "position_long": wp.Location.Longitude})
-					if wp.Location.Altitude is not None:
-						rec_contents.update({"altitude": wp.Location.Altitude})
+					rec_contents.update({"altitude": wp.Location.Altitude})
 				if wp.HR is not None:
 					rec_contents.update({"heart_rate": wp.HR})
 				if wp.RunCadence is not None:
-					rec_contents.update({"cadence": wp.RunCadence})
+					rec_contents.update({"cadence": (wp.RunCadence/2 if (act.ServiceData != None and act.ServiceData.get("Origin") == "decathlon") else wp.RunCadence)})
 				if wp.Cadence is not None:
 					rec_contents.update({"cadence": wp.Cadence})
 				if wp.Power is not None:

@@ -214,7 +214,6 @@ class PolarFlowService(ServiceBase):
 
             activity = FITIO.Parse(response.content)
             activity.ServiceData = {"ActivityID": act_url.decode('utf-8').split('/')[-1]}
-            activity.AdjustTZ()
 
             activities.append(activity)
         

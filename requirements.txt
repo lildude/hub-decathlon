@@ -4,15 +4,13 @@ pytz
 lxml
 dropbox==10.10.0
 python-dateutil
-Django==1.8.2
+Django==1.8.19
 pycryptodome
-celery
 django-pipeline==1.5.1
 requests_oauthlib==0.4.0
 redis==2.10.6
 django-ipware
 smashrun-client>=0.6.0
-beautifulsoup4
 isodate
 django-webpack-loader
 cssmin

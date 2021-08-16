@@ -23,6 +23,7 @@ import json
 import pprint
 import base64
 from requests_oauthlib import OAuth2Session
+from dateutil.parser import parse
 
 logger = logging.getLogger(__name__)
 
@@ -463,9 +464,8 @@ class FitbitService(ServiceBase):
                     activity = UploadedActivity()
 
                     #parse date start to get timezone and date
-                    parsedDate = ftbt_activity["startTime"][0:19] + ftbt_activity["startTime"][23:]
-                    activity.StartTime = datetime.strptime(parsedDate, "%Y-%m-%dT%H:%M:%S%z")
-                    activity.TZ = pytz.utc
+                    activity.StartTime = parse(ftbt_activity["startTime"])
+                    activity.TZ = pytz.FixedOffset(int(datetime.utcoffset(activity.StartTime).total_seconds()/60))
 
                     logger.debug("\tActivity s/t %s: %s" % (activity.StartTime, ftbt_activity["activityName"]))
 
@@ -709,6 +709,11 @@ class FitbitService(ServiceBase):
 
 
     def SubscribeToPartialSyncTrigger(self, serviceRecord):
+        # Safety features to avoid resubscribing multiple times
+        if serviceRecord.PartialSyncTriggerSubscribed:
+            logging.warning("Trying to re-subscribe an already subscribed user skipping")
+            return
+        
         webhook_sub_URL = "https://api.fitbit.com/1/user/-/activities/apiSubscriptions/"+serviceRecord.ExternalID+".json?subscriberId=" + FITBIT_SUBSCRIBER_ID
         logging.info(webhook_sub_URL)
 

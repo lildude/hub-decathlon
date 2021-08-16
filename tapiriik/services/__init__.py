@@ -8,8 +8,9 @@ from tapiriik.services.Endomondo import EndomondoService
 Endomondo = EndomondoService()
 from tapiriik.services.Dropbox import DropboxService
 Dropbox = DropboxService()
-from tapiriik.services.GarminConnect import GarminConnectService
-GarminConnect = GarminConnectService()
+#Garmin connect is deprecated
+#from tapiriik.services.GarminConnect import GarminConnectService
+#GarminConnect = GarminConnectService()
 from tapiriik.services.SportTracks import SportTracksService
 SportTracks = SportTracksService()
 from tapiriik.services.RideWithGPS import RideWithGPSService
@@ -36,14 +37,10 @@ from tapiriik.services.Setio import SetioService
 Setio = SetioService()
 from tapiriik.services.Singletracker import SingletrackerService
 Singletracker = SingletrackerService()
-from tapiriik.services.Aerobia import AerobiaService
-Aerobia = AerobiaService()
 from tapiriik.services.PolarFlow import PolarFlowService
 PolarFlow = PolarFlowService()
 from tapiriik.services.Decathlon import DecathlonService
 Decathlon = DecathlonService()
-from tapiriik.services.PolarPersonalTrainer import PolarPersonalTrainerService
-PolarPersonalTrainer = PolarPersonalTrainerService()
 
 from tapiriik.services.Fitbit import FitbitService
 Fitbit = FitbitService()
@@ -53,6 +50,9 @@ GarminHealth = GarminHealthService()
 
 from tapiriik.services.Coros import CorosService
 Coros = CorosService()
+
+from tapiriik.services.Suunto import SuuntoService
+Suunto = SuuntoService()
 
 PRIVATE_SERVICES = []
 try:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-18 10:09+0100\n"
+"POT-Creation-Date: 2021-07-19 10:29+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -116,34 +116,38 @@ msgid "sync your runs, rides & more"
 msgstr "synchronisez vos activités"
 
 #: tapiriik/web/templates/dashboard.html:11
-msgid "Manage your services"
-msgstr "Services disponibles"
+msgid "Retrieve your activities"
+msgstr "Récupérer vos activités"
 
-#: tapiriik/web/templates/dashboard.html:36
+#: tapiriik/web/templates/dashboard.html:34
+msgid "Share your activities"
+msgstr "Partager vos activités"
+
+#: tapiriik/web/templates/dashboard.html:61
 #: tapiriik/web/templates/dashboard_old.html:38
 msgid "Some activities could not be synchronized."
 msgstr "Certaines activités pourraient ne pas être synchronisées"
 
-#: tapiriik/web/templates/dashboard.html:57
+#: tapiriik/web/templates/dashboard.html:82
 msgid "Connected services will be synchronized automatically"
 msgstr "Les services connectés sont synchronisés automatiquement"
 
-#: tapiriik/web/templates/dashboard.html:63
+#: tapiriik/web/templates/dashboard.html:88
 #: tapiriik/web/templates/dashboard_old.html:18
 msgid "Connect a second service to synchronize your activities to &amp; from"
 msgstr "Connectez un second service pour synchroniser vos activités"
 
-#: tapiriik/web/templates/dashboard.html:69
+#: tapiriik/web/templates/dashboard.html:94
 #: tapiriik/web/templates/dashboard_old.html:11
 msgid "Substituting user"
 msgstr "Remplacement utilisateur"
 
-#: tapiriik/web/templates/dashboard.html:70
+#: tapiriik/web/templates/dashboard.html:95
 #: tapiriik/web/templates/dashboard_old.html:12
 msgid "Return"
 msgstr "Retour"
 
-#: tapiriik/web/templates/dashboard.html:77
+#: tapiriik/web/templates/dashboard.html:102
 msgid ""
 "Decathlon HUB synchronizes your recent activities between Garmin Connect, "
 "Polar Flow and Strava<br/>\t(your heart rate, cadence, power, and "
@@ -153,25 +157,25 @@ msgstr ""
 "Fitbit, Strava et DECATHLON Connect, Econnected et Coach <br/>\t(Vos données "
 "cardiaque, température, cadence...)"
 
-#: tapiriik/web/templates/dashboard.html:97
+#: tapiriik/web/templates/dashboard.html:122
 msgid "Connect to your Decathlon services"
 msgstr "Connectez-vous à votre compte DECATHLON"
 
-#: tapiriik/web/templates/dashboard.html:109
+#: tapiriik/web/templates/dashboard.html:134
 msgid "Available services"
 msgstr "Services disponibles"
 
-#: tapiriik/web/templates/dashboard.html:121
+#: tapiriik/web/templates/dashboard.html:146
 #: tapiriik/web/templates/dashboard_old.html:73
 msgid "Did not find your service?"
 msgstr "Vous ne trouvez pas votre service ?"
 
-#: tapiriik/web/templates/dashboard.html:121
+#: tapiriik/web/templates/dashboard.html:146
 #: tapiriik/web/templates/dashboard_old.html:73
 msgid "Try here"
 msgstr "Essayez ici"
 
-#: tapiriik/web/templates/dashboard.html:122
+#: tapiriik/web/templates/dashboard.html:147
 #: tapiriik/web/templates/dashboard_old.html:74
 msgid ""
 "Your email, password, and fitness data are kept safe - full details on the"
@@ -179,17 +183,17 @@ msgstr ""
 "Votre email, mots de passe et activités sportives sont en lieux sûr, plus de "
 "détail sur la"
 
-#: tapiriik/web/templates/dashboard.html:122
+#: tapiriik/web/templates/dashboard.html:147
 #: tapiriik/web/templates/dashboard_old.html:74
-#: tapiriik/web/templates/static/faq.html:61
+#: tapiriik/web/templates/static/faq.html:68
 msgid "privacy page"
 msgstr "Page de données personnelles"
 
-#: tapiriik/web/templates/dashboard.html:127
+#: tapiriik/web/templates/dashboard.html:152
 msgid "Welcome !"
 msgstr "Bienvenue !"
 
-#: tapiriik/web/templates/dashboard.html:128
+#: tapiriik/web/templates/dashboard.html:153
 msgid ""
 "Decathlon HUB synchronizes your recent activities between Garmin Connect, "
 "Polar Flow and Strava"
@@ -228,13 +232,12 @@ msgstr "Vous pouvez synchroniser avec d'autres services"
 #: tapiriik/web/templates/dashboard_old.html:67
 msgid ""
 "Hub by DECATHLON synchronizes your activities between Garmin Health, Polar "
-"Flow, PolarPersonalTrainer, Strava, RideWithGPS, Dropbox, Smashrun and "
-"BeginnerTriathlete<br/>\t(your heart rate, cadence, power, and temperature "
-"data syncs too)"
+"Flow, Strava, RideWithGPS, Dropbox, Smashrun and BeginnerTriathlete<br/>"
+"\t(your heart rate, cadence, power, and temperature data syncs too)"
 msgstr ""
 "Le Hub by DECATHLON synchronise vos activités entre Garmin Connect, Polar "
-"Flow, PolarPersonalTrainer, Strava, RideWithGPS, BeginnerTriathlete et "
-"DecathlonCoach <br/>\t(Vos données cardiaques, température, cadence...)"
+"Flow, Strava, RideWithGPS, BeginnerTriathlete et DecathlonCoach <br/>\t(Vos "
+"données cardiaques, température, cadence...)"
 
 #: tapiriik/web/templates/donation.html:4
 #: tapiriik/web/templates/donation.html:19
@@ -561,7 +564,7 @@ msgstr ""
 "..jusqu'à ce que vous vous déconnectez ou qu'ils ne soient plus requis."
 
 #: tapiriik/web/templates/privacy.html:30
-msgid "<span>What are</span>Access tokens?"
+msgid "<span>What are</span> Access tokens?"
 msgstr "<span>Qu'est ce qu'un</span> Access tokens ?"
 
 #: tapiriik/web/templates/privacy.html:31
@@ -579,7 +582,7 @@ msgstr ""
 "token."
 
 #: tapiriik/web/templates/privacy.html:35
-msgid "<span>What is</span>Activity metadata?"
+msgid "<span>What is</span> Activity metadata?"
 msgstr "<span>Qu'est ce qu'une</span> métadonnée ?"
 
 #: tapiriik/web/templates/privacy.html:36
@@ -594,7 +597,7 @@ msgstr ""
 "afin de déterminer quelles activités doivent être synchronisées."
 
 #: tapiriik/web/templates/privacy.html:40
-msgid "<span>What constitutes</span>Activity data?"
+msgid "<span>What constitutes</span> Activity data?"
 msgstr "<span>Que comportent les </span>données d'activités ?"
 
 #: tapiriik/web/templates/privacy.html:41
@@ -607,8 +610,8 @@ msgstr ""
 "<b>le tracé GPS, les données de capteurs, et toutes les métadonnées</b>. "
 
 #: tapiriik/web/templates/privacy.html:48
-msgid "All the juicy details"
-msgstr "Tous les détails"
+msgid "More details"
+msgstr "Plus de détails"
 
 #: tapiriik/web/templates/privacy.html:51
 msgid ""
@@ -623,34 +626,19 @@ msgstr ""
 #: tapiriik/web/templates/privacy.html:54
 msgid ""
 "However, the services you connect may, of their own accord, share your "
-"activity data with third parties. For instance, at the time I write this, "
-"Strava reserves the right to <i>collect certain use data and information "
-"related to [Hub's] use of the Strava API Materials, and Strava Platform in "
-"connection with [Hub's] Developer Application ('Usage Data'), and that "
-"Strava may use such Usage Data for any business purpose, internal or "
-"external, including, without limitation, providing enhancements to the "
-"Strava API Materials or Strava Platform, providing developer of user "
-"support, or otherwise.'</i> Please consult the privacy policy for the "
-"services you connect in order to determine how they handle your data."
-msgstr ""
-"Attention cependant aux conditions d'exploitation de vos données sur les "
+"activity data with third parties. For instance, please consult the privacy "
+"policy for the services you connect in order to determine how they handle "
+"your data."
+msgstr "Attention cependant aux conditions d'exploitation de vos données sur les "
 "différents services utilisés."
 
-#: tapiriik/web/templates/privacy.html:56
-msgid ""
-"Limited data regarding your interaction with hub.decathlon.com is recorded "
-"in order to monitor the performance of the website itself."
-msgstr ""
-"Les données d'interaction avec le site sont enregistrées afin de suivre la "
-"performance et l'usage du site."
-
-#: tapiriik/web/templates/privacy.html:58
+#: tapiriik/web/templates/privacy.html:57
 msgid "Exporting &amp; erasing your personal data"
 msgstr "Exporter et supprimer vos données"
 
-#: tapiriik/web/templates/privacy.html:59
+#: tapiriik/web/templates/privacy.html:58
 msgid ""
-"Most of the data the Hub stores regarding your accounts and activities is "
+"The data the Hub stores regarding your accounts and activities is "
 "automatically deleted once you disconnect your last service from hub."
 "decathlon.com. Only diagnostic logs regarding your account will remain for a "
 "limited period afterwards - but are not stored permanently. During this "
@@ -665,11 +653,11 @@ msgstr ""
 "activités synchronisées précédemment. Si vous souhaitez recevoir une copie "
 "de toutes vos données stockées par le Hub ou demander leur suppression, "
 
-#: tapiriik/web/templates/privacy.html:59
+#: tapiriik/web/templates/privacy.html:58
 msgid "contact us"
 msgstr "Contactez-nous"
 
-#: tapiriik/web/templates/privacy.html:59
+#: tapiriik/web/templates/privacy.html:58
 msgid " and mention GDPR in the subject line."
 msgstr " et mentionnez RGPD dans le sujet de l'email."
 
@@ -811,10 +799,10 @@ msgstr "pour les contributions sur site"
 
 #: tapiriik/web/templates/static/credits.html:10
 msgid ""
-"Aerobia, Polar, Strava et al.</b> for creating and supporting the APIs that "
-"make this site possible"
+"Polar, Garmin and Strava</b> for creating and supporting the APIs that make "
+"this site possible"
 msgstr ""
-"Aerobia, Garmin, Strava pour créer et maintenir des APIs qui rendent "
+"Polar, Garmin et Strava</b> pour créer et maintenir des APIs qui rendent "
 "possible ce service."
 
 #: tapiriik/web/templates/static/credits.html:11
@@ -838,10 +826,26 @@ msgid "Questions: Answers"
 msgstr "Questions: réponses"
 
 #: tapiriik/web/templates/static/faq.html:9
-msgid "What do I have to do to use Hub by DECATHLON?"
+msgid "What is HUB by DECATHLON?"
 msgstr "Que dois-je faire pour utiliser le Hub by DECATHLON ?"
 
 #: tapiriik/web/templates/static/faq.html:10
+msgid ""
+"We have created this service to facilitate the portability of sports data "
+"from our DECATHLON products to Strava, for example, but also to be able to "
+"group sports activities from other manufacturers (Garmin, Polar, Fitbit...) "
+"within your DECATHLON applications."
+msgstr ""
+"Nous avons créé ce service pour faciliter la portabilité des données sportives "
+"depuis les produits Decathlon vers Strava par exemple. Vous pouvez aussi "
+"récupérer vos activités depuis d'autres fabriquants (Garmin, Polar, Fitbit...). "
+
+
+#: tapiriik/web/templates/static/faq.html:14
+msgid "What do I have to do to use Hub by DECATHLON?"
+msgstr "Que dois-je faire pour utiliser le Hub by DECATHLON ?"
+
+#: tapiriik/web/templates/static/faq.html:15
 msgid ""
 "Just connect to all the services you would like to sync between, click &quot;"
 "Synchronize now,&quot; then forget ever reading this sentence."
@@ -849,23 +853,30 @@ msgstr ""
 "Il suffit de vous connecter à tous les services que vous souhaitez "
 "synchroniser, puis cliquez sur &quot; Lancer Synchro &quot;"
 
-#: tapiriik/web/templates/static/faq.html:14
-msgid ""
-"Which services are uni-directional (do not support incoming activities) ?"
+#: tapiriik/web/templates/static/faq.html:19
+msgid "Which services are uni-directional ?"
 msgstr ""
 "Quels sont les services ne supportant pas la réception de nouvelles "
 "activités?"
 
-#: tapiriik/web/templates/static/faq.html:15
+#: tapiriik/web/templates/static/faq.html:20
 msgid "Garmin Health, Coros and Polar only support retrieving activites."
 msgstr ""
 "Garmin Health, Coros et Polar ne supportent que la récupération d'activités."
 
-#: tapiriik/web/templates/static/faq.html:19
+#: tapiriik/web/templates/static/faq.html:22
+msgid ""
+"Strava only accepts new activities, it is not possible to retrieve "
+"activities from Strava."
+msgstr ""
+"Strava accepte seulement de recevoir des activités, il n'est pas possible de récupérer "
+"vos activités depuis Strava."
+
+#: tapiriik/web/templates/static/faq.html:26
 msgid "Do I need to re-connect my accounts every time?"
 msgstr "Dois-je connecter mes comptes à chaque fois ?"
 
-#: tapiriik/web/templates/static/faq.html:20
+#: tapiriik/web/templates/static/faq.html:27
 msgid ""
 "<strong>No.</strong> Just <strong>connect to any one of the services you "
 "have already connected</strong>, and you will be signed back into Hub by "
@@ -875,11 +886,11 @@ msgstr ""
 "préalablement liés au Hub by DECATHLON qui se chargera automatiquement de la "
 "synchronisation."
 
-#: tapiriik/web/templates/static/faq.html:24
+#: tapiriik/web/templates/static/faq.html:31
 msgid "Do I need to visit hub.decathlon.com to sync activities?"
 msgstr "Dois-je visiter hub.decathlon.com pour synchroniser mes activités ?"
 
-#: tapiriik/web/templates/static/faq.html:25
+#: tapiriik/web/templates/static/faq.html:32
 msgid ""
 "<b>No. Synchronization is fully automatic.</b> You can also manually trigger "
 "a synchronization any time you want."
@@ -887,11 +898,11 @@ msgstr ""
 "<b>Non, la synchronisation est automatique.</b> Vous pouvez aussi déclencher "
 "la synchronisation manuellement quand vous le souhaitez."
 
-#: tapiriik/web/templates/static/faq.html:29
+#: tapiriik/web/templates/static/faq.html:36
 msgid "Which activities get synchronized?"
 msgstr "Quelles sont les activités synchronisées ?"
 
-#: tapiriik/web/templates/static/faq.html:30
+#: tapiriik/web/templates/static/faq.html:37
 msgid ""
 "<b>All supported activities in your account are synchronized</b>. Garmin "
 "Health and Polar are two exceptions : it is one way could only get "
@@ -901,11 +912,11 @@ msgstr ""
 "sont des exceptions, il n'est pas possible de transferer des activités vers "
 "ces services."
 
-#: tapiriik/web/templates/static/faq.html:34
+#: tapiriik/web/templates/static/faq.html:41
 msgid "Will Hub by DECATHLON create duplicate activities?"
 msgstr "Est-ce que le Hub by DECATHLON crée des doublons d'activités ?"
 
-#: tapiriik/web/templates/static/faq.html:35
+#: tapiriik/web/templates/static/faq.html:42
 msgid ""
 "No - <b>even if you tracked the same activity on multiple devices, or with "
 "multiple apps,</b> Hub by DECATHLON will see that and <b>won't create any "
@@ -914,11 +925,11 @@ msgstr ""
 "Non, même si vous avez enregistré la même activité sur plusieurs services, "
 "le Hub le détectera et évitera de créer des doublons."
 
-#: tapiriik/web/templates/static/faq.html:39
+#: tapiriik/web/templates/static/faq.html:46
 msgid "What data gets synchronized?"
 msgstr "Quelles sont les données synchronisées ?"
 
-#: tapiriik/web/templates/static/faq.html:40
+#: tapiriik/web/templates/static/faq.html:47
 msgid ""
 "As much as possible: in addition to your path, Hub by DECATHLON will also "
 "sync <b>distance, speed, heart rate, cadence, power, calories burned and "
@@ -929,11 +940,11 @@ msgstr ""
 "les calories et même la température</b> vers les <b>services qui le "
 "supportent.</b>"
 
-#: tapiriik/web/templates/static/faq.html:44
+#: tapiriik/web/templates/static/faq.html:51
 msgid "The activity statistics changed after a sync!"
 msgstr "Les statistiques de l'activité changent après chaque synchronisation !"
 
-#: tapiriik/web/templates/static/faq.html:45
+#: tapiriik/web/templates/static/faq.html:52
 msgid ""
 "Discrepancies in activity statistics, like elevation gained/lost or calories "
 "burned, appear when <strong>services use different algorithms to calculate "
@@ -945,51 +956,51 @@ msgstr ""
 "kcal, etc. Hub by DECATHLON ne recalcule pas ces valeurs durant la "
 "synchronisation."
 
-#: tapiriik/web/templates/static/faq.html:49
+#: tapiriik/web/templates/static/faq.html:56
 msgid "Can I view which activities were synchronized?"
 msgstr "Est-ce que je peux voir quelles activités ont été synchronisées ?"
 
-#: tapiriik/web/templates/static/faq.html:50
+#: tapiriik/web/templates/static/faq.html:57
 msgid "When logged in, you can <b>visit the "
 msgstr "Quand vous êtes connecté, vous pouvez <b>visiter le "
 
-#: tapiriik/web/templates/static/faq.html:50
+#: tapiriik/web/templates/static/faq.html:57
 msgid "activities dashboard"
 msgstr "tableau de bord des activités"
 
-#: tapiriik/web/templates/static/faq.html:50
+#: tapiriik/web/templates/static/faq.html:57
 msgid "to see which activities were (or were not) synchronized, and to where."
 msgstr ""
 "pour voir quelles activités ont (ou n'ont pas) été synchronisées, ainsi que "
 "le service d'origine et de destination."
 
-#: tapiriik/web/templates/static/faq.html:55
+#: tapiriik/web/templates/static/faq.html:62
 msgid "Does Hub by DECATHLON ever modify or delete my activities?"
 msgstr "Est-ce que le Hub by DECATHLON modifie ou supprime mes activités ?"
 
-#: tapiriik/web/templates/static/faq.html:56
+#: tapiriik/web/templates/static/faq.html:63
 msgid "<b>No.</b> Simple as that."
 msgstr ""
 "<b>Non.</b> Seule la synchronisation peut mener à des écarts en fonction des "
 "algorithmes employés par les différents services."
 
-#: tapiriik/web/templates/static/faq.html:60
+#: tapiriik/web/templates/static/faq.html:67
 msgid "What data is stored on your servers?"
 msgstr "Quelles sont les données stockées sur vos serveurs ?"
 
-#: tapiriik/web/templates/static/faq.html:61
+#: tapiriik/web/templates/static/faq.html:68
 msgid "As little as is required. Check out the"
 msgstr "Le strict minimum. Consultez la"
 
-#: tapiriik/web/templates/static/faq.html:61
+#: tapiriik/web/templates/static/faq.html:68
 msgid "for more."
 msgstr "pour en savoir plus."
 
-#: tapiriik/web/templates/static/faq.html:65
+#: tapiriik/web/templates/static/faq.html:72
 msgid "How do I connect more services?"
 msgstr "Comment puis-je connecter plus de services ?"
 
-#: tapiriik/web/templates/static/faq.html:66
+#: tapiriik/web/templates/static/faq.html:73
 msgid ""
 "Just sign into any one of the services you already connected, then sign into "
 "the new service (or the other way around, it doesn't matter). The new "
@@ -999,11 +1010,11 @@ msgstr ""
 "nouveaux services. Ils seront synchronisés avec ceux qui ont été "
 "précédemment liés au Hub."
 
-#: tapiriik/web/templates/static/faq.html:70
+#: tapiriik/web/templates/static/faq.html:77
 msgid "What about Fitbit ?"
 msgstr "Comment fonctionne Fitbit ?"
 
-#: tapiriik/web/templates/static/faq.html:71
+#: tapiriik/web/templates/static/faq.html:78
 msgid ""
 "When you want to log your Fitbit account with the HUB, don't forget to "
 "consent every sub-services of Fitbit. With Fitbit you can retrieve complete "
@@ -1015,11 +1026,11 @@ msgstr ""
 "pas aujourd'hui d'enregistrer les courbes GPS provenant d'autres services "
 "comme le Hub."
 
-#: tapiriik/web/templates/static/faq.html:74
+#: tapiriik/web/templates/static/faq.html:81
 msgid "What about Garmin Health ?"
 msgstr "Comment fonctionne Garmin Health ?"
 
-#: tapiriik/web/templates/static/faq.html:75
+#: tapiriik/web/templates/static/faq.html:82
 msgid ""
 "The application is on read-only mode. This means that it can retrieve "
 "complete activity information such as GPS data and cardiac data. But on the "
@@ -1030,11 +1041,11 @@ msgstr ""
 "pourrez pas récupérer l'historique. De plus, vous ne pourrez pas envoyer "
 "d'activités vers Garmin."
 
-#: tapiriik/web/templates/static/faq.html:79
+#: tapiriik/web/templates/static/faq.html:86
 msgid "Will Hub by DECATHLON support <i>Activity Tracking Site X</i>?"
 msgstr "Est-ce que le Hub supportera <i>le site d'activités sportives X </i>?"
 
-#: tapiriik/web/templates/static/faq.html:80
+#: tapiriik/web/templates/static/faq.html:87
 msgid "Possibly. We are open to contribute to connected sport ecosystem."
 msgstr ""
 "C'est possible ! Nous sommes ouverts pour contribuer à l'écosystème du sport "
@@ -1057,6 +1068,34 @@ msgstr ""
 "sont pas dans cette liste</b> le Hub peut toujours les synchroniser. Vous "
 "avez juste à les changer vers le type d'activités approprié une fois "
 "arrivées dans le service de destination."
+
+#~ msgid "Manage your services"
+#~ msgstr "Services disponibles"
+
+#~ msgid "All the juicy details"
+#~ msgstr "Tous les détails"
+
+#~ msgid ""
+#~ "However, the services you connect may, of their own accord, share your "
+#~ "activity data with third parties. For instance, at the time I write this, "
+#~ "Strava reserves the right to <i>collect certain use data and information "
+#~ "related to [Hub's] use of the Strava API Materials, and Strava Platform "
+#~ "in connection with [Hub's] Developer Application ('Usage Data'), and that "
+#~ "Strava may use such Usage Data for any business purpose, internal or "
+#~ "external, including, without limitation, providing enhancements to the "
+#~ "Strava API Materials or Strava Platform, providing developer of user "
+#~ "support, or otherwise.'</i> Please consult the privacy policy for the "
+#~ "services you connect in order to determine how they handle your data."
+#~ msgstr ""
+#~ "Attention cependant aux conditions d'exploitation de vos données sur les "
+#~ "différents services utilisés."
+
+#~ msgid ""
+#~ "Limited data regarding your interaction with hub.decathlon.com is "
+#~ "recorded in order to monitor the performance of the website itself."
+#~ msgstr ""
+#~ "Les données d'interaction avec le site sont enregistrées afin de suivre "
+#~ "la performance et l'usage du site."
 
 #~ msgid " is used to track website performance."
 #~ msgstr " est utilisé pour suivre la performance du site."
@@ -1222,9 +1261,6 @@ msgstr ""
 
 #~ msgid "For system status updates"
 #~ msgstr "Pour les mises à jour systèmes"
-
-#~ msgid "exercisync group on aerobia.ru"
-#~ msgstr "exercisync groupe sur aerobia.ru"
 
 #, fuzzy
 #~| msgid ""

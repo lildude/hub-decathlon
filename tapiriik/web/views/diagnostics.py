@@ -34,7 +34,7 @@ def diag_stats(req):
     active_services_list = [svc for svc in Service.List() if svc.ID not in WITHDRAWN_SERVICES]
     mongo_count_webhook_subscribed_users = db.connections.count({"Service":"fitbit","PartialSyncTriggerSubscribed":True})
 
-    usr_only_connected_to_coach = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}]}, projection={"ConnectedServices": 1, "_id": 0})
+    usr_only_connected_to_coach = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}]})
 
 
     context["services_stats"] = []
@@ -156,6 +156,14 @@ def server_status(req):
 
 def server_status_elb(req):
     return HttpResponse(status=200)
+
+
+def server_securitytxt(request):
+    lines = [
+        "# We strongly appreciate exchange about security for the users",
+        "Contact: mailto:infra@decathloncoach.com",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 @diag_requireAuth
 def diag_errors(req):

@@ -27,10 +27,8 @@ class Service:
 
     def List():
         return [
-            Aerobia,
             RunKeeper,
             Strava,
-            GarminConnect,
             PolarFlow,
             Endomondo,
             SportTracks,
@@ -48,10 +46,10 @@ class Service:
             Setio,
             Singletracker,
             Decathlon,
-            PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
-            Coros
+            Coros,
+            Suunto
         ] + PRIVATE_SERVICES
 
     def PreferredDownloadPriorityList():
@@ -60,7 +58,6 @@ class Service:
         # So, I think this will do for now
         return [
             TrainerRoad, # Special case, since TR has a lot more data in some very specific areas
-            GarminConnect, # The reference
             PolarFlow,
             Smashrun,  # TODO: not sure if this is the right place, but it seems to have a lot of data
             SportTracks, # Pretty much equivalent to GC, no temperature (not that GC temperature works all thar well now, but I digress)
@@ -78,12 +75,11 @@ class Service:
             Pulsstory,
             Setio,
             Singletracker,
-            Aerobia,
             Decathlon,
-            PolarPersonalTrainer,
             Fitbit,
             GarminHealth,
-            Coros
+            Coros,
+            Suunto
         ] + PRIVATE_SERVICES
 
     def WebInit():
