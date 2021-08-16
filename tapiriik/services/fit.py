@@ -665,10 +665,19 @@ class FITIO:
 				)
 
 
+			time_to_use = (
+				# We should return the timer time but for unknown reason it could be 0 and could raise DivisionByZero.
+				actividata.get("total_timer_time") if actividata.get("total_timer_time", 0) != 0 else
+				# So just in case we try the elapsed time value and we also check if it is not 0.
+				actividata.get("total_elapsed_time") if actividata.get("total_elapsed_time", 0) != 0 else
+				# If they're both 0 it's time to try the delta between activity Start/End
+				(activity.EndTime - activity.StartTime).total_seconds() if 
+					(activity.EndTime - activity.StartTime).total_seconds() != 0 else 1
+			)
 			
 			activity.Stats = ActivityStatistics(
 				distance=actividata.get("total_distance"), 
-				timer_time=actividata.get("total_timer_time"), 
+				timer_time=time_to_use, 
 				# The *3.6 is the m/s to Km/h conversion.
 				# Also implemented the usage of "enhanced values" because Garmin prefer using them.
 				# Also made an last resort fallback to recalculate the speed if all values are None
@@ -678,11 +687,11 @@ class FITIO:
 				avg_speed=(
 					actividata.get("avg_speed") if actividata.get("avg_speed") != None else 
 					actividata.get("enhanced_avg_speed") if actividata.get("enhanced_avg_speed") != None else 
-					actividata.get("total_distance",0) / actividata.get("total_timer_time")) *3.6, 
+					actividata.get("total_distance") / time_to_use) *3.6, 
 				max_speed=(
 					actividata.get("max_speed") if actividata.get("max_speed") != None else
 					actividata.get("enhanced_max_speed") if actividata.get("enhanced_max_speed") != None else 
-					actividata.get("total_distance",0) / actividata.get("total_timer_time")) *3.6, 
+					actividata.get("total_distance") / time_to_use) *3.6, 
 				avg_hr=actividata.get("avg_heart_rate"), 
 				max_hr=actividata.get("max_heart_rate"), 
 				avg_run_cadence=actividata.get("avg_running_cadence"), 
