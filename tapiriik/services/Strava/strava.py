@@ -382,47 +382,69 @@ class StravaService(ServiceBase):
             source_svc = str(list(activity.ServiceDataCollection.keys())[0])
 
         upload_id = None
+        if activity.CountTotalWaypoints():
+            req = {
+                    "data_type": "fit",
+                    "activity_name": activity.Name,
+                    "description": activity.Notes, # Paul Mach said so.
+                    "activity_type": self._activityTypeMappings[activity.Type],
+                    "private": 1 if activity.Private else 0}
 
-        req = {
-                "data_type": "fit",
-                "activity_name": activity.Name,
-                "description": activity.Notes, # Paul Mach said so.
-                "activity_type": self._activityTypeMappings[activity.Type],
-                "private": 1 if activity.Private else 0}
+            if "fit" in activity.PrerenderedFormats:
+                logger.debug("Using prerendered FIT")
+                fitData = activity.PrerenderedFormats["fit"]
+            else:
+                # TODO: put the fit back into PrerenderedFormats once there's more RAM to go around and there's a possibility of it actually being used.
+                fitData = FITIO.Dump(activity, drop_pauses=True)
+            files = {"file":("tap-sync-" + activity.UID + "-" + str(os.getpid()) + ("-" + source_svc if source_svc else "") + ".fit", fitData)}
 
-        if "fit" in activity.PrerenderedFormats:
-            logger.info("Using prerendered FIT")
-            fitData = activity.PrerenderedFormats["fit"]
-        else:
-            logger.info("Dumping into FIT")
-            fitData = FITIO.Dump(activity, drop_pauses=True)
-        files = {"file":("tap-sync-" + activity.UID + "-" + str(os.getpid()) + ("-" + source_svc if source_svc else "") + ".fit", fitData)}
-
-        response = self._requestWithAuth(lambda session: session.post("https://www.strava.com/api/v3/uploads", data=req, files=files), serviceRecord)
-        if response.status_code != 201:
-            if response.status_code == 401:
-                raise APIException("No authorization to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
-            if "duplicate of activity" in response.text:
-                logger.info("Strava duplicate activity handled correctly")
-                self.LastUpload = datetime.now()
-                return # Fine by me. The majority of these cases were caused by a dumb optimization that meant existing activities on services were never flagged as such if tapiriik didn't have to synchronize them elsewhere.
-            raise APIException("Unable to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code))
-
-        upload_id = response.json()["id"]
-        upload_poll_wait = 8 # The mode of processing times
-        while not response.json()["activity_id"]:
-            logger.info("STRAVA call updload activity SLEEP 8SEC")
-            time.sleep(upload_poll_wait)
-            response = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/uploads/%s" % upload_id), serviceRecord)
-            logger.debug("Waiting for upload - status %s id %s" % (response.json()["status"], response.json()["activity_id"]))
-            if response.json()["error"]:
-                error = response.json()["error"]
-                if "duplicate of activity" in error:
-                    self.LastUpload = datetime.now()
+            response = self._requestWithAuth(lambda session: session.post("https://www.strava.com/api/v3/uploads", data=req, files=files), serviceRecord)
+            if response.status_code != 201:
+                if response.status_code == 401:
+                    raise APIException("No authorization to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
+                if "duplicate of activity" in response.text:
                     logger.info("Strava duplicate activity handled correctly")
-                    return # I guess we're done here?
-                raise APIException("Strava failed while processing activity - last status %s" % response.text)
-        upload_id = response.json()["activity_id"]
+                    self.LastUpload = datetime.now()
+                    return # Fine by me. The majority of these cases were caused by a dumb optimization that meant existing activities on services were never flagged as such if tapiriik didn't have to synchronize them elsewhere.
+                raise APIException("Unable to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code))
+
+            upload_id = response.json()["id"]
+            upload_poll_wait = 8 # The mode of processing times
+            while not response.json()["activity_id"]:
+                logger.info("STRAVA call updload activity SLEEP 8SEC")
+                time.sleep(upload_poll_wait)
+                response = self._requestWithAuth(lambda session: session.get("https://www.strava.com/api/v3/uploads/%s" % upload_id), serviceRecord)
+                logger.debug("Waiting for upload - status %s id %s" % (response.json()["status"], response.json()["activity_id"]))
+                if response.json()["error"]:
+                    error = response.json()["error"]
+                    if "duplicate of activity" in error:
+                        self.LastUpload = datetime.now()
+                        logger.info("Strava duplicate activity handled correctly")
+                        return # I guess we're done here?
+                    raise APIException("Strava failed while processing activity - last status %s" % response.text)
+            upload_id = response.json()["activity_id"]
+        else:
+            localUploadTS = activity.StartTime.strftime("%Y-%m-%d %H:%M:%S")
+            req = {
+                    "name": activity.Name if activity.Name else activity.StartTime.strftime("%d/%m/%Y"), # This is required
+                    "description": activity.Notes,
+                    "type": self._activityTypeMappings[activity.Type],
+                    "private": 1 if activity.Private else 0,
+                    "start_date_local": localUploadTS,
+                    "distance": activity.Stats.Distance.asUnits(ActivityStatisticUnit.Meters).Value,
+                    "elapsed_time": round((activity.EndTime - activity.StartTime).total_seconds())
+                }
+            response = self._requestWithAuth(lambda session: session.post("https://www.strava.com/api/v3/activities", data=req), serviceRecord)
+            # FFR this method returns the same dict as the activity listing, as REST services are wont to do.
+            if response.status_code != 201:
+                if response.status_code == 401:
+                    raise APIException("No authorization to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
+                if response.status_code == 409:
+                    self.LastUpload = datetime.now()
+                    logger.info("Strava 409 on stationnary activity")
+                    return # 409 handling at Strava API
+                raise APIException("Unable to upload stationary activity " + activity.UID + " response " + response.text + " status " + str(response.status_code))
+            upload_id = response.json()["id"]
 
         self.LastUpload = datetime.now()
 

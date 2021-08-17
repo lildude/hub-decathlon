@@ -388,8 +388,7 @@ class DecathlonService(ServiceBase):
         activity.GPS = False
         activity.Stationary = True
         #work on date
-        startdate = root["startdate"]
-        datebase = parse(startdate)
+        datebase = activity.StartTime
 
         ridedata = {}
         ridedataindex = []
