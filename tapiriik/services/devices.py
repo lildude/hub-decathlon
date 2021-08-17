@@ -77,11 +77,11 @@ class Device:
 	# But they are still Identifier attributes to preserve backward compatibility.
 	@property
 	def Manufacturer(self):
-		return self.Identifier.Manufacturer
+		return self.Identifier.Manufacturer if isinstance(self.Identifier, FITDeviceIdentifier) else None
 
 	@property
 	def Product(self):
-		return self.Identifier.Product
+		return self.Identifier.Product if isinstance(self.Identifier, FITDeviceIdentifier) else None
 
 	# A device should be instanciated into an activity, so it may be necessary to print it for debug purposes
 	def asdict(self):
