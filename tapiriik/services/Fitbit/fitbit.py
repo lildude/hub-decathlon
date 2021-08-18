@@ -565,7 +565,8 @@ class FitbitService(ServiceBase):
             }), svcRecord)
         # check if request has error
         if resp.status_code != 204 and resp.status_code != 200:
-            raise APIException("Unable to find Fitbit TCX activity")
+            logger.warn("Fitbit responded with the code %i, it is unable to send the activity with ID:%s from USER:%s" % (resp.status_code, activity_id, userID))
+            return activity
 
         # Prepare tcxio params
         ns = copy.deepcopy(TCXIO.Namespaces)
