@@ -424,7 +424,7 @@ class StravaService(ServiceBase):
                     raise APIException("Strava failed while processing activity - last status %s" % response.text)
             upload_id = response.json()["activity_id"]
         else:
-            localUploadTS = activity.StartTime.strftime("%Y-%m-%d %H:%M:%S")
+            localUploadTS = activity.StartTime.strftime("%Y-%m-%dT%H:%M:%S%z")
             req = {
                     "name": activity.Name if activity.Name else activity.StartTime.strftime("%d/%m/%Y"), # This is required
                     "description": activity.Notes,

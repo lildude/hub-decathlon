@@ -501,7 +501,7 @@ class DecathlonService(ServiceBase):
         root = {}
 
         root["name"] = activity.Name
-        root["startdate"] = str(activity.StartTime).replace(" ","T") 
+        root["startdate"] = activity.StartTime.strftime("%Y-%m-%dT%H:%M:%S%z")
         duration = int((activity.EndTime - activity.StartTime).total_seconds())
         root["duration"] = duration
         
