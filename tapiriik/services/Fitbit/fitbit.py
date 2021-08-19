@@ -462,6 +462,7 @@ class FitbitService(ServiceBase):
                 for ftbt_activity in ftbt_activities:
                     index_total = index_total +1
                     activity = UploadedActivity()
+                    activity.SourceServiceID = self.ID
 
                     #parse date start to get timezone and date
                     activity.StartTime = parse(ftbt_activity["startTime"])

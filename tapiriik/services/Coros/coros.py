@@ -225,7 +225,7 @@ class CorosService(ServiceBase):
         for ride in activitiesData:
             # Some king of factory design patern for instanciating an activity
             activity = UploadedActivity()
-
+            activity.SourceServiceID = self.ID
             # Puting UTC by default but it's possible to get possibles timezones and chose it randomly with the possible_timezones method. 
             # The only problem is the possility to select a non DST timezone for an activity in a DST one.
             # self.possible_timezones(ride["startTimezone"]/4)  <== keeping this in case of really needing timzones

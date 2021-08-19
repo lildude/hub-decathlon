@@ -213,6 +213,7 @@ class PolarFlowService(ServiceBase):
                 raise APIException("No FIT available for exercise", user_exception=UserException(UserExceptionType.DownloadError))
 
             activity = FITIO.Parse(response.content)
+            activity.SourceServiceID = self.ID
             activity.ServiceData = {"ActivityID": act_url.decode('utf-8').split('/')[-1]}
 
             activities.append(activity)

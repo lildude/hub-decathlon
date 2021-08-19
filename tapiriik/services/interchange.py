@@ -66,7 +66,7 @@ class ActivityType:  # taken from RK API docs. The text values have no meaning e
 
 
 class Activity:
-    def __init__(self, startTime=None, endTime=None, actType=ActivityType.Other, distance=None, name=None, notes=None, tz=None, lapList=None, private=False, fallbackTz=None, stationary=None, gps=None, device=None, fitFileUrl=None):
+    def __init__(self, startTime=None, endTime=None, actType=ActivityType.Other, distance=None, name=None, notes=None, tz=None, lapList=None, private=False, fallbackTz=None, stationary=None, gps=None, device=None, fitFileUrl=None, sourceServiceID=None):
         self.StartTime = startTime
         self.EndTime = endTime
         self.Type = actType
@@ -82,6 +82,7 @@ class Activity:
         self.PrerenderedFormats = {}
         self.Device = device
         self.FitFileUrl = fitFileUrl
+        self.SourceServiceID = sourceServiceID
 
     def asdict(self):
         return {

@@ -297,6 +297,7 @@ class DecathlonService(ServiceBase):
                 for ride in resp_activities["hydra:member"]:
         
                     activity = UploadedActivity()
+                    activity.SourceServiceID = self.ID
                     activity.StartTime = parse(ride["startdate"])
                     activity.TZ = pytz.FixedOffset(int(datetime.utcoffset(activity.StartTime).total_seconds()/60))
                     activity.ServiceData = {"ActivityID": ride["id"], "Manual": ride["manual"]}
