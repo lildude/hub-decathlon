@@ -404,7 +404,7 @@ class StravaService(ServiceBase):
                 if response.status_code == 401:
                     raise APIException("No authorization to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
                 if "duplicate of activity" in response.text:
-                    logger.info("Strava duplicate activity from %s handled correctly" % activity.SourceServiceID)
+                    logger.info("Strava duplicate activity from %s handled correctly" % (activity.SourceServiceID if activity.SourceServiceID != None else "UNKNOWN_SVC"))
                     self.LastUpload = datetime.now()
                     return # Fine by me. The majority of these cases were caused by a dumb optimization that meant existing activities on services were never flagged as such if tapiriik didn't have to synchronize them elsewhere.
                 raise APIException("Unable to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code))
@@ -420,7 +420,7 @@ class StravaService(ServiceBase):
                     error = response.json()["error"]
                     if "duplicate of activity" in error:
                         self.LastUpload = datetime.now()
-                        logger.info("Strava duplicate activity from %s handled correctly" % activity.SourceServiceID)
+                        logger.info("Strava duplicate activity from %s handled correctly" % (activity.SourceServiceID if activity.SourceServiceID != None else "UNKNOWN_SVC"))
                         return # I guess we're done here?
                     raise APIException("Strava failed while processing activity - last status %s" % response.text)
             upload_id = response.json()["activity_id"]
@@ -442,7 +442,7 @@ class StravaService(ServiceBase):
                     raise APIException("No authorization to upload activity " + activity.UID + " response " + response.text + " status " + str(response.status_code), block=True, user_exception=UserException(UserExceptionType.Authorization, intervention_required=True))
                 if response.status_code == 409:
                     self.LastUpload = datetime.now()
-                    logger.info("Strava 409 on stationnary activity from %s" % activity.SourceServiceID)
+                    logger.info("Strava 409 on stationnary activity from %s" % (activity.SourceServiceID if activity.SourceServiceID != None else "UNKNOWN_SVC"))
                     return # 409 handling at Strava API
                 raise APIException("Unable to upload stationary activity " + activity.UID + " response " + response.text + " status " + str(response.status_code))
             upload_id = response.json()["id"]
