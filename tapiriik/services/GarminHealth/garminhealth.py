@@ -232,6 +232,7 @@ class GarminHealthService(ServiceBase):
                 pre_download_counter += 1
                 try:
                     activity = FITIO.Parse(resp.content)
+                    activity.SourceServiceID = self.ID
                 except FitEOFError as e:
                     logger.warning("Can't parse the file from %s. Skipping this activity." % activity_file_url)
                     continue

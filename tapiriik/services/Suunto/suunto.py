@@ -235,6 +235,7 @@ class SuuntoService(ServiceBase):
                 raise APIException("Apparently a bad request has been made to suunto this must be examined", user_exception=UserException(UserExceptionType.DownloadError))
 
             activity = FITIO.Parse(response.content)
+            activity.SourceServiceID = self.ID
             activity.ServiceData = {"ActivityID": act_id}
 
             activities.append(activity)
