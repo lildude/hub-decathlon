@@ -24,6 +24,7 @@ import pprint
 import base64
 from requests_oauthlib import OAuth2Session
 from dateutil.parser import parse
+from tapiriik.database import redis
 
 logger = logging.getLogger(__name__)
 
@@ -732,5 +733,28 @@ class FitbitService(ServiceBase):
 
 
     def ExternalIDsForPartialSyncTrigger(self, req):
+        pause_delay_in_sec = 86400
         data = json.loads(req.body.decode("UTF-8"))
-        return [notif.get("ownerId") for notif in data if notif.get('collectionType') == 'activities']
+        
+        
+        users_to_sync = []
+        # We filter the data to get uniques user IDs and remove all unnecessary fitbit data
+        # We ensure user IDs are unique because fitbit send A LOT of data and maybe duplicates
+        idList = list({notif.get("ownerId") for notif in data if notif.get('collectionType') == 'activities'})
+        
+        for id in idList:
+            # Telling which user has a fitbit trigger event
+            logging.info("\tGot webhook event from FITBIT for ID : %s" % id)
+            redis_key = "fitbit-wh-recent-sync:%s" % id
+            # If the user has no recent sync key in redis
+            if redis.get(redis_key) == None:
+                # It's ok and we add the id to the users to sync list
+                # And we also set a recent-sync key into redis wich will expire in "pause_delay_in_sec"
+                users_to_sync.append(id)
+                redis.setex(redis_key, 1, pause_delay_in_sec)
+            else:
+                # The user has been synced recently so ignoring its trigger
+                logging.info("\t\tbut ignored because it has already been triggered in the last %i hours" % (pause_delay_in_sec/3600))
+            
+        return users_to_sync
+        
