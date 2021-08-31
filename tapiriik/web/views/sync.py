@@ -119,10 +119,7 @@ def sync_trigger_partial_sync_callback(req, service):
             # verify if it is an user
             if "_id" not in user:
                 if svc.ID == "coros":
-                    return JsonResponse({
-                        "message":"not authorized",
-                        "result":"0002"
-                    })  
+                    continue  
                 return HttpResponse(status=403)    
             # For each users, if we can sync now
             if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
