@@ -1,5 +1,6 @@
 import json
 from django.http import HttpResponse
+from django.http.response import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from tapiriik.auth import User
@@ -117,6 +118,8 @@ def sync_trigger_partial_sync_callback(req, service):
         for user in users_to_sync:
             # verify if it is an user
             if "_id" not in user:
+                if svc.ID == "coros":
+                    continue  
                 return HttpResponse(status=403)    
             # For each users, if we can sync now
             if "LastSynchronization" in user and user["LastSynchronization"] is not None and datetime.utcnow() - \
@@ -127,6 +130,11 @@ def sync_trigger_partial_sync_callback(req, service):
             # Force immadiate sync
             _sync.ScheduleImmediateSync(user, exhaustive)
 
+        if svc.ID == "coros":
+            return JsonResponse({
+                "message":"ok",
+                "result":"0000"
+            })  
         return HttpResponse(status=svc.PartialSyncTriggerStatusCode)
 
     elif req.method == "GET":	
