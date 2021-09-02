@@ -928,7 +928,8 @@ class FITIO:
 				if wp.HR is not None:
 					rec_contents.update({"heart_rate": wp.HR})
 				if wp.RunCadence is not None:
-					rec_contents.update({"cadence": (wp.RunCadence/2 if (act.ServiceData != None and act.ServiceData.get("Origin") == "decathlon") else wp.RunCadence)})
+					# Here we asume we already have the Run_Cadence as batch of 1 left and 1 right step (As the fit ask to)
+					rec_contents.update({"cadence": wp.RunCadence})
 				if wp.Cadence is not None:
 					rec_contents.update({"cadence": wp.Cadence})
 				if wp.Power is not None:

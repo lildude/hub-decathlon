@@ -468,7 +468,8 @@ class DecathlonService(ServiceBase):
                     wp.Cadence = rd['CADENCE']
 
                 if 'R_CADENCE' in rd :
-                     wp.RunCadence = rd['R_CADENCE']
+                    # Here we want the RunCadence to be a batch of 1 left and 1 right step (As the fit ask to)
+                     wp.RunCadence = rd['R_CADENCE']/2
 
                 if 'POWER' in rd :
                     wp.Power = rd['POWER']
