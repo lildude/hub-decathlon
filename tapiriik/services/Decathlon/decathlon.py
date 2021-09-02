@@ -562,8 +562,10 @@ class DecathlonService(ServiceBase):
                         oneMeasureLocation[self._unitMap["kcal"]] = int(wp.Calories)
                     if wp.Distance is not None:
                         oneMeasureLocation[self._unitMap["distance"]] = int(wp.Distance)
+                    if wp.RunCadence is not None:
+                        # We have the number of left and right steps couple but Decathlon stores the number of unique steps so we have to do *2
+                        oneMeasureLocation[self._unitMap["cadence"]] = int(wp.RunCadence*2)
                     if wp.Cadence is not None:
-                        oneMeasureLocation[self._unitMap["cadence"]] = int(wp.Cadence)
                         oneMeasureLocation[self._unitMap["rpm"]] = int(wp.Cadence)
                     dataStream[elapsedTime] = oneMeasureLocation
             if addLap and oneMeasureLocation is not None:
