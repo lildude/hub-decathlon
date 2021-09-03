@@ -3,6 +3,14 @@ from tapiriik.services import Service, ServiceRecord
 from tapiriik.database import db
 register = template.Library()
 
+@register.filter(name="svc_by_id")
+def ID(values, id):
+    svc_id_array = [value for value in values if value.ID == id]
+    if len(svc_id_array) == 1:
+        return svc_id_array[0]
+    else:
+        return None
+
 
 @register.filter(name="svc_ids")
 def IDs(value):

@@ -1,14 +1,22 @@
 {% extends "site.html" %}
 {% load i18n %}
-{% block title %}credits{% endblock %}
+{% block title %}Credits{% endblock %}
 {% block content %}
-<h1>{% trans "Credits" %}</h1>
-<ul style="list-style:none" class="block">
-	<li><a href="{% url 'contact' %}">{% trans "Hub by DECATHLON is based on the" %}</a> <a href="https://github.com/cpfair/tapiriik">tapiriik</a> {% trans "open source project by" %} <b><a href="https://github.com/cpfair">Collin Fair</a></b></li>
-	<li>{% trans "Hub by DECATHLON is also based on the" %} <a href="https://github.com/antash/exercisync">Exercisync</a> {% trans "open source project by" %} <b><a href="https://github.com/antash">Anton Ashmarin</a></b></li>
-	<li><b><a href="https://github.com/timbilalov">{% trans "Timur Bilalov" %}</a></b> {% trans "for frontend contributions" %}</li>
-	<li><b>{% trans "Polar, Garmin and Strava</b> for creating and supporting the APIs that make this site possible" %}</li>
-	<li><div>{% trans "Some icons made by" %} <a href="https://www.flaticon.com/authors/freepik" title="Plus">Plus</a> {% trans "from" %} <a href="https://www.flaticon.com/"     title="Flaticon">www.flaticon.com</a> {% trans "is licensed by" %} <a href="http://creativecommons.org/licenses/by/3.0/"     title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div></li>
-	<li>{% trans "and finally, <b>all the beta testers</b>. You know who you are." %}</li>
-</ul>
+<h3>Synchronisez vos applications de suivi sportif avec Decathlon.</h3>
+        
+<p>
+	Hub by DECATHLON est basé sur le tapiriik projet open source Collin Fair.
+</p>
+<p>
+	Hub by DECATHLON est aussi basé sur le Exercisync projet open source Anton Ashmarin.
+</p>
+<p>
+	Timur Bilalov pour les contributions sur le site.
+</p>
+<p>
+	Polar, Garmin, Fitbit, Coros, Suunto et Strava pour créer et maintenir des APIs qui rendent possible ce service.
+</p>
+<p>
+	Et enfin, tous les testeurs.
+</p>
 {% endblock %}

@@ -98,54 +98,115 @@
 
 {% else %}
 	{% ifequal device_support 'web' %}
-	<div class="block">
-		<p class="info">{% trans "Decathlon HUB synchronizes your recent activities between Garmin Connect, Polar Flow and Strava<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
-	</div>
-	<dib class="block">
-		<div class="row">
-			<div class="col-md-3"></div>
-			<div class="col-md-2 col-xs-4">
-		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
-		    	<p class="text decathlonapp"><strong>DECATHLON Connect</strong></p>
+	<h3>Synchronisez vos applications de suivi sportif avec Decathlon</h3>
+	<p>Retrouvez vos activités dans vos applications préférées et cumulez des points pour gagner des récompenses grâce au DECAT’CLUB</p>
+
+	<ul class="steps-list mobile:vtmn-grid vtmn-flex">
+		<li class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<img class="step-img" src="static/img/new/step1.svg" alt="Step 1">
+			<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+				<p class="vtmn-text-center mobile:vtmn-text-left">Je me connecte avec mon compte Decathlon</p>
+				{% with decathlon=service_providers|svc_by_id:'decathlon' %}
+					<a class="vtmn-btn vtmn-btn_size--small vtmn-mt-2" href="{{decathlon.UserAuthorizationURL}}">Se connecter</a>
+				{% endwith %}
 			</div>
-			<div class="col-md-2 col-xs-4">
-		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach-rounded.png">
-		    	<p class="text decathlonapp"><strong>DECATHLON Coach</strong></p>
+		</li>
+		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
+				<img class="step-img" src="static/img/new/step2.svg" alt="Step 2">
+				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+					<p class="vtmn-text-center mobile:vtmn-text-left">Je chosis le ou les service(s) que je veux synchroniser avec Decathlon</p>
+				</div>
 			</div>
-			<div class="col-md-2 col-xs-4">
-	    		<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
-		    	<p class="text decathlonapp"><strong>E-Connected</strong></p>
+			
+			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
+				<div class="custom-little-title vtmn-my-2">Services compatibles</div>
+				<div class="vtmn-grid vtmn-grid-cols-2 vtmn-gap-6">
+					{% with localservices="decathlon decathlondev" %}
+						{% for provider in service_providers %}
+							{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+								<img src="static/img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
+							{% endif %}
+						{% endfor %}
+					{% endwith %}
+				</div>
 			</div>
-		</div>
-	</dib>
-	<div class="block">
-		<div class="titleBlock">{% trans "Connect to your Decathlon services" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap serviceButtonLogin row">
+		</li>
+		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
+				<img class="step-img" src="static/img/new/step3.svg" alt="Step 3">
+				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+					<p class="vtmn-text-center mobile:vtmn-text-left">Je retrouve mes activités dans mes app préférées et je gagne des points deans mes apps Decathlon !</p>
+					<a class="vtmn-btn vtmn-btn_size--small vtmn-btn_variant--conversion vtmn-mt-2" href="https://decatclub.decathlon.fr/">Decat'Club</a>
+				</div>
+			</div>
+			
+
+			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
+				<div class="custom-little-title vtmn-my-2">Applications Decathlon</div>
+				<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-3">
+					<div>
+						<img src="static/img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Connect</small>
+					</div>
+					<div>
+						<img src="static/img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Coach</small>
+					</div>
+					<div>
+						<img src="static/img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
+					</div>
+				</div>
+			</div>
+		</li>
+	</ul>
+
+	<div class="vtmn-flex vtmn-flex-col mobile:vtmn-hidden vtmn-mt-5 vtmn-items-center">
+		<div class="custom-little-title vtmn-my-2">Services compatibles</div>
+		<div class="vtmn-grid vtmn-grid-cols-4 tablet:vtmn-grid-cols-3 tablet:vtmn-gap-6 small-desktop:vtmn-grid-cols-3 vtmn-gap-10 tablet:vtmn-w-full vtmn-w-2/3 vtmn-items-center vtmn-justify-items-center">
+			
+			{% with localservices="decathlon decathlondev" %}
 				{% for provider in service_providers %}
-					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-						{% include "service-button.html" with login=True provider=provider inactive=True hideicon=True size=4 centered=True %}
+					{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+						<img class="service-logo" src="static/img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
 					{% endif %}
 				{% endfor %}
-			</div>
-		</div>
-	</div>
-	<div class="block logoPartners">
-		<div class="titleBlock">{% trans "Available services" %}</div>
-		<div class="partnerOuter row">
-			{% with localservices="decathlon decathlondev" %}
-  			{% for provider in service_providers %}
-				{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-					{% include "service-logos.html" with provider=provider %}
-				{% endif %}
-			{% endfor %}
 			{% endwith %}
 		</div>
 	</div>
-	<div class="block">
-		<!--<p class="info">{% trans "Did not find your service?" %} - {% trans "Try here" %}: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a></p>-->
-		<p class="info">{% trans "Your email, password, and fitness data are kept safe - full details on the" %} <a href="{% url "privacy" %}">{% trans "privacy page" %}</a>.</p>
+
+	<div class="vtmn-flex vtmn-flex-col mobile:vtmn-hidden vtmn-mt-5 vtmn-items-center">
+		<div class="custom-little-title vtmn-my-2">Applications Decathlon</div>
+		<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-1">
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Connect</small>
+			</div>
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Coach</small>
+			</div>
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
+			</div>
+		</div>
 	</div>
+
+	<ul class="informations">
+		<li>
+			<h4>Sécurité</h4>
+			<p>Vos email, mots de passe et activités sportives sont en lieu sûr, plus de détails sur la page
+				données personnelles.</p>
+		</li>
+		<li>
+			<h4>Comment ça marche ?</h4>
+			<p>Il suffit de vous connecter avec Decathlon et ensuite vous connecter à tous les services que vous
+				souhaitez synchroniser, puis cliquez sur "Lancer Synchro"</p>
+			<a class="button secondary" href="./faq">Lire la FAQ</a>
+		</li>
+	</ul>
 	{% else %}
 
 		<div class="block">

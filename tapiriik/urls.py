@@ -71,10 +71,10 @@ urlpatterns = patterns('',
 
     url(r'^ab/begin/(?P<key>[^/]+)$', 'tapiriik.web.views.ab_web_experiment_begin', {}, name='ab_web_experiment_begin'),
 
-    url(r'^privacy$', 'tapiriik.web.views.privacy.privacy', name='privacy'),
 
-    url(r'^garmin_connect_users$', TemplateView.as_view(template_name='static/garmin_connect_users.html'), name='garmin_connect_users'),
-
+    # url(r'^garmin_connect_users$', TemplateView.as_view(template_name='static/garmin_connect_users.html'), name='garmin_connect_users'),
+    
+    url(r'^privacy$', TemplateView.as_view(template_name='static/privacy.html'), name='privacy'),
     url(r'^faq$', TemplateView.as_view(template_name='static/faq.html'), name='faq'),
     url(r'^credits$', TemplateView.as_view(template_name='static/credits.html'), name='credits'),
     url(r'^contact$', TemplateView.as_view(template_name='static/contact.html'), name='contact'),
