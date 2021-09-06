@@ -199,6 +199,19 @@ def diag_graphs(req):
     return render(req, "diag/graphs.html", context)
 
 @diag_requireAuth
+def diag_user_lookup(req):
+    # identity the user by its LDID (decathlon ID)
+    if "ldid" in req.POST:
+        ldid = req.POST["ldid"]
+        connection = db.connections.find_one({ "ExternalID": {"$eq": ldid}, "Service":{"$eq":"decathlon"}})
+        if connection is not None:
+            user = db.users.find_one({ "ConnectedServices.ID": connection["_id"]})
+            if user is not None:
+                user_id = user["_id"]
+                return redirect("diagnostics_user", user=user_id)
+    return redirect("diagnostics_dashboard")
+
+@diag_requireAuth
 def diag_user(req, user):
     try:
         userRec = db.users.find_one({"_id": ObjectId(user)})

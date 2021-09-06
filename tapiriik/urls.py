@@ -99,6 +99,7 @@ if 'DIAG_ENABLED' in os.environ and os.environ['DIAG_ENABLED'] == 'True':
     url(r'^diagnostics/error/(?P<error>.+)$', 'tapiriik.web.views.diag_error', {}, name='diagnostics_error'),
     url(r'^diagnostics/graphs$', 'tapiriik.web.views.diag_graphs', {}, name='diagnostics_graphs'),
     url(r'^diagnostics/user/unsu$', 'tapiriik.web.views.diag_unsu', {}, name='diagnostics_unsu'),
+    url(r'^diagnostics/userlookup/$', 'tapiriik.web.views.diag_user_lookup', {}, name='diagnostics_user_lookup'),
     url(r'^diagnostics/user/(?P<user>.+)$', 'tapiriik.web.views.diag_user', {}, name='diagnostics_user'),
     url(r'^diagnostics/payments/$', 'tapiriik.web.views.diag_payments', {}, name='diagnostics_payments'),
     url(r'^diagnostics/ip$', 'tapiriik.web.views.diag_ip', {}, name='diagnostics_ip'),
