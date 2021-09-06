@@ -7,88 +7,148 @@
 
 {% block content %}
 {% if user != none %}
-	<div class="block">
-		<div class="titleBlock">{% trans "Retrieve your activities" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_conns %}
-				{% with svc=connection.Service %}
-					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-					<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
-					{% if svc.ID not in config.withdrawn_services and svc.ID != "strava" and svc.ID != "decathlon" %}
-						{% include "service-button.html" with provider=svc connection=connection %}
-					{% endif %}
-				{% endwith %}
-			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_providers_except %}
-				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-				<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services and provider.ID != "strava" and provider.ID != "decathlon" %}
-					{% include "service-button.html" with provider=provider inactive=True %}
-				{% endif %}
-			{% endfor %}
+	<h3>Synchronisez vos applications de suivi sportif avec Decathlon</h3>
+	<p v-if="!isOneSvcConnected">Pour commencer à synchroniser vos activités choisissez le service ou les
+		services que vous souhaitez
+		synchroniser.</p>
+
+	<div class="legend-grid">
+		<div class="legend-item">
+			<div class="round-icon vtmn-text-white green">
+				<span class="vtmx-arrow-left-right-line"></span>
+			</div>
+			<small>
+				Synchronisation bi-directionnelle<br>
+				(récupération <b>ET</b> envoi d’activités)
+			</small>
+		</div>
+		<div class="legend-item">
+			<div class="round-icon blue">
+				<span class="vtmx-left-emphasized-arrow-left-right">
+					<!-- <img src="static/img/new/icon/unilateral-left-emphasized-arrow-left-right.svg" alt="Unidirectionnal service icon"> -->
+				</span>
+			</div>
+			<small>
+				Synchronisation uni-directionnelle<br>
+				(récupération <b>OU</b> envoi d’activités)
+			</small>
+		</div>
+	</div>
+
+	<ul class="vtmn-mb-2 services-list">
+		<li v-for="service in services" :key="service.id" :id="service.id">
+			<div>
+				<img class="vtmn-h-4" :src="'static/img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
+				<div class="vtmn-flex vtmn-h-5 vtmn-mt-2">
+					<div
+						:class="['round-icon', !service.isConnected ? 'grey' : service.isBidirectional ? 'green' : 'blue']">
+						<span
+							:class="service.isBidirectional ? 'vtmn-text-white vtmx-arrow-left-right-line' : 'vtmx-left-emphasized-arrow-left-right'"></span>
+					</div>
+					<small class="grey-text my-2px" v-if="service.isConnected">Synchronisé</small>
+					<small class="grey-text my-2px" v-if="!service.isConnected">Non synchronisé</small>
+				</div>
+			</div>
+			<button v-if="service.isConnected" class="button-sync vtmn-mt-1"
+				@click="openDisconnectModal(service.id)">Désynchroniser</button>
+			<a v-if="!service.isConnected" class="button button-sync vtmn-mt-1" :href="service.authURI">Synchroniser</a>
+		</li>
+	</ul>
+
+	<div id="sync-management" v-if="isOneSvcConnected">
+		<h4>Activités</h4>
+		<button class="vtmn-mb-4 vtmn-btn--icon-right">
+			Lancer une synchronisation
+			<span class="vtmx-refresh-line"></span>
+		</button>
+
+		<ul class="recent-sync vtmn-mb-2">
+			<li>
+				<div class="vtmn-col-span-3">
+					<small class="small vtmn-pb-4"><b>Date</b></small>
+					<small class="small">18/07/2021</small>
+				</div>
+				<div class="vtmn-col-span-5">
+					<small class="vtmn-pb-4"><b>Details</b></small>
+					<small><b>Durée : </b>46 min.</small>
+					<small><b>Lieu : </b>V2</small>
+					<small><b>Activité : </b>Cyclo</small>
+					<small><b>Source : </b>DKT</small>
+					<small><b>Destination : </b>Strava</small>
+				</div>
+			</li>
+			<li>
+				<div class="vtmn-col-span-3">
+					<small class="small vtmn-pb-4"><b>Date</b></small>
+					<small class="small">18/07/2021</small>
+				</div>
+				<div class="vtmn-col-span-5">
+					<small class="vtmn-pb-4"><b>Details</b></small>
+					<small><b>Durée : </b>46 min.</small>
+					<small><b>Lieu : </b>V2</small>
+					<small><b>Activité : </b>Cyclo</small>
+					<small><b>Source : </b>DKT</small>
+					<small><b>Destination : </b>Strava</small>
+				</div>
+			</li>
+		</ul>
+		<div class="vtmn-flex vtmn-justify-center">
+			<a href="" class="button secondary">Voir tout</a>
+		</div>
+	</div>
+
+	<ul class="informations" v-if="!isOneSvcConnected">
+		<li>
+			<h4>Sécurité</h4>
+			<p>Vos email, mots de passe et activités sportives sont en lieu sûr, plus de détails sur la page
+				données personnelles.</p>
+		</li>
+		<li>
+			<h4>Comment ça marche ?</h4>
+			<p>Il suffit de vous connecter avec Decathlon et ensuite vous connecter à tous les services que vous
+				souhaitez synchroniser, puis cliquez sur "Lancer Synchro"</p>
+			<a class="button secondary" href="./faq.html">Lire la FAQ</a>
+		</li>
+	</ul>
+
+	<div class="modal" role="dialog" aria-modal="true" v-show="disconnectModalValues.isOpen" v-cloak
+		@click="closeDisconnectModal">
+		<div class="modal-body" @click.stop>
+			<div class="modal-body-title">
+				<h4>Désynchroniser</h4>
+				<div class="round-icon vtmn-text-black" @click="closeDisconnectModal">
+					<span class="vtmx-close-line"></span>
+				</div>
+			</div>
+			<img :src="'static/img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
+				:alt="disconnectModalValues.svdDisplayName+' logo'">
+			<p>
+				En désynchronisant, {{disconnectModalValues.svdDisplayName}} ne transmettra plus vos activités
+				dans vos applications Decathlon. Aucune donnée ne sera supprimée.
+			</p>
+			<div class="modal-body-buttons">
+				<button @click="confirmDisconnection(disconnectModalValues.svcId)">Oui, désynchroniser
+					{{disconnectModalValues.svdDisplayName}}</button>
+				<button class="secondary" @click="closeDisconnectModal">Non, annuler</button>
 			</div>
 		</div>
 	</div>
-	<div class="block">
-		<div class="titleBlock">{% trans "Share your activities" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_conns %}
-				{% with svc=connection.Service %}
-					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-					{% if svc.ID == "strava" %}
-						{% include "service-button.html" with provider=svc connection=connection %}
-					{% endif %}
-				{% endwith %}
-			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_providers_except %}
-				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-				{% if provider.ID == "strava" %}
-					{% include "service-button.html" with provider=provider inactive=True %}
-				{% endif %}
-			{% endfor %}
-			</div>
+
+	<div class="modal" v-show="isLoading" v-cloak>
+		<div class="vtmn-m-auto">
+			<h3 class="vtmn-text-white vtmn-w-2/3 vtmn-m-auto vtmn-text-center">Désynchronisation en cours, veuillez patienter</h3>
+			<div class="loader" v-show="!loadingSuccess"></div>
+
+			<svg class="checkmark" v-show="loadingSuccess" xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 52 52">
+				<circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" />
+				<path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+			</svg>
 		</div>
 	</div>
-	{% if user.ConnectedServices|length > 1 %}
 
-		<div class="block manageSyncBlock">
-			{% include "manage-sync.html" %}
-		</div>
-		<div class="block">
-			{% if user.NonblockingSyncErrorCount > 0 %}
-				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
-			{% endif %}
-		</div> 
-	{% endif %}
 
-	<div class="block">
-		{% for connection in user.ConnectedServices|svc_populate_conns %}
-			{% with svc=connection.Service %}
-				{% for error in connection.SyncErrors %}
-					{% if error.UserException.InterventionRequired and error.Block %}
-						{% include "service-blockingexception.html" with provider=svc connection=connection exception=error %}
-					{% endif %}
-				{% endfor %}
-			{% endwith %}
-		{% endfor %}
-	</div>
-
-	<!-- tooltip blocks -->
-	{% if user.ConnectedServices|length > 1 %}
-		<!--{% infotip connectedWillSync %}-->
-			<div class="block">
-				<div class="tooltip">{% trans "Connected services will be synchronized automatically" %}</div>
-			</div>
-		<!--{% endinfotip %}-->
-	{% else %}
-		<!--{% infotip connectOneMore %}-->
-			<div class="block">
-				<div class="tooltip">{% trans "Connect a second service to synchronize your activities to &amp; from" %}</div>
-			</div>
-		<!--{% endinfotip %}-->
-	{% endif %}	
+	
 		
 	{% if user.Substitute %}
 		<h1>{% trans "Substituting user" %}</h1>
@@ -227,4 +287,16 @@
 		</div>
 	{% endifequal%}
 {% endif %}
+{% endblock %}
+
+
+
+
+
+{% block specific-js %}
+	{% if user != none %}
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script src="static/js/vue.js"></script>
+		<script src="static/js/dashboard_handler.js"></script>
+	{% endif %}
 {% endblock %}

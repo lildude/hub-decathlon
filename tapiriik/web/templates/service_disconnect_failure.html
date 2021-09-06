@@ -1,0 +1,15 @@
+{% extends "site.html" %}
+{% load i18n %}
+{% block title %}Disconnect failed{% endblock %}
+
+{% block content %}
+<main>
+    <h3>Une erreur s'est produite pendant la déconnexion du service</h3>
+    <div class="vtmn-ml-6">
+        <p>Le problème est peut-être temporaire et nécessite éventuellement un second essai.</p>
+        <p>Si le problème persiste n'hésitez pas a nous contacter, nous tâcherons solutionner le problème dans les plus bref délais.</p>
+        <p>Horodatage : <code>{% now "Y-m-d H:i:s" %}</code></p>
+    </div>
+
+</main>
+{% endblock %}

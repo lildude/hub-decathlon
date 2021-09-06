@@ -3,7 +3,7 @@
 
 {#{% load pipeline %}#}
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 
 	<head>
 		<meta charset="utf-8">
@@ -22,7 +22,7 @@
 			href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,700&display=swap" />
 
 		
-		<link rel="stylesheet" href="/static/css/style_copy.css">
+		<!-- <link rel="stylesheet" href="/static/css/style_copy.css"> -->
 		<link rel="stylesheet" href="/static/css/style.css">
 
 		<link rel="stylesheet" href="https://unpkg.com/@vtmn/icons@0.3.3/dist/vitamix/font/vitamix.css">
@@ -31,15 +31,13 @@
 		<meta name="theme-color" content="#ffffff">
 	</head>
 
-	<body
-		class="{% if user = none %} unlog{% endif %}"
-		ng-app="tapiriik">
+	<body>
 
 		<header class="vtmn-place-items-center">
 			<img src="static/img/new/logo_hub.svg" alt="HUB by Decathlon logo">
 		</header>
 
-		<main>
+		<main id="app" @keydown.esc="closeDisconnectModal" tabindex="0">
 			{% if request.path != "/" %}
 			<a class="back-button vtmn-absolute vtmn-top-5" href="/">
 				<h5 class="vtmn-text-content-action"><span class="vtmx-arrow-left-s-line"></span> <span class="mobile:vtmn-hidden"> Retour</span></h5>

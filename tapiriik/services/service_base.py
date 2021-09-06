@@ -44,6 +44,9 @@ class ServiceBase:
     ReceivesStationaryActivities = True # Manually-entered?
     ReceivesNonGPSActivitiesWithOtherSensorData = True # Trainer-ish?
     SuppliesActivities = True
+    # Yeah this is a duplicate of "SuppliesActivities" but we want Strava to say "i don't supply activities" 
+    #   without triggering obscure functions in the sync class.
+    ProvidesActivities = True
     # Services with this flag unset will receive an explicit date range for activity listing,
     # rather than the exhaustive flag alone. They are also processed after all other services.
     # An account must have at least one service that supports exhaustive listing.
