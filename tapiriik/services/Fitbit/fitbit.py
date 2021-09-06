@@ -400,7 +400,7 @@ class FitbitService(ServiceBase):
         # get user "start sync from date" info
         # then prepare afterDate var (this var determine the date since we download activities)
         user = db.users.find_one({'ConnectedServices': {'$elemMatch': {'ID': service_id, 'Service': 'fitbit'}}})
-        afterDateObj = datetime.now() - timedelta(days=1)
+        afterDateObj = datetime.now() - timedelta(days=2)
 
         # Obscure setting only used by fitbit so forcing to false
         # And for other obscure reason this date could be set couple of month before now so non exhaustive sync are sort of exhaustive.
@@ -622,15 +622,9 @@ class FitbitService(ServiceBase):
                 time.sleep(1)
                 logger.debug("Inter-upload cooldown")
 
-        # Get activity source
-        source_svc = None
-        if hasattr(activity, "ServiceDataCollection"):
-            source_svc = str(list(activity.ServiceDataCollection.keys())[0])
-
         upload_id = None
 
         userID = svcRecord.ExternalID
-        activity_id = activity.ServiceData["ActivityID"]
 
         activity_date = activity.StartTime.strftime("%Y-%m-%d")
         activity_time = activity.StartTime.strftime("%H:%M:%S")
@@ -733,7 +727,7 @@ class FitbitService(ServiceBase):
 
 
     def ExternalIDsForPartialSyncTrigger(self, req):
-        pause_delay_in_sec = 86400
+        pause_delay_in_sec = 3600 * 3
         data = json.loads(req.body.decode("UTF-8"))
         
         
