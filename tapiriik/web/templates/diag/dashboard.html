@@ -107,6 +107,12 @@
 			</li>
 		</ul>
 	</div>
+	<div class="block">
+		<h3>User lookup</h3>
+		<form action="{% url 'diagnostics_user_lookup' %}" method="POST">{% csrf_token %}
+			<input type="text" name="ldid" value=""/><input type="submit" name="ldidlookup" value="Lookup by LDID"/>
+		</form>
+	</div>
 </div>
 
 
