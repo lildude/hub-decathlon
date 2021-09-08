@@ -25,7 +25,6 @@
 		<div class="legend-item">
 			<div class="round-icon blue">
 				<span class="vtmx-left-emphasized-arrow-left-right">
-					<!-- <img src="static/img/new/icon/unilateral-left-emphasized-arrow-left-right.svg" alt="Unidirectionnal service icon"> -->
 				</span>
 			</div>
 			<small>
@@ -38,7 +37,7 @@
 	<ul class="vtmn-mb-2 services-list">
 		<li v-for="service in services" :key="service.id" :id="service.id">
 			<div>
-				<img class="vtmn-h-4" :src="'static/img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
+				<img class="vtmn-h-4" :src="'{{STATIC_URL}}img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
 				<div class="vtmn-flex vtmn-h-5 vtmn-mt-2">
 					<div
 						:class="['round-icon', !service.isConnected ? 'grey' : service.isBidirectional ? 'green' : 'blue']">
@@ -57,9 +56,9 @@
 
 	<div id="sync-management" v-if="isOneSvcConnected">
 		<h4>Activités</h4>
-		<button class="vtmn-mb-4 vtmn-btn--icon-right">
+		<button id="sync-now-btn" class="vtmn-mb-4 vtmn-btn--icon-right" :disabled="syncNowBtnDisabled" @click="syncNow">
 			Lancer une synchronisation
-			<span class="vtmx-refresh-line"></span>
+			<span class="vtmx-refresh-line vtmn-h-4 vtmn-pr-2"></span>
 		</button>
 
 		<ul class="recent-sync vtmn-mb-2">
@@ -120,7 +119,7 @@
 					<span class="vtmx-close-line"></span>
 				</div>
 			</div>
-			<img :src="'static/img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
+			<img :src="'{{STATIC_URL}}img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
 				:alt="disconnectModalValues.svdDisplayName+' logo'">
 			<p>
 				En désynchronisant, {{disconnectModalValues.svdDisplayName}} ne transmettra plus vos activités
@@ -163,7 +162,7 @@
 
 	<ul class="steps-list mobile:vtmn-grid vtmn-flex">
 		<li class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
-			<img class="step-img" src="static/img/new/step1.svg" alt="Step 1">
+			<img class="step-img" src="{{STATIC_URL}}img/new/step1.svg" alt="Step 1">
 			<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
 				<p class="vtmn-text-center mobile:vtmn-text-left">Je me connecte avec mon compte Decathlon</p>
 				{% with decathlon=service_providers|svc_by_id:'decathlon' %}
@@ -173,7 +172,7 @@
 		</li>
 		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
 			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
-				<img class="step-img" src="static/img/new/step2.svg" alt="Step 2">
+				<img class="step-img" src="{{STATIC_URL}}img/new/step2.svg" alt="Step 2">
 				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
 					<p class="vtmn-text-center mobile:vtmn-text-left">Je chosis le ou les service(s) que je veux synchroniser avec Decathlon</p>
 				</div>
@@ -185,7 +184,7 @@
 					{% with localservices="decathlon decathlondev" %}
 						{% for provider in service_providers %}
 							{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-								<img src="static/img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
+								<img src="{{STATIC_URL}}img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
 							{% endif %}
 						{% endfor %}
 					{% endwith %}
@@ -194,7 +193,7 @@
 		</li>
 		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
 			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
-				<img class="step-img" src="static/img/new/step3.svg" alt="Step 3">
+				<img class="step-img" src="{{STATIC_URL}}img/new/step3.svg" alt="Step 3">
 				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
 					<p class="vtmn-text-center mobile:vtmn-text-left">Je retrouve mes activités dans mes app préférées et je gagne des points deans mes apps Decathlon !</p>
 					<a class="vtmn-btn vtmn-btn_size--small vtmn-btn_variant--conversion vtmn-mt-2" href="https://decatclub.decathlon.fr/">Decat'Club</a>
@@ -206,15 +205,15 @@
 				<div class="custom-little-title vtmn-my-2">Applications Decathlon</div>
 				<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-3">
 					<div>
-						<img src="static/img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
+						<img src="{{STATIC_URL}}img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
 						<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Connect</small>
 					</div>
 					<div>
-						<img src="static/img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
+						<img src="{{STATIC_URL}}img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
 						<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Coach</small>
 					</div>
 					<div>
-						<img src="static/img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
+						<img src="{{STATIC_URL}}img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
 						<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
 					</div>
 				</div>
@@ -229,7 +228,7 @@
 			{% with localservices="decathlon decathlondev" %}
 				{% for provider in service_providers %}
 					{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-						<img class="service-logo" src="static/img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
+						<img class="service-logo" src="{{STATIC_URL}}img/decathlon/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
 					{% endif %}
 				{% endfor %}
 			{% endwith %}
@@ -240,15 +239,15 @@
 		<div class="custom-little-title vtmn-my-2">Applications Decathlon</div>
 		<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-1">
 			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
-				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/decathlon/logos/dkt-connect.png" alt="Decathlon connect logo">
 				<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Connect</small>
 			</div>
 			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
-				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/decathlon/logos/dkt-coach.png" alt="Decathlon coach logo">
 				<small class="vtmn-text-center grey-text vtmn-mt-2">Decathlon Coach</small>
 			</div>
 			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
-				<img class="vtmn-w-3/4" src="static/img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/decathlon/logos/e-connected.png" alt="Domyos e-connected logo">
 				<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
 			</div>
 		</div>
@@ -296,7 +295,7 @@
 {% block specific-js %}
 	{% if user != none %}
 		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-		<script src="static/js/vue.js"></script>
-		<script src="static/js/dashboard_handler.js"></script>
+		<script src="{{STATIC_URL}}js/vue.js"></script>
+		<script src="{{STATIC_URL}}js/dashboard_handler.js"></script>
 	{% endif %}
 {% endblock %}
