@@ -7,45 +7,39 @@
 
 {% block content %}
 {% if user != none %}
-	<h3>Synchronisez vos applications de suivi sportif avec Decathlon</h3>
 	<p v-if="!isOneSvcConnected">Pour commencer à synchroniser vos activités choisissez le service ou les
 		services que vous souhaitez
 		synchroniser.</p>
-
-	<div class="legend-grid">
-		<div class="legend-item">
-			<div class="round-icon vtmn-text-white green">
-				<span class="vtmx-arrow-left-right-line"></span>
-			</div>
-			<small>
-				Synchronisation bi-directionnelle<br>
-				(récupération <b>ET</b> envoi d’activités)
-			</small>
-		</div>
-		<div class="legend-item">
-			<div class="round-icon blue">
-				<span class="vtmx-left-emphasized-arrow-left-right">
-				</span>
-			</div>
-			<small>
-				Synchronisation uni-directionnelle<br>
-				(récupération <b>OU</b> envoi d’activités)
-			</small>
-		</div>
-	</div>
-
+		
 	<ul class="vtmn-mb-2 services-list">
 		<li v-for="service in services" :key="service.id" :id="service.id">
-			<div>
-				<img class="vtmn-h-4" :src="'{{STATIC_URL}}img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
-				<div class="vtmn-flex vtmn-h-5 vtmn-mt-2">
-					<div
-						:class="['round-icon', !service.isConnected ? 'grey' : service.isBidirectional ? 'green' : 'blue']">
-						<span
-							:class="service.isBidirectional ? 'vtmn-text-white vtmx-arrow-left-right-line' : 'vtmx-left-emphasized-arrow-left-right'"></span>
+			<div class="vtmn-flex">
+				<div :class="['vtmn-relative vtmn-border vtmn-flex vtmn-h-8 vtmn-w-8 vtmn-rounded-lg vtmn-border-grey-light-2', !service.isConnected ? 'vtmn-opacity-50' : '']">
+					<div class="vtmn-absolute vtmn-mt-1 vtmn-ml-1 vtmn-flex vtmn-h-7 vtmn-w-7 vtmn-content-center vtmn-items-center">
+						<img :src="'{{STATIC_URL}}img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
 					</div>
+					<div
+						:class="['round-icon vtmn-flex vtmn-absolute vtmn-text-white ', isBidirectional(service) ? 'green' : 'blue']">
+						<span
+							:class="isBidirectional(service) ? 'vtmx-arrow-left-right-line' : service.isSupplier ? 'vtmx-arrow-left-line' : 'vtmx-arrow-right-line'"></span>
+					</div>
+				</div>
+				<div class="vtmn-ml-2">
+					<small><b>{% verbatim %}{{service.displayName}}{% endverbatim %}</b></small>
 					<small class="grey-text my-2px" v-if="service.isConnected">Synchronisé</small>
-					<small class="grey-text my-2px" v-if="!service.isConnected">Non synchronisé</small>
+					<small class="grey-text my-2px" v-else>Non synchronisé</small>
+
+					<div class="tag green" v-if="isBidirectional(service)">
+						Récupération et envoi
+					</div>
+
+					<div class="tag blue" v-else-if="service.isReceiver">
+						Envoi uniquement
+					</div>
+
+					<div class="tag blue" v-else>
+						Récupération uniquement
+					</div>
 				</div>
 			</div>
 			<button v-if="service.isConnected" class="button-sync vtmn-mt-1"
@@ -157,7 +151,6 @@
 
 {% else %}
 	{% ifequal device_support 'web' %}
-	<h3>Synchronisez vos applications de suivi sportif avec Decathlon</h3>
 	<p>Retrouvez vos activités dans vos applications préférées et cumulez des points pour gagner des récompenses grâce au DECAT’CLUB</p>
 
 	<ul class="steps-list mobile:vtmn-grid vtmn-flex">
@@ -166,7 +159,7 @@
 			<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
 				<p class="vtmn-text-center mobile:vtmn-text-left">Je me connecte avec mon compte Decathlon</p>
 				{% with decathlon=service_providers|svc_by_id:'decathlon' %}
-					<a class="vtmn-btn vtmn-btn_size--small vtmn-mt-2" href="{{decathlon.UserAuthorizationURL}}">Se connecter</a>
+					<a class="button vtmn-mt-2" href="{{decathlon.UserAuthorizationURL}}">Se connecter</a>
 				{% endwith %}
 			</div>
 		</li>
@@ -195,8 +188,7 @@
 			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
 				<img class="step-img" src="{{STATIC_URL}}img/new/step3.svg" alt="Step 3">
 				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
-					<p class="vtmn-text-center mobile:vtmn-text-left">Je retrouve mes activités dans mes app préférées et je gagne des points deans mes apps Decathlon !</p>
-					<a class="vtmn-btn vtmn-btn_size--small vtmn-btn_variant--conversion vtmn-mt-2" href="https://decatclub.decathlon.fr/">Decat'Club</a>
+					<p class="vtmn-text-center mobile:vtmn-text-left">Je retrouve mes activités dans mes app préférées.</p>
 				</div>
 			</div>
 			

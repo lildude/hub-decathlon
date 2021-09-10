@@ -10,7 +10,7 @@ var app = new Vue({
             ],
             disconnectModalValues: {
                 svcId: "",
-                svdDisplayName: "",
+                svcDisplayName: "",
                 isOpen: false
             },
             isLoading: false,
@@ -37,6 +37,7 @@ var app = new Vue({
         }
     },
     methods: {
+        isBidirectional: svc => svc.isSupplier && svc.isReceiver,
         syncNow(event) {
             this.syncNowBtnDisabled = true;
             axios.post("sync/schedule/now")
@@ -75,7 +76,7 @@ var app = new Vue({
             serviceHandled = this.services.find(x => x.id == svcId)
             this.disconnectModalValues = {
                 svcId: svcId,
-                svdDisplayName: serviceHandled.displayName,
+                svcDisplayName: serviceHandled.displayName,
                 isOpen: true
             }
         },

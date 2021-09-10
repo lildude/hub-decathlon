@@ -39,35 +39,40 @@
 		<main id="app" @keydown.esc="closeDisconnectModal" tabindex="0">
 			{% if request.path != "/" %}
 			<a class="back-button vtmn-absolute vtmn-top-5" href="/">
-				<h5 class="vtmn-text-content-action"><span class="vtmx-arrow-left-s-line"></span> <span class="mobile:vtmn-hidden"> Retour</span></h5>
+				<h5 class="vtmn-text-content-action vtmn-flex vtmn-items-center"><span class="vtmx-arrow-left-s-line"></span> <span class="mobile:vtmn-hidden">{% trans "Return to homepage" %}</span></h5>
 			</a>
 			{% endif %}
 
+			<h3>
+				{% block page_title %}
+					{% trans "Synchronize your sport activity trackers with Decathlon" %}
+				{% endblock page_title %}
+			</h3>
+			
 			{% block content %}{% endblock %}
 		</main>
 
 		<footer class="vtmn-grid-cols-1 vtmn-mb-10">
 			<nav class="vtmn-text-center vtmn-mb-3">
-				<a class="vtmn-link vtmn-link--standalone vtmn-link_size--small" href="./faq">FAQ</a>
-				<a class="vtmn-link vtmn-link--standalone vtmn-link_size--small" href="./privacy">Données
-					personnelles</a>
-				<a class="vtmn-link vtmn-link--standalone vtmn-link_size--small" href="./credits">Crédits</a>
+				<a class="standalone small" href="./faq">{% trans "FAQ" %}</a>
+				<a class="standalone small" href="./privacy">{% trans "Privacy" %}</a>
+				<a class="standalone small" href="./credits">{% trans "Credits" %}</a>
 				{% if user %}
 					<form class="vtmn-inline" action="./auth/logout" method="post">
 						{% csrf_token %}
-						<a onclick="this.parentNode.submit();" class="vtmn-link vtmn-link--standalone vtmn-link_size--small">Déconnexion</a>
+						<a onclick="this.parentNode.submit();" class="standalone small">{% trans "Disconnection" %}</a>
 					</form>
 				{% endif %}
 			</nav>
 			
 			{% if user %}
 			<p class="small vtmn-text-center grey-text">
-				Identifiant utilisateur : {{ user|dict_get:'_id' }}
+				{% trans "User ID" %} : {{ user|dict_get:'_id' }}
 			</p> 
 			{% endif %}
 
 			<p class="small vtmn-text-center grey-text">
-				Toutes les marques déposées sont la propriété de leurs propriétaires respectifs
+				{% trans "Toutes les marques déposées sont la propriété de leurs propriétaires respectifs" %}
 			</p> 
 		</footer>
 
