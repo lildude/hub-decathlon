@@ -701,32 +701,13 @@ msgstr "Paramètres avancés"
 msgid "Share your recent activities with other apps !"
 msgstr "Partagez vos activités récentes sur différentes apps !"
 
-#: tapiriik/web/templates/site.html:100 tapiriik/web/templates/site_old.html:61
-msgid "FAQ"
-msgstr "FAQ"
-
-#: tapiriik/web/templates/site.html:100 tapiriik/web/templates/site_old.html:61
-msgid "Privacy"
-msgstr "Page de données personnelles"
-
-#: tapiriik/web/templates/site.html:100 tapiriik/web/templates/site_old.html:61
-#: tapiriik/web/templates/static/credits.html:5
-msgid "Credits"
-msgstr "Crédits"
 
 #: tapiriik/web/templates/site.html:100 tapiriik/web/templates/site_old.html:61
 msgid "Log out"
 msgstr "Deconnexion"
 
 #: tapiriik/web/templates/site.html:103
-msgid "User ID"
-msgstr "Identifiant utilisateur"
 
-#: tapiriik/web/templates/site.html:106 tapiriik/web/templates/site_old.html:61
-msgid "All trademarks displayed are property of their respective owners"
-msgstr ""
-"Toutes les marques déposées sont la propriété de leurs propriétaires "
-"respectifs"
 
 #: tapiriik/web/templates/site_old.html:52
 msgid "when kudos on strava is not enough"
@@ -822,12 +803,12 @@ msgid "and finally, <b>all the beta testers</b>. You know who you are."
 msgstr "et enfin, <b>tous les testeurs</b>."
 
 #: tapiriik/web/templates/static/faq.html:6
-msgid "Questions: Answers"
-msgstr "Questions: réponses"
+msgid "Questions / Answers"
+msgstr "Questions / Réponses"
 
 #: tapiriik/web/templates/static/faq.html:9
 msgid "What is HUB by DECATHLON?"
-msgstr "Que dois-je faire pour utiliser le Hub by DECATHLON ?"
+msgstr "Le hub Decathlon c'est quoi ?"
 
 #: tapiriik/web/templates/static/faq.html:10
 msgid ""
@@ -847,17 +828,22 @@ msgstr "Que dois-je faire pour utiliser le Hub by DECATHLON ?"
 
 #: tapiriik/web/templates/static/faq.html:15
 msgid ""
-"Just connect to all the services you would like to sync between, click &quot;"
-"Synchronize now,&quot; then forget ever reading this sentence."
+"Just connect to all the services you would like to sync between, then you can click on &quot;Sync now&quot;"
 msgstr ""
-"Il suffit de vous connecter à tous les services que vous souhaitez "
-"synchroniser, puis cliquez sur &quot; Lancer Synchro &quot;"
+"Il suffit de vous connecter à tous les services que vous souhaitez synchroniser, "
+"ensuite il vous est possible de lancer une synchronisation instantanée via la page d'accueil en cliquant sur &quot;Lancer une synchronisation&quot;"
+
+
+#: tapiriik/web/templates/static/faq.html:15
+msgid "After this step, the next synchronizations should be automatic."
+msgstr "Après cette étape les synchronisations devraient être automatiques."
+
 
 #: tapiriik/web/templates/static/faq.html:19
 msgid "Which services are uni-directional ?"
 msgstr ""
 "Quels sont les services ne supportant pas la réception de nouvelles "
-"activités?"
+"activités ?"
 
 #: tapiriik/web/templates/static/faq.html:20
 msgid "Garmin Health, Coros and Polar only support retrieving activites."
@@ -1011,7 +997,7 @@ msgstr ""
 "précédemment liés au Hub."
 
 #: tapiriik/web/templates/static/faq.html:77
-msgid "What about Fitbit ?"
+msgid "What about Fitbit?"
 msgstr "Comment fonctionne Fitbit ?"
 
 #: tapiriik/web/templates/static/faq.html:78
@@ -1027,7 +1013,7 @@ msgstr ""
 "comme le Hub."
 
 #: tapiriik/web/templates/static/faq.html:81
-msgid "What about Garmin Health ?"
+msgid "What about Garmin Health?"
 msgstr "Comment fonctionne Garmin Health ?"
 
 #: tapiriik/web/templates/static/faq.html:82
@@ -1042,7 +1028,7 @@ msgstr ""
 "d'activités vers Garmin."
 
 #: tapiriik/web/templates/static/faq.html:86
-msgid "Will Hub by DECATHLON support <i>Activity Tracking Site X</i>?"
+msgid "Will Hub by DECATHLON support Activity Tracking Site X?"
 msgstr "Est-ce que le Hub supportera <i>le site d'activités sportives X </i>?"
 
 #: tapiriik/web/templates/static/faq.html:87
@@ -1275,3 +1261,52 @@ msgstr ""
 
 #~ msgid "Activity <b>data</b>"
 #~ msgstr "<b>Données</b> de l'activité"
+
+
+
+
+
+
+
+
+
+########################
+# Header and footer
+########################
+
+########## Header ##########
+
+# Desktop return to homepage button
+msgid "Return to homepage"
+msgstr "Retour à l'accueil"
+
+# Default page title
+msgid "Synchronize your sport activity trackers with Decathlon"
+msgstr "Synchronisez vos applications de suivi sportif avec Decathlon"
+
+########## Footer ##########
+
+# Nav links
+msgid "FAQ"
+msgstr "FAQ"
+
+msgid "Privacy"
+msgstr "Données personnelles"
+
+msgid "Credits"
+msgstr "Crédits"
+
+msgid "Disconnection"
+msgstr "Déconnexion"
+
+
+# Debug UID display
+msgid "User ID"
+msgstr "Identifiant utilisateur"
+
+
+# Legal notice
+msgid "All trademarks displayed are property of their respective owners"
+msgstr ""
+"Toutes les marques déposées sont la propriété de leurs propriétaires "
+"respectifs"
