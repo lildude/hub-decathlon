@@ -14,14 +14,14 @@
 	<ul class="vtmn-mb-2 services-list">
 		<li v-for="service in services" :key="service.id" :id="service.id">
 			<div class="vtmn-flex">
-				<div :class="['vtmn-relative vtmn-border vtmn-flex vtmn-h-8 vtmn-w-8 vtmn-rounded-lg vtmn-border-grey-light-2', !service.isConnected ? 'vtmn-opacity-50' : '']">
-					<div class="vtmn-absolute vtmn-mt-1 vtmn-ml-1 vtmn-flex vtmn-h-7 vtmn-w-7 vtmn-content-center vtmn-items-center">
-						<img :src="'{{STATIC_URL}}img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
-					</div>
+				<div :class="['vtmn-border vtmn-flex vtmn-flex-col vtmn-items-center vtmn-h-8 vtmn-w-8 vtmn-rounded-lg vtmn-border-grey-light-2', !service.isConnected ? 'vtmn-opacity-50' : '']">
 					<div
-						:class="['round-icon vtmn-flex vtmn-absolute vtmn-text-white ', isBidirectional(service) ? 'green' : 'blue']">
+						:class="['round-icon vtmn-text-white vtmn-my-1', isBidirectional(service) ? 'green' : 'blue']">
 						<span
 							:class="isBidirectional(service) ? 'vtmx-arrow-left-right-line' : service.isSupplier ? 'vtmx-arrow-left-line' : 'vtmx-arrow-right-line'"></span>
+					</div>
+					<div class="vtmn-content-center vtmn-mx-1">
+						<img :src="'{{STATIC_URL}}img/decathlon/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
 					</div>
 				</div>
 				<div class="vtmn-ml-2">
