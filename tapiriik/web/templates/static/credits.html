@@ -1,25 +1,22 @@
 {% extends "site.html" %}
 {% load i18n %}
-{% block title %}Credits{% endblock %}
+{% block title %}{% trans "Credits" %}{% endblock %}
 
-{% block page_title %}Credits{% endblock page_title %}
+{% block page_title %}{% trans "Credits" %}{% endblock page_title %}
 
 
 {% block content %}
         
 <p>
-	Hub by DECATHLON est basé sur le tapiriik projet open source Collin Fair.
+	{% trans "Hub by DECATHLON is based on the open source project from Collin Fair" %} : <a href="https://tapiriik.com/">Tapiriik</a>.
 </p>
 <p>
-	Hub by DECATHLON est aussi basé sur le Exercisync projet open source Anton Ashmarin.
+	{% trans "Hub by DECATHLON is also based on the open source project from Anton Ashmarin" %} : Exercisync.
 </p>
 <p>
-	Timur Bilalov pour les contributions sur le site.
+	{% trans "<b>Polar, Garmin Health, Fitbit, Coros, Suunto and Strava</b> to let us use their APIs which make this service possible." %}
 </p>
 <p>
-	Polar, Garmin, Fitbit, Coros, Suunto et Strava pour créer et maintenir des APIs qui rendent possible ce service.
-</p>
-<p>
-	Et enfin, tous les testeurs.
+	{% trans "And finally, thanks to all the testers giving us precious feedback to improve this service." %}
 </p>
 {% endblock %}
