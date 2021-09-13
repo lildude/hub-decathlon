@@ -10,6 +10,8 @@
         <meta name="Keywords"
             content="automatic, synchronize, sync, update, copy, transfer, download, fitness, garmin, garmin connect, strava, path, track, heart rate, free, service, gpx, tcx, health, data, service, cycling, running, swimming, walking">
 
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ STATIC_URL }}img/favicon-32x32.png">
+	    <link rel="icon" type="image/png" sizes="16x16" href="{{ STATIC_URL }}img/favicon-16x16.png">
 
         <title>{% block site_title %}{% block title %}dashboard{% endblock %} &bull; Hub by DECATHLON{% endblock %}</title>
 
@@ -33,7 +35,7 @@
         </h3>
 
         {% with decathlon=service_providers|svc_by_id:'decathlon' %}
-            <a href="{{decathlon.UserAuthorizationURL}}" class="button">Se connecter</a>
+            <a href="{{decathlon.UserAuthorizationURL}}" class="button">{% trans "Login" %}</a>
         {% endwith %}
     </body>
 </html>

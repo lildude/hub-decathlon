@@ -90,7 +90,7 @@ msgstr ""
 #: tapiriik/web/templates/service-button.html:25
 #: tapiriik/web/templates/service-button.html:28
 msgid "Login"
-msgstr "Connexion"
+msgstr "Se connecter"
 
 #: tapiriik/web/templates/auth/login.html:7
 #: tapiriik/web/templates/oauth-failure.html:7
@@ -688,7 +688,7 @@ msgstr "Crédits"
 
 #: tapiriik/web/templates/site copy.html:100
 #: tapiriik/web/templates/site_old.html:61
-msgid "Log out"
+msgid "Logout"
 msgstr "Deconnexion"
 
 # Debug UID display

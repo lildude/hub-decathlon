@@ -21,6 +21,8 @@
 		<link rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,700&display=swap" />
 
+		<link rel="icon" type="image/png" sizes="32x32" href="{{ STATIC_URL }}img/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="{{ STATIC_URL }}img/favicon-16x16.png">
 		
 		<link rel="stylesheet" href="{{STATIC_URL}}css/style.css">
 
@@ -60,7 +62,7 @@
 				{% if user %}
 					<form class="vtmn-inline" action="./auth/logout" method="post">
 						{% csrf_token %}
-						<a onclick="this.parentNode.submit();" class="standalone small">{% trans "Disconnection" %}</a>
+						<a onclick="this.parentNode.submit();" class="standalone small">{% trans "Logout" %}</a>
 					</form>
 				{% endif %}
 			</nav>
