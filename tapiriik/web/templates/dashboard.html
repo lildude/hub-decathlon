@@ -56,32 +56,20 @@
 		</button>
 
 		<ul class="recent-sync vtmn-mb-2">
-			<li>
+			<li v-for="recentActivity in recentActivities">
 				<div class="vtmn-col-span-3">
 					<small class="small vtmn-pb-4"><b>{% trans "Date" %}</b></small>
-					<small class="small">18/07/2021</small>
+					{% verbatim  %}
+					<small class="small">{{recentActivity.Readable_date}}</small>
+					{% endverbatim  %}
 				</div>
 				<div class="vtmn-col-span-5">
 					<small class="vtmn-pb-4"><b>{% trans "Details" %}</b></small>
-					<small><b>{% trans "Duration" %} : </b>46 min.</small>
-					<small><b>{% trans "Location" %} : </b>V2</small>
-					<small><b>{% trans "Activity" %} : </b>Cyclo</small>
-					<small><b>{% trans "From" %} : </b>DKT</small>
-					<small><b>{% trans "To" %} : </b>Strava</small>
-				</div>
-			</li>
-			<li>
-				<div class="vtmn-col-span-3">
-					<small class="small vtmn-pb-4"><b>Date</b></small>
-					<small class="small">18/07/2021</small>
-				</div>
-				<div class="vtmn-col-span-5">
-					<small class="vtmn-pb-4"><b>Details</b></small>
-					<small><b>Durée : </b>46 min.</small>
-					<small><b>Lieu : </b>V2</small>
-					<small><b>Activité : </b>Cyclo</small>
-					<small><b>Source : </b>DKT</small>
-					<small><b>Destination : </b>Strava</small>
+					<small><b>{% trans "Duration" %} : </b>{% verbatim  %}{{recentActivity.Period}}{% endverbatim  %}</small>
+					<small><b>{% trans "Location" %} : </b>{% verbatim  %}{% endverbatim  %}</small>
+					<small><b>{% trans "Activity" %} : </b>{% verbatim  %}{{recentActivity.Type}}{% endverbatim  %}</small>
+					<small><b>{% trans "From" %} : </b>{% verbatim  %}{{recentActivity.Source}}{% endverbatim  %}</small>
+					<small><b>{% trans "To" %} : </b>{% verbatim  %}{{recentActivity.Destinations.join(", ")}}{% endverbatim  %}</small>
 				</div>
 			</li>
 		</ul>

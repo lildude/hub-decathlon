@@ -6,8 +6,8 @@ var app = new Vue({
     el: '#app',
     data() {
         return {
-            services: [
-            ],
+            services: [],
+            recentActivities:[],
             disconnectModalValues: {
                 svcId: "",
                 svcDisplayName: "",
@@ -23,6 +23,10 @@ var app = new Vue({
         // Retreiving the user connections.
         axios.get("api/providers")
             .then(response => this.services = response.data.providers)
+            .catch(error => console.error(error))
+
+        axios.get("sync/activity")
+            .then(response => this.recentActivities = response.data)
             .catch(error => console.error(error))
 
         // To know on page loading the sync Status
