@@ -1446,6 +1446,42 @@ msgstr ""
 
 
 
+msgid "Get your sports activities in your favorite apps."
+msgstr "Retrouvez vos activités dans vos applications préférées."
+
+
+
+
+msgid "I login to my DECATHLON account."
+msgstr "Je me connecte avec mon compte DECATHLON."
+
+
+
+
+
+msgid "I chose the services I want to connect with the HUB."
+msgstr "Je chosis le ou les service(s) que je veux synchroniser avec DECATHLON"
+
+
+
+
+
+msgid "I can find my activities in my favorites apps."
+msgstr "Je retrouve mes activités dans mes app préférées."
+
+
+
+
+msgid "Compatible services"
+msgstr "Services compatibles"
+
+
+
+
+msgid "DECATHLON Apps"
+msgstr "Applications DECATHLON"
+
+
 
 
 
