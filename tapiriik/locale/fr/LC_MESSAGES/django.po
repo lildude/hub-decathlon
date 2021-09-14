@@ -798,12 +798,12 @@ msgstr "Que dois-je faire pour utiliser le Hub by DECATHLON ?"
 #: tapiriik/web/templates/static/faq.html:21
 msgid ""
 "Just connect to all the services you would like to sync between, then you "
-"can click on &quot;Sync now&quot;"
+"can click on &quot;Sync now&quot;."
 msgstr ""
 "Il suffit de vous connecter à tous les services que vous souhaitez "
 "synchroniser, ensuite il vous est possible de lancer une synchronisation "
 "instantanée via la page d'accueil en cliquant sur &quot;Lancer une "
-"synchronisation&quot;"
+"synchronisation&quot;."
 
 #: tapiriik/web/templates/static/faq.html:22
 msgid "After this step, the next synchronizations should be automatic."

@@ -116,7 +116,7 @@
 					<span class="vtmx-close-line"></span>
 				</div>
 			</div>
-			<img :src="'{{STATIC_URL}}img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
+			<img v-if="disconnectModalValues.svcId != ''" :src="'{{STATIC_URL}}img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
 				:alt="disconnectModalValues.svdDisplayName+' logo'">
 			<p>
 				{% trans "Desynchronizing" %} {{disconnectModalValues.svdDisplayName}} {% trans "will stop all activities being transfered from and/or to this service. The HUB will not delete any data." %}
