@@ -131,9 +131,9 @@ msgstr "Bienvenue !"
 
 #: tapiriik/web/templates/dashboard.html:265
 msgid ""
-"Decathlon HUB synchronizes your recent activities between Garmin Connect, "
+"DECATHLON HUB synchronizes your recent activities between Garmin Connect, "
 "Polar Flow and Strava"
-msgstr "Decathlon HUB synchronise vos activités sportives récentes"
+msgstr "DECATHLON HUB synchronise vos activités sportives récentes"
 
 #: tapiriik/web/templates/dashboard_old.html:16
 msgid "Connected services will be synchronized"
@@ -710,8 +710,8 @@ msgstr "Retour à l'accueil"
 # Default page title
 #: tapiriik/web/templates/site.html:46
 #: tapiriik/web/templates/static/onboarding.html:32
-msgid "Synchronize your sport activity trackers with Decathlon"
-msgstr "Synchronisez vos applications de suivi sportif avec Decathlon"
+msgid "Synchronize your sport activity trackers with DECATHLON"
+msgstr "Synchronisez vos applications de suivi sportif avec DECATHLON"
 
 #: tapiriik/web/templates/site.html:61
 msgid "Disconnection"
@@ -777,7 +777,7 @@ msgstr "Questions / Réponses"
 
 #: tapiriik/web/templates/static/faq.html:9
 msgid "What is HUB by DECATHLON?"
-msgstr "Le hub Decathlon c'est quoi ?"
+msgstr "Le hub DECATHLON c'est quoi ?"
 
 #: tapiriik/web/templates/static/faq.html:12
 msgid ""
@@ -787,7 +787,7 @@ msgid ""
 "within your DECATHLON applications."
 msgstr ""
 "Nous avons créé ce service pour faciliter la portabilité des données "
-"sportives depuis les produits Decathlon vers Strava par exemple. Vous pouvez "
+"sportives depuis les produits DECATHLON vers Strava par exemple. Vous pouvez "
 "aussi récupérer vos activités depuis d'autres fabriquants (Garmin, Polar, "
 "Fitbit...). "
 
@@ -869,14 +869,14 @@ msgstr ""
 "ces services."
 
 #: tapiriik/web/templates/static/faq.html:71
-msgid "Will Hub by DECATHLON create duplicate activities?"
+msgid "Will Hub by DECATHLON create duplicated activities?"
 msgstr "Est-ce que le Hub by DECATHLON crée des doublons d'activités ?"
 
 #: tapiriik/web/templates/static/faq.html:75
 msgid ""
 "No - <b>even if you tracked the same activity on multiple devices, or with "
 "multiple apps,</b> Hub by DECATHLON will see that and <b>won't create any "
-"duplicate activities</b>."
+"duplicated activities</b>."
 msgstr ""
 "Non, même si vous avez enregistré la même activité sur plusieurs services, "
 "le Hub le détectera et évitera de créer des doublons."
@@ -1386,7 +1386,7 @@ msgid ""
 "The HUB will not delete any data."
 msgstr ""
 "ne transmettra plus vos activités"
-"dans vos applications Decathlon. Aucune donnée ne sera supprimée."
+"dans vos applications DECATHLON. Aucune donnée ne sera supprimée."
 
 
 msgid "Confirm"
@@ -1405,7 +1405,7 @@ msgid ""
 "process."
 msgstr ""
 "Pour commencer à synchroniser vos activités choisissez le service ou les "
-"services que vous souhaitez synchroniser"
+"services que vous souhaitez synchroniser."
 
 
 
@@ -1430,7 +1430,7 @@ msgstr ""
 "plus de détails sur la page "
 
 
-msgid "page for more informations."
+msgid "page for more information."
 msgstr "."
 
 msgid "Read the FAQ"
@@ -1438,11 +1438,11 @@ msgstr "Lire la FAQ"
 
 msgid ""
 "After you got the HUB connected with DECATHLON, you just have to connect "
-"the services you want to synchronize and click on &quot;Sync now&quot;"
+"the services you want to synchronize and click on &quot;Sync now&quot;."
 msgstr ""
 "Une fois le Hub connecté avec DECATHLON, il suffit de vous connecter "
 "à tous les services que vous souhaitez synchroniser, puis cliquez sur "
-"&quot;Lancer une synchronisation&quot;"
+"&quot;Lancer une synchronisation&quot;."
 
 
 
@@ -1460,7 +1460,7 @@ msgstr "Je me connecte avec mon compte DECATHLON."
 
 
 msgid "I chose the services I want to connect with the HUB."
-msgstr "Je chosis le ou les service(s) que je veux synchroniser avec DECATHLON"
+msgstr "Je choisis le ou les service(s) que je veux synchroniser avec DECATHLON"
 
 
 
