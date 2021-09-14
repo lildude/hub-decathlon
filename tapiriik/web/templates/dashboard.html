@@ -7,9 +7,9 @@
 
 {% block content %}
 {% if user != none %}
-	<p v-if="!isOneSvcConnected">Pour commencer à synchroniser vos activités choisissez le service ou les
-		services que vous souhaitez
-		synchroniser.</p>
+	<p v-if="!isOneSvcConnected">
+		{% trans "Choose the services you want to synchronize to start the synchronization process." %}
+	</p>
 		
 	<ul class="vtmn-mb-2 services-list">
 		<li v-for="service in services" :key="service.id" :id="service.id">
@@ -26,48 +26,48 @@
 				</div>
 				<div class="vtmn-ml-2">
 					<small><b>{% verbatim %}{{service.displayName}}{% endverbatim %}</b></small>
-					<small class="grey-text my-2px" v-if="service.isConnected">Synchronisé</small>
-					<small class="grey-text my-2px" v-else>Non synchronisé</small>
+					<small class="grey-text my-2px" v-if="service.isConnected">{% trans "Synchronized" %}</small>
+					<small class="grey-text my-2px" v-else>{% trans "Not synchronized" %}</small>
 
 					<div class="tag green" v-if="isBidirectional(service)">
-						Récupération et envoi
+						{% trans "Sending and receiving" %}
 					</div>
 
 					<div class="tag blue" v-else-if="service.isReceiver">
-						Envoi uniquement
+						{% trans "Sending only" %}
 					</div>
 
 					<div class="tag blue" v-else>
-						Récupération uniquement
+						{% trans "Receiving only" %}
 					</div>
 				</div>
 			</div>
 			<button v-if="service.isConnected" class="button-sync vtmn-mt-1"
-				@click="openDisconnectModal(service.id)">Désynchroniser</button>
-			<a v-if="!service.isConnected" class="button button-sync vtmn-mt-1" :href="service.authURI">Synchroniser</a>
+				@click="openDisconnectModal(service.id)">{% trans "Desynchronize" %}</button>
+			<a v-if="!service.isConnected" class="button button-sync vtmn-mt-1" :href="service.authURI">{% trans "Synchronize" %}</a>
 		</li>
 	</ul>
 
 	<div id="sync-management" v-if="isOneSvcConnected">
-		<h4>Activités</h4>
+		<h4>{% trans "Activities" %}</h4>
 		<button id="sync-now-btn" class="vtmn-mb-4 vtmn-btn--icon-right" :disabled="syncNowBtnDisabled" @click="syncNow">
-			Lancer une synchronisation
+			{% trans "Sync now" %}
 			<span class="vtmx-refresh-line vtmn-h-4 vtmn-pr-2"></span>
 		</button>
 
 		<ul class="recent-sync vtmn-mb-2">
 			<li>
 				<div class="vtmn-col-span-3">
-					<small class="small vtmn-pb-4"><b>Date</b></small>
+					<small class="small vtmn-pb-4"><b>{% trans "Date" %}</b></small>
 					<small class="small">18/07/2021</small>
 				</div>
 				<div class="vtmn-col-span-5">
-					<small class="vtmn-pb-4"><b>Details</b></small>
-					<small><b>Durée : </b>46 min.</small>
-					<small><b>Lieu : </b>V2</small>
-					<small><b>Activité : </b>Cyclo</small>
-					<small><b>Source : </b>DKT</small>
-					<small><b>Destination : </b>Strava</small>
+					<small class="vtmn-pb-4"><b>{% trans "Details" %}</b></small>
+					<small><b>{% trans "Duration" %} : </b>46 min.</small>
+					<small><b>{% trans "Location" %} : </b>V2</small>
+					<small><b>{% trans "Activity" %} : </b>Cyclo</small>
+					<small><b>{% trans "From" %} : </b>DKT</small>
+					<small><b>{% trans "To" %} : </b>Strava</small>
 				</div>
 			</li>
 			<li>
@@ -86,21 +86,25 @@
 			</li>
 		</ul>
 		<div class="vtmn-flex vtmn-justify-center">
-			<a href="" class="button secondary">Voir tout</a>
+			<a href="" class="button secondary">{% trans "See all" %}</a>
 		</div>
 	</div>
 
 	<ul class="informations" v-if="!isOneSvcConnected">
 		<li>
-			<h4>Sécurité</h4>
-			<p>Vos email, mots de passe et activités sportives sont en lieu sûr, plus de détails sur la page
-				données personnelles.</p>
+			<h4>{% trans "Security" %}</h4>
+			<p>
+				{% trans "Your email and password are secured, please visit the" %}
+				<a href="./privacy">{% trans "Privacy" %}</a>
+				{% trans "page for more informations." %}
+			</p>
 		</li>
 		<li>
-			<h4>Comment ça marche ?</h4>
-			<p>Il suffit de vous connecter avec Decathlon et ensuite vous connecter à tous les services que vous
-				souhaitez synchroniser, puis cliquez sur "Lancer Synchro"</p>
-			<a class="button secondary" href="./faq.html">Lire la FAQ</a>
+			<h4>{% trans "How does it works ?" %}</h4>
+			<p>
+				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;" %}	
+			</p>
+			<a class="button secondary" href="./faq.html">{% trans "Read the FAQ" %}</a>
 		</li>
 	</ul>
 
@@ -108,7 +112,7 @@
 		@click="closeDisconnectModal">
 		<div class="modal-body" @click.stop>
 			<div class="modal-body-title">
-				<h4>Désynchroniser</h4>
+				<h4>{% trans "Desynchronize" %}</h4>
 				<div class="round-icon vtmn-text-black" @click="closeDisconnectModal">
 					<span class="vtmx-close-line"></span>
 				</div>
@@ -116,20 +120,19 @@
 			<img :src="'{{STATIC_URL}}img/decathlon/logos/'+disconnectModalValues.svcId+'.png'"
 				:alt="disconnectModalValues.svdDisplayName+' logo'">
 			<p>
-				En désynchronisant, {{disconnectModalValues.svdDisplayName}} ne transmettra plus vos activités
-				dans vos applications Decathlon. Aucune donnée ne sera supprimée.
+				{% trans "Desynchronizing" %} {{disconnectModalValues.svdDisplayName}} {% trans "will stop all activities being transfered from and/or to this service. The HUB will not delete any data." %}
 			</p>
 			<div class="modal-body-buttons">
-				<button @click="confirmDisconnection(disconnectModalValues.svcId)">Oui, désynchroniser
+				<button @click="confirmDisconnection(disconnectModalValues.svcId)">{% trans "Confirm" %}
 					{{disconnectModalValues.svdDisplayName}}</button>
-				<button class="secondary" @click="closeDisconnectModal">Non, annuler</button>
+				<button class="secondary" @click="closeDisconnectModal">{% trans "Cancel" %}</button>
 			</div>
 		</div>
 	</div>
 
 	<div class="modal" v-show="isLoading" v-cloak>
 		<div class="vtmn-m-auto">
-			<h3 class="vtmn-text-white vtmn-w-2/3 vtmn-m-auto vtmn-text-center">Désynchronisation en cours, veuillez patienter</h3>
+			<h3 class="vtmn-text-white vtmn-w-2/3 vtmn-m-auto vtmn-text-center">{% trans "Desynchronization in progress, please wait" %}</h3>
 			<div class="loader" v-show="!loadingSuccess"></div>
 
 			<svg class="checkmark" v-show="loadingSuccess" xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +258,7 @@
 			<h4>Comment ça marche ?</h4>
 			<p>Il suffit de vous connecter avec Decathlon et ensuite vous connecter à tous les services que vous
 				souhaitez synchroniser, puis cliquez sur "Lancer Synchro"</p>
-			<a class="button secondary" href="./faq">Lire la FAQ</a>
+			<a class="button secondary" href="./faq">{% trans "Read the FAQ" %}</a>
 		</li>
 	</ul>
 	{% else %}

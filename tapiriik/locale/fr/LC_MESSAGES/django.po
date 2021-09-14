@@ -383,10 +383,6 @@ msgstr "Synchronisation"
 msgid "Push sync"
 msgstr "Synchronisation"
 
-#: tapiriik/web/templates/manage-sync.html:23
-msgid "Sync now"
-msgstr "Lancer synchro"
-
 #: tapiriik/web/templates/manage-sync.html:36
 msgid "Sync date"
 msgstr "Date de démarrage"
@@ -406,9 +402,6 @@ msgstr "Sauvegarder"
 msgid "Last sync activities"
 msgstr "Dernières synchronisations"
 
-#: tapiriik/web/templates/manage-sync.html:64
-msgid "See all"
-msgstr "Voir tout"
 
 #: tapiriik/web/templates/oauth-failure.html:10
 msgid "Error"
@@ -1330,3 +1323,129 @@ msgstr ""
 #: tapiriik/web/templates/privacy.html:40
 msgid "What constitutes Activity data ?"
 msgstr "Que comportent les données d'activités ?"
+
+
+msgid "Synchronized"
+msgstr "Synchronisé"
+
+msgid "Not synchronized"
+msgstr "Non synchronisé"
+
+
+msgid "Sending and receiving"
+msgstr "Récupération et envoi"
+
+msgid "Sending only"
+msgstr "Envoi uniquement"
+
+msgid "Receiving only"
+msgstr "Récupération uniquement"
+
+msgid "Desynchronize"
+msgstr "Désynchroniser"
+
+
+msgid "Synchronize"
+msgstr "Synchroniser"
+
+
+
+msgid "Activities"
+msgstr "Activités"
+
+msgid "Sync now"
+msgstr "Lancer une synchronisation"
+
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Details"
+msgstr "Détails"
+
+msgid "Duration"
+msgstr "Durée"
+
+msgid "Location"
+msgstr "Lieux"
+
+msgid "Activity"
+msgstr "Activité"
+
+msgid "From"
+msgstr "Origine"
+
+msgid "To"
+msgstr "Destinataires"
+
+msgid "Desynchronizing"
+msgstr "En désynchronisant"
+
+msgid ""
+"will stop all activities being transfered from and/or to this service. "
+"The HUB will not delete any data."
+msgstr ""
+"ne transmettra plus vos activités"
+"dans vos applications Decathlon. Aucune donnée ne sera supprimée."
+
+
+msgid "Confirm"
+msgstr "Oui, désynchroniser"
+
+msgid "Cancel"
+msgstr "Non, annuler"
+
+
+msgid "Desynchronization in progress, please wait"
+msgstr "Désynchronisation en cours, veuillez patienter"
+
+
+msgid ""
+"Choose the services you want to synchronize to start the synchronization "
+"process."
+msgstr ""
+"Pour commencer à synchroniser vos activités choisissez le service ou les "
+"services que vous souhaitez synchroniser"
+
+
+
+msgid "See all"
+msgstr "Voir tout"
+
+msgid "Security"
+msgstr "Sécurité"
+
+msgid "How does it works ?"
+msgstr "Comment ça marche ?"
+
+
+
+
+msgid ""
+"Your email and password are secured, "
+"please visit the "
+
+msgstr ""
+"Vos email, mots de passe et activités sportives sont en lieu sûr, "
+"plus de détails sur la page "
+
+
+msgid "page for more informations."
+msgstr "."
+
+msgid "Read the FAQ"
+msgstr "Lire la FAQ"
+
+msgid ""
+"After you got the HUB connected with DECATHLON, you just have to connect "
+"the services you want to synchronize and click on &quot;Sync now&quot;"
+msgstr ""
+"Une fois le Hub connecté avec DECATHLON, il suffit de vous connecter "
+"à tous les services que vous souhaitez synchroniser, puis cliquez sur "
+"&quot;Lancer une synchronisation&quot;"
+
+
+
+
+
+
