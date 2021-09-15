@@ -2,11 +2,13 @@
 {% load i18n %}
 {% load displayutils %}
 {% block title %}contact{% endblock %}
+
+
+{% block page_title %}{% trans "For help with your account" %} :{% endblock page_title %}
+
+
 {% block content %}
-<div class="contactBlock">
-	<h1>{% trans "For help with your account" %}</h1>
-	<p>{% trans "If you are having issues with your account" %}, <b>{% trans "please check" %} <a href="{% url 'activities_dashboard' %}">{% trans "the activity dashboard" %}</a></b> - {% trans "it'll do its best to tell you what went wrong" %}.</p>
-	<a href="mailto:infra@decathloncoach.com{% if user %}?body=My Hub by DECATHLON user ID is {{ user|dict_get:'_id' }}{% endif %}" target="_blank" class="large">infra@decathloncoach.com</a>
-	<p>{% trans "If you are making an enquiry regarding the European Union's General Data Protection Regulation, please mention &quot;GDPR&quot; in the subject line." %}</p>
-</div>
+<p>{% trans "If you are having issues with your account" %}, <b>{% trans "please check" %} <a href="{% url 'activities_dashboard' %}">{% trans "the activity dashboard" %}</a></b> - {% trans "it'll do its best to tell you what went wrong" %}.</p>
+<a href="mailto:infra@decathloncoach.com{% if user %}?body=My Hub by DECATHLON user ID is {{ user|dict_get:'_id' }}{% endif %}" target="_blank" class="large">infra@decathloncoach.com</a>
+<p>{% trans "If you are making an enquiry regarding the European Union's General Data Protection Regulation, please mention &quot;GDPR&quot; in the subject line." %}</p>
 {% endblock %}
