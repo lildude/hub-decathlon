@@ -1430,7 +1430,7 @@ msgstr ""
 "plus de détails sur la page "
 
 
-msgid "page for more information."
+msgid " page for more information."
 msgstr "."
 
 msgid "Read the FAQ"
