@@ -91,6 +91,7 @@ STATIC_ROOT = 'C:/wamp/www/tapiriik/tapiriik/static/'
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
+VUE_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -195,6 +196,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.celebration_mode',
     'tapiriik.web.context_processors.device_support',
     'tapiriik.web.context_processors.background_use',
+    'tapiriik.web.context_processors.vue_link',
     'django.core.context_processors.static',
     'django.core.context_processors.request',
     'django.template.context_processors.i18n')
