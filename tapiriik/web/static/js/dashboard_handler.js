@@ -1,6 +1,6 @@
 axios.defaults.headers.common['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]').value
 
-const syncCooldownInMs = 60000
+const syncCooldownInMs = 1000
 
 var app = new Vue({
     el: '#app',
