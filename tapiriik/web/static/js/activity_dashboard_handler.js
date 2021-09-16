@@ -6,24 +6,13 @@ var app = new Vue({
     data() {
         return {
             activities:[],
-            services:[],
         }
     },
 
     mounted() {
-        axios.get("api/providers")
-            .then(response => this.services = response.data.providers)
-            .catch(error => console.error(error))
-
         // Retreiving the activities.
         axios.get("activities/fetch")
             .then(response => {this.activities = response.data})
             .catch(error => console.error(error))
-
-        // console.log(this.activities);
-    },
-
-    computed: {
     }
-
 })

@@ -57,6 +57,8 @@ var app = new Vue({
         getStatus() {
             axios.get("sync/status")
                 .then(response => {
+                    if (this.isOneSvcConnected && response.data.NextSync == null) this.syncNow()
+
                     nextSync = new Date(response.data.NextSync)
                     lastSync = new Date(response.data.LastSync)
 
