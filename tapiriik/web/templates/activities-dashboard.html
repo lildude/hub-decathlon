@@ -36,7 +36,7 @@
 		</div>
 	</li>
 </ul>
-<div v-if="activities.length == 0">{% trans "The hub doesn't know about any activities in your accounts" %}{% trans "Have you synchronized lately?" %}</div>
+<div v-if="activities.length == 0">{% trans "The hub doesn't know about any activities in your accounts" %}. {% trans "Have you synchronized lately?" %}</div>
 {% comment %} <div class="activitiesTable-empty-message" ng-show="loading"><h2>{% trans "Loading..." %}</h2></div> {% endcomment %}
 <p>{% trans "<b>If your account is currently synchronizing</b>, those activities will appear here once the synchronization completes. All dates shown are in UTC." %}</p>
 
