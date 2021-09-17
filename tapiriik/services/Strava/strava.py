@@ -64,7 +64,8 @@ class StravaService(ServiceBase):
         ActivityType.StrengthTraining: "WeightTraining",
         ActivityType.Climbing: "RockClimbing",
         ActivityType.StandUpPaddling: "StandUpPaddling",
-        ActivityType.Yoga: "Yoga"
+        ActivityType.Yoga: "Yoga",
+        ActivityType.Other: "Workout"
     }
 
     # For mapping Strava->common
