@@ -235,7 +235,11 @@ class CorosService(ServiceBase):
             activity.ServiceData = {"ActivityID": ride["labelId"]}
 
             if ride["mode"] not in self._reverseActivityTypeMappings:
-                exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["mode"], activity_id=ride["id"], user_exception=UserException(UserExceptionType.Other)))
+                if id in ride :
+                    act_id = ride["id"]
+                else :
+                    act_id = "0"
+                exclusions.append(APIExcludeActivity("Unsupported activity type %s" % ride["mode"], activity_id=act_id, user_exception=UserException(UserExceptionType.Other)))
                 logger.debug("\t\tUnknown activity")
                 continue
 
