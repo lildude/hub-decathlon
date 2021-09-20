@@ -318,13 +318,6 @@ WITHDRAWN_SERVICES = [
     , "trainerroad"
     , "trainingpeaks"
     , "velohero"
-    , "rwgps"
-    , "smashrun"
-   # , "dropbox"
-    , "beginnertriathlete"
-    , "polarpersonaltrainer"
-    , "aerobia"
-    , "garminconnect"
 ]
 
 # Where to put per-user sync logs

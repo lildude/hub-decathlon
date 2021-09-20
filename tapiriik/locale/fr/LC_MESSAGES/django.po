@@ -1483,5 +1483,19 @@ msgstr "Applications DECATHLON"
 
 
 
+msgid "An error occured while disconnecting the service"
+msgstr "Une erreur s'est produite pendant la déconnexion du service"
+
+
+
+msgid "This issue might be temporary and could be solved by making a second try."
+msgstr "Le problème est peut-être temporaire et nécessite éventuellement un second essai."
+
+
+
+msgid "If the issue persists even after a second try, please contact us. We will do our best to resolve it as fast as possible."
+msgstr "Si le problème persiste n'hésitez pas a nous contacter, nous tâcherons solutionner le problème dans les plus bref délais."
+
+
 
 
