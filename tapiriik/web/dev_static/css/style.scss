@@ -1,0 +1,533 @@
+@use "vtmn.css";
+
+
+/////////////////////////////////////////
+// Color related class
+/////////////////////////////////////////
+.grey-text {
+    color: var(--vtmn-color_grey);
+}
+
+.green{
+    background-color: var(--vtmn-color_green-dark-2);
+}
+
+.blue{
+    background-color: var(--vtmn-color_brand-digital-dark-2);
+}
+
+.grey{
+    background-color: var(--vtmn-base-color_grey400);
+}
+/////////////////////////////////////////
+
+
+/////////////////////////////////////////
+// Vtmn typo binding
+/////////////////////////////////////////
+/*
+    The goal is to avoid putting mannually a typo class in each text element.
+
+    The <b> element must be used to emphasize a word or sentence in a paragraph.
+        eg: <p>This is <b>IMPORTANT</b>.</p>
+
+    In normal HTML the <small> tag must be use as the <b> tag.
+    But there are a lot of paragraph in the Hub that has a smaller text than the normal paragraph,
+    that's why i put a "display: block;" rule.
+*/
+h1 {@extend .vtmn-typo_title-1;}
+h2 {@extend .vtmn-typo_title-2;}
+h3 {@extend .vtmn-typo_title-3;}
+h4 {@extend .vtmn-typo_title-4;}
+h5 {@extend .vtmn-typo_title-5;}
+
+p {@extend .vtmn-typo_text-2;}
+b {@extend .vtmn-font-bold;}
+small {
+    @extend .vtmn-typo_text-3;
+    display: block;
+}
+/////////////////////////////////////////
+
+
+
+/////////////////////////////////////////
+// Default values
+/////////////////////////////////////////
+/*
+    Some default rules for the main elements of all pages.
+*/
+body {
+    @extend .vtmn-container;
+    @extend .vtmn-mx-auto;
+    padding: 20px;
+}
+
+
+// Avoid the blue focus outline on safari
+*:focus {
+    outline: none;
+}
+
+
+header, main{
+    @extend .vtmn-grid;
+    @extend .vtmn-gap-5;
+    @extend .vtmn-mb-6;
+}
+/////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////
+// Vtmn button binding
+/////////////////////////////////////////
+/*
+    Bind the vitamin button on the button tag and a tag with 'button' class
+*/
+button, a.button{
+    @extend .vtmn-btn;
+    @extend .vtmn-justify-self-start;
+    &.secondary, & .secondary{
+        @extend .vtmn-btn_variant--secondary;
+    }
+    &.button-sync{
+        @extend .vtmn-btn_variant--ghost;
+        @extend .vtmn-btn_size--small;
+    }
+}
+/////////////////////////////////////////
+
+
+/////////////////////////////////////////
+// Vtmn link binding
+/////////////////////////////////////////
+/*
+    Some default rules for the main elements of all pages.
+*/
+a:not(.button):not(.back-button){
+    @extend .vtmn-link;
+    &.standalone {
+        @extend .vtmn-link--standalone;
+    }
+    &.small {
+        @extend .vtmn-link_size--small;
+    }
+}
+/////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////
+// Custom classes
+/////////////////////////////////////////
+button#sync-now-btn[disabled] span {
+    animation: load8 infinite linear 1.1s
+}
+
+.round-icon{
+    border-radius: 12px;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.step-img{
+    height:200px;
+}
+// Those media queries are real quick wins to avoid, device with width resolution < 360px, getting the connect bouton out of the screen without refactoring all the html/css
+@media screen and (max-width: 365px) {
+    .step-img {
+        height:160px;
+    }
+}
+@media screen and (max-width: 345px) {
+    .step-img {
+        height:130px;
+    }
+}
+
+
+.grey-divider {
+    border-bottom: solid var(--vtmn-color_grey-light-2) 1px;
+}
+
+
+.my-2px {
+    margin: 2px 0;
+}
+
+
+.custom-little-title{
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    font-family: var(--vtmn-typo_font-family);
+}
+
+.tag-font{
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 20px;
+    font-family: var(--vtmn-typo_font-family);
+}
+
+.tag{
+    @extend .tag-font;
+    border-radius: 12px;
+    padding: 0 8px;
+    &.blue{
+       color: var(--vtmn-base-color_blue600);
+       background-color: var(--vtmn-base-color_blue50);
+    }
+    &.green{
+        color: var(--vtmn-base-color_green700);
+        background-color: var(--vtmn-base-color_green50);
+    }
+}
+
+
+// They are all gap-4 so it might be usefull
+.hub-grid {
+    @extend .vtmn-grid;
+    @extend .vtmn-gap-4;
+}
+
+
+// .legend-grid {
+//     @extend .hub-grid;
+//     @extend .mobile\:vtmn-grid-cols-1;
+//     @extend .tablet\:vtmn-grid-cols-2;
+//     @extend .small-desktop\:vtmn-grid-cols-2;
+//     @extend .vtmn-grid-cols-4;
+
+// }
+
+
+.service-logo {
+    width: 190px;
+}
+
+
+// .legend-item {
+//     @extend .vtmn-flex;
+//     &:nth-child(odd){
+//         @extend .mobile\:vtmn-col-start-1;
+//         @extend .tablet\:vtmn-col-start-1;
+//         @extend .small-desktop\:vtmn-col-start-1;
+//         @extend .vtmn-col-start-2;
+//     }
+//     small {
+//         @extend .vtmn-mt-1;
+//     }
+// }
+
+
+// Avoiding getting the modals blinking before the JS is loaded
+[v-cloak] > * { 
+    display:none 
+}
+
+
+#sync-management {
+    @extend .vtmn-grid;
+    @extend .vtmn-gap-5;
+}
+
+
+footer nav a:nth-child(n+2)::before {
+    content: "| ";
+}
+/////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////
+// <ul> Related classes
+/////////////////////////////////////////
+ul {
+    @extend .hub-grid;
+    @extend .vtmn-grid-cols-1;
+
+    & li {
+        border-bottom: solid var(--vtmn-color_grey-light-2) 1px;
+    }
+
+    // The .service-list ul>li
+    &.services-list {
+        & li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            @extend .vtmn-pb-4;
+        }
+    }
+
+    // The .recent-sync ul>li
+    &.recent-sync {
+        & li {
+            @extend .hub-grid;
+            @extend .vtmn-grid-cols-8;
+            @extend .vtmn-pb-4;
+        }
+    }
+
+    &.informations {
+        & li {
+            @extend .vtmn-grid;
+            @extend .vtmn-gap-3;
+            @extend .vtmn-pb-4;
+            &:last-child {
+                border-bottom: none;
+            }
+        }
+    }
+
+    &.steps-list {
+        @extend .mobile\:vtmn-grid-cols-1;
+
+        // @extend .mobile\:vtmn-border-b-0;
+        // @extend .vtmn-border-b;
+        // border-color: var(--vtmn-color_grey-light-2);
+        // border-style: solid;
+
+        justify-content: center;
+        justify-items: center;
+
+        & li{
+            @extend .mobile\:vtmn-border-b;
+            @extend .vtmn-border-b-0;
+
+            @extend .vtmn-pb-4;
+            &:nth-child(even) {
+                div{
+                    @extend .mobile\:vtmn-flex-row-reverse;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+/////////////////////////////////////////
+// Modal related class
+/////////////////////////////////////////
+.modal {
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100%;
+    background-color: rgba($color: #001018, $alpha: 0.8);
+    display: flex;
+
+    &-body {
+        margin: auto;
+        max-height: 90%;
+        width: 600px;
+        background-color: white;
+        @extend .vtmn-p-5;
+        @extend .hub-grid;
+
+
+        &-title {
+            display: flex;
+            h4 {
+                flex: 1 1 0%;
+            }
+            div.round-icon {
+                flex: none;
+            }
+        }
+
+
+        & img{
+            height: 32px;
+            margin: 0 auto;
+        }
+
+
+        &-buttons {
+            @extend .vtmn-space-y-3;
+            display: flex;
+            flex-direction: column;
+        }
+
+    }
+}
+/////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////
+// FAQ Page
+/////////////////////////////////////////
+.faq-topic{
+    @extend .vtmn-p-4;
+    border-radius: 16px;
+    border: 1px solid var(--vtmn-color_grey-light-2);
+    cursor: pointer;
+
+    &-header{
+        display: flex;
+        justify-content: space-between;
+        &-title{
+            @extend .custom-little-title;
+        }
+    }
+
+    & p{
+        max-height: 0;
+        transition: max-height 1.0s;
+        overflow: hidden;
+    }
+
+    &.active{
+        .faq-topic-header{
+            color: #007DBC;
+        }
+
+        & p{
+            transition: max-height 2.0s;
+            max-height: 300px;
+        }
+
+        & .faq-topic-header .round-icon{
+            transform: rotate(180deg);
+        }
+    }
+}
+/////////////////////////////////////////
+
+
+
+
+/////////////////////////////////////////
+// Animations
+/////////////////////////////////////////
+
+
+/*
+    The loading turning hollow circle animation
+
+    Copyright (c) 2014 Luke Haas
+    The MIT License (MIT)
+*/
+.loader,
+.loader:after {
+    border-radius: 50%;
+    width: 10em;
+    height: 10em;
+}
+.loader {
+    margin: 60px auto;
+    font-size: 10px;
+    position: relative;
+    text-indent: -9999em;
+    border-top: 1.1em solid rgba(0,144,255, 0.2);
+    border-right: 1.1em solid rgba(0,144,255, 0.2);
+    border-bottom: 1.1em solid rgba(0,144,255, 0.2);
+    border-left: 1.1em solid var(--vtmn-semantic-color_background-brand-primary);
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-animation: load8 1.1s infinite linear;
+    animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+@keyframes load8 {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+
+/*
+    The success checkmark animaiton (after loading)
+
+    Source https://stackoverflow.com/questions/41078478/css-animated-checkmark
+*/
+.checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: green;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+  
+.checkmark {
+    margin: 60px auto;
+    width: 10em;
+    height: 10em;
+    font-size: 10px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #fff;
+    stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px green;
+    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+}
+  
+.checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+  
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0px 0px 0px 200px green;
+    }
+}
+
+
+
+/*
+    Rotating sync icon on sync now btn (if disabled) 
+*/
+button#sync-now-btn[disabled] span {
+    animation: load8 infinite linear 1.1s
+}
+/////////////////////////////////////////

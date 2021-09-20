@@ -91,7 +91,10 @@ STATIC_ROOT = 'C:/wamp/www/tapiriik/tapiriik/static/'
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
-VUE_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14'
+
+VUE_DEV_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js'
+VUE_PROD_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js'
+VUE_URL = VUE_PROD_URL if DEBUG == False else VUE_DEV_URL
 
 # Additional locations of static files
 STATICFILES_DIRS = (

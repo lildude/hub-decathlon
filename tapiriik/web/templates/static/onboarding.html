@@ -2,7 +2,6 @@
 {% load services %}
 
 <html>
-    
     <head>
         <meta charset="utf-8">
         <meta name="Description"
@@ -28,10 +27,10 @@
     </head>
 
     <body class="vtmn-flex vtmn-flex-col vtmn-place-items-center vtmn-place-content-center vtmn-h-full vtmn-space-y-5">
-        <img src="{{STATIC_URL}}img/new/logo_hub.svg" alt="HUB by Decathlon logo">
+        <img src="{{STATIC_URL}}img/logo_hub.svg" alt="HUB by DECATHLON logo">
 
         <h3 class="vtmn-text-center">
-            {% trans "Synchronize your sport activity trackers with Decathlon" %}
+            {% trans "Synchronize your sport activity trackers with DECATHLON" %}
         </h3>
 
         {% with decathlon=service_providers|svc_by_id:'decathlon' %}

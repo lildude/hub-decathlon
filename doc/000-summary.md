@@ -2,6 +2,8 @@
 ## [Install with vagrant](002-install-vagrant.md)
 ## [Install without vagrant](002-install-wt-vagrant.md)
 
+# [CSS Manipulation & Building](080-css-manip-and-build.md)
+
 # [Conception](010-conception.md)
 ## [Terminology](011-cncpt-terminology.md)
 ## [Object hierarchy](012-cncpt-object-hierarchy.md)
