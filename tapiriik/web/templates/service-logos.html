@@ -1,7 +1,0 @@
-{% load services %}
-{% load i18n %}
-<div class="partner col-md-3 col-xs-4">
-	{% if provider.ID not in config.disabled_services %}
-		<img class="partner" src="{{ STATIC_URL }}img/services/{{provider.ID}}.png">
-	{% endif %}
-</div>
