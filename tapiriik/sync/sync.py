@@ -96,7 +96,7 @@ class Sync:
     SyncIntervalHours = 96 + random.randint(1,48)
     SyncInterval = timedelta(hours=SyncIntervalHours) #auto sync each interval
     SyncIntervalJitter = timedelta(minutes=5)
-    MinimumSyncInterval = timedelta(seconds=60)
+    MinimumSyncInterval = timedelta(seconds=1)
     MaximumIntervalBeforeExhaustiveSync = timedelta(days=30)  # Based on the general page size of 50 activites, this would be >3/day...
 
     # TODO : change sync to real class
