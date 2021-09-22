@@ -687,11 +687,11 @@ class FITIO:
 				avg_speed=(
 					actividata.get("avg_speed") if actividata.get("avg_speed") != None else 
 					actividata.get("enhanced_avg_speed") if actividata.get("enhanced_avg_speed") != None else 
-					actividata.get("total_distance") / time_to_use) *3.6, 
+					actividata.get("total_distance",0) / time_to_use) *3.6, 
 				max_speed=(
 					actividata.get("max_speed") if actividata.get("max_speed") != None else
 					actividata.get("enhanced_max_speed") if actividata.get("enhanced_max_speed") != None else 
-					actividata.get("total_distance") / time_to_use) *3.6, 
+					actividata.get("total_distance",0) / time_to_use) *3.6, 
 				avg_hr=actividata.get("avg_heart_rate"), 
 				max_hr=actividata.get("max_heart_rate"), 
 				avg_run_cadence=actividata.get("avg_running_cadence"), 
