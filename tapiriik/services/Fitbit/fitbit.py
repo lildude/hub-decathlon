@@ -256,6 +256,7 @@ class FitbitService(ServiceBase):
         17230: ActivityType.Walking, #	90013	27	4.5 mph, very, very brisk	Walk	Walking
         17231: ActivityType.Walking, #	90013	27	5.0 mph, speed walking	Walk	Walking
         17165: ActivityType.Walking, #	90013	27	Walking the dog	Walk	Walking
+        1071: ActivityType.Cycling
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
@@ -727,7 +728,7 @@ class FitbitService(ServiceBase):
 
 
     def ExternalIDsForPartialSyncTrigger(self, req):
-        pause_delay_in_sec = 3600 * 3
+        pause_delay_in_sec = 3600
         data = json.loads(req.body.decode("UTF-8"))
         
         
