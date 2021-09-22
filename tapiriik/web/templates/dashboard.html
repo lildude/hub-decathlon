@@ -21,7 +21,7 @@
 							:class="isBidirectional(service) ? 'vtmx-arrow-left-right-line' : service.isSupplier ? 'vtmx-arrow-left-line' : 'vtmx-arrow-right-line'"></span>
 					</div>
 					<div class="vtmn-content-center vtmn-mx-1">
-						<img :src="'{{STATIC_URL}}img/logos/'+service.id+'.png'" :alt="service.displayName+' logo'">
+						<img  class="little-logo" :src="'{{STATIC_URL}}img/logos/'+service.id+'.svg'" :alt="service.displayName+' logo'">
 					</div>
 				</div>
 				<div class="vtmn-ml-2">
@@ -103,7 +103,7 @@
 					<span class="vtmx-close-line"></span>
 				</div>
 			</div>
-			<img v-if="disconnectModalValues.svcId != ''" :src="'{{STATIC_URL}}img/logos/'+disconnectModalValues.svcId+'.png'"
+			<img v-if="disconnectModalValues.svcId != ''" :src="'{{STATIC_URL}}img/logos/'+disconnectModalValues.svcId+'.svg'"
 				:alt="disconnectModalValues.svdDisplayName+' logo'">
 			<p>
 				{% trans "Desynchronizing" %} {{disconnectModalValues.svdDisplayName}} {% trans "will stop all activities being transfered from and/or to this service. The HUB will not delete any data." %}
@@ -168,7 +168,7 @@
 					{% with localservices="decathlon decathlondev" %}
 						{% for provider in service_providers %}
 							{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-								<img src="{{STATIC_URL}}img/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
+								<img src="{{STATIC_URL}}img/logos/{{provider.ID}}.svg" alt="{{provider.DisplayName}} logo">
 							{% endif %}
 						{% endfor %}
 					{% endwith %}
@@ -211,7 +211,7 @@
 			{% with localservices="decathlon decathlondev" %}
 				{% for provider in service_providers %}
 					{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-						<img class="service-logo" src="{{STATIC_URL}}img/logos/{{provider.ID}}.png" alt="{{provider.DisplayName}} logo">
+						<img class="service-logo" src="{{STATIC_URL}}img/logos/{{provider.ID}}.svg" alt="{{provider.DisplayName}} logo">
 					{% endif %}
 				{% endfor %}
 			{% endwith %}
