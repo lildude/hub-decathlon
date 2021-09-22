@@ -294,7 +294,7 @@ class SuuntoService(ServiceBase):
             
             if uploadStatus.get("status") == "ERROR":
                 # If there is an error we raise en exception
-                raise APIException("Error: Suunto can't process the activity " + activity.UID + " response " + uploadStatus.text)
+                raise APIException("Error: Suunto can't process the activity " + activity.UID + " response " + response.text)
 
             if retries == max_retry_count - 1:
                 # If the max_retry_count is reached and we have nothing, it raises an exception
