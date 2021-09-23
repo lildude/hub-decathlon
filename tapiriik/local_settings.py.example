@@ -9,6 +9,12 @@ WEB_ROOT = "http://localhost:8000"
 # It is the only directory that needs to be writable by the webapp user
 USER_SYNC_LOGS = "./"
 
+DEBUG = True
+VUE_DEV_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js'
+VUE_PROD_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js'
+VUE_URL = VUE_PROD_URL if DEBUG == False else VUE_DEV_URL
+
+
 # These settings are used to communicate with each respective service
 # Register your installation with each service to get these values
 

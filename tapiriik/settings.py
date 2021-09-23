@@ -92,6 +92,10 @@ STATIC_ROOT = 'C:/wamp/www/tapiriik/tapiriik/static/'
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
 
+VUE_DEV_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js'
+VUE_PROD_URL = 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js'
+VUE_URL = VUE_PROD_URL if DEBUG == False else VUE_DEV_URL
+
 # Additional locations of static files
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
@@ -111,31 +115,31 @@ STATICFILES_FINDERS = (
 
 STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
 
-PIPELINE_JS = {
-    'tapiriik-js': {
-        'source_filenames': (
-          'js/jquery.address-1.5.min.js',
-          'js/tapiriik.js',
-        ),
-        'output_filename': 'js/tapiriik.min.js',
-    },
-    'tapiriik-user-js': {
-        'source_filenames': (
-          'js/jstz.min.js',
-          'js/tapiriik-ng.js',
-        ),
-        'output_filename': 'js/tapiriik-user.min.js',
-    }
-}
+# PIPELINE_JS = {
+#     'tapiriik-js': {
+#         'source_filenames': (
+#           'js/jquery.address-1.5.min.js',
+#           'js/tapiriik.js',
+#         ),
+#         'output_filename': 'js/tapiriik.min.js',
+#     },
+#     'tapiriik-user-js': {
+#         'source_filenames': (
+#           'js/jstz.min.js',
+#           'js/tapiriik-ng.js',
+#         ),
+#         'output_filename': 'js/tapiriik-user.min.js',
+#     }
+# }
 
-PIPELINE_CSS = {
-    'tapiriik-css': {
-        'source_filenames': (
-          'css/style.css',
-        ),
-        'output_filename': 'css/style.min.css',
-    },
-}
+# PIPELINE_CSS = {
+#     'tapiriik-css': {
+#         'source_filenames': (
+#           'css/style.css',
+#         ),
+#         'output_filename': 'css/style.min.css',
+#     },
+# }
 
 PIPELINE_CSS_COMPRESSOR  = 'pipeline.compressors.cssmin.CSSMinCompressor'
 PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.jsmin.JSMinCompressor'
@@ -195,6 +199,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'tapiriik.web.context_processors.celebration_mode',
     'tapiriik.web.context_processors.device_support',
     'tapiriik.web.context_processors.background_use',
+    'tapiriik.web.context_processors.vue_link',
     'django.core.context_processors.static',
     'django.core.context_processors.request',
     'django.template.context_processors.i18n')

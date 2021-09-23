@@ -1,0 +1,40 @@
+{% load i18n %}
+{% load services %}
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="Description"
+            content="Automatically synchronize your fitness activities between Garmin, Strava and more.">
+        <meta name="Keywords"
+            content="automatic, synchronize, sync, update, copy, transfer, download, fitness, garmin, garmin connect, strava, path, track, heart rate, free, service, gpx, tcx, health, data, service, cycling, running, swimming, walking">
+
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ STATIC_URL }}img/favicon-32x32.png">
+	    <link rel="icon" type="image/png" sizes="16x16" href="{{ STATIC_URL }}img/favicon-16x16.png">
+
+        <title>{% block site_title %}{% block title %}dashboard{% endblock %} &bull; Hub by DECATHLON{% endblock %}</title>
+
+        <meta name="viewport" content="width=device-width">
+        {% block head %}{% endblock %}
+
+        <link rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,700&display=swap" />
+
+        <link rel="stylesheet" href="{{STATIC_URL}}css/style.css">
+
+        <link rel="manifest" href="{{ STATIC_URL }}site.webmanifest">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+
+    <body class="vtmn-flex vtmn-flex-col vtmn-place-items-center vtmn-place-content-center vtmn-h-full vtmn-space-y-5">
+        <img src="{{STATIC_URL}}img/logo_hub.svg" alt="HUB by DECATHLON logo">
+
+        <h3 class="vtmn-text-center">
+            {% trans "Synchronize your sport activity trackers with DECATHLON" %}
+        </h3>
+
+        {% with decathlon=service_providers|svc_by_id:'decathlon' %}
+            <a href="{{decathlon.UserAuthorizationURL}}" class="button">{% trans "Login" %}</a>
+        {% endwith %}
+    </body>
+</html>

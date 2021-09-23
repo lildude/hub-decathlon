@@ -30,19 +30,21 @@ def activities_fetch_json(req):
         return HttpResponse("[]", content_type="application/json")
     cleanedRecords = []
     for activity in activityRecords["Activities"]:
+        activity["Prescence"] = list(activity.get("Prescence").keys())
+        activity["Abscence"] = list(activity.get("Abscence").keys())
         # Strip down the record since most of this info isn't displayed
-        for presence in activity["Prescence"]:
-            del activity["Prescence"][presence]["Exception"]
-        for abscence in activity["Abscence"]:
-            if activity["Abscence"][abscence]["Exception"]:
-                del activity["Abscence"][abscence]["Exception"]["InterventionRequired"]
-                del activity["Abscence"][abscence]["Exception"]["ClearGroup"]
-        # Don't really need these seperate at this point
-        activity["Prescence"].update(activity["Abscence"])
-        for svc in WITHDRAWN_SERVICES:
-            if svc in activity["Prescence"]:
-                del activity["Prescence"][svc]
-        del activity["Abscence"]
+        # for presence in activity["Prescence"]:
+        #     del activity["Prescence"][presence]["Exception"]
+        # for abscence in activity["Abscence"]:
+        #     if activity["Abscence"][abscence]["Exception"]:
+        #         del activity["Abscence"][abscence]["Exception"]["InterventionRequired"]
+        #         del activity["Abscence"][abscence]["Exception"]["ClearGroup"]
+        # # Don't really need these seperate at this point
+        # activity["Prescence"].update(activity["Abscence"])
+        # for svc in WITHDRAWN_SERVICES:
+        #     if svc in activity["Prescence"]:
+        #         del activity["Prescence"][svc]
+        # del activity["Abscence"]
 
         diff_date = int((activity['EndTime'] - activity["StartTime"]).total_seconds() / 60.0)
         period = str(diff_date) + " minutes"

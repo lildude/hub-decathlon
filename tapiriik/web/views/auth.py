@@ -1,4 +1,6 @@
+from tapiriik.services.service_record import ServiceRecord
 from django.http import HttpResponse
+from django.http.response import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.csrf import csrf_exempt
@@ -70,12 +72,19 @@ def auth_disconnect(req, service):
 
 @require_POST  # don't want this getting called by just anything
 def auth_disconnect_ajax(req, service):
+    # if req.user == None:
+    #     return JsonResponse({"success": False, "error": "No user provided"},status=403)
     try:
-        status = auth_disconnect_do(req, service)
+        svcRec = User.GetConnectionRecord(req.user, service)
+        if svcRec is None:
+            raise Exception("The user don't seems to be connected to %s" % service)
+
+        Service.DeleteServiceRecord(svcRec)
+        User.DisconnectService(svcRec)
     except Exception as e:
-        raise
-        return HttpResponse(json.dumps({"success": False, "error": str(e)}), content_type='application/json', status=500)
-    return HttpResponse(json.dumps({"success": status}), content_type='application/json')
+        logging.error("An error occured while diconnecting user %s from %s. Exception : %s" % (req.user.get("_id"), service, e))
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": True})
 
 
 def auth_disconnect_do(req, service):

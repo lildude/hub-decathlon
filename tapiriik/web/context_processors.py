@@ -1,7 +1,7 @@
 from tapiriik.services import Service
 from tapiriik.auth import User
 from tapiriik.sync import Sync
-from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES
+from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES, VUE_URL
 from tapiriik.database import db
 from datetime import datetime
 from random import randint
@@ -105,3 +105,7 @@ def device_support(req):
 
 def background_use(req):
     return {'background_use': randint(1, 5)}
+
+
+def vue_link(req):
+    return {"VUE_URL": VUE_URL}

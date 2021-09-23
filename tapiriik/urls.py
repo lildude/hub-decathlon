@@ -19,7 +19,7 @@ urlpatterns = patterns('',
     url(r'^auth/login-ajax/(?P<service>.+)$', 'tapiriik.web.views.auth_login_ajax', {}, name='auth_simple_ajax', ),
     url(r'^auth/persist-ajax/(?P<service>.+)$', 'tapiriik.web.views.auth_persist_extended_auth_ajax', {}, name='auth_persist_extended_auth_ajax', ),
     url(r'^auth/disconnect/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect', {}, name='auth_disconnect', ),
-    #url(r'^auth/disconnect-ajax/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect_ajax', {}, name='auth_disconnect_ajax', ),
+    url(r'^auth/disconnect-ajax/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect_ajax', {}, name='auth_disconnect_ajax', ),
     url(r'^auth/disconnect-do/(?P<service>.+)$', 'tapiriik.web.views.auth_disconnect_do', {}, name='auth_disconnect_do', ),
     url(r'^auth/auth_disconnect_garmin_health$', 'tapiriik.web.views.auth_disconnect_garmin_health', {}, name='auth_disconnect_garmin_health', ),
     url(r'^auth/logout$', 'tapiriik.web.views.auth_logout', {}, name='auth_logout', ),
@@ -71,10 +71,7 @@ urlpatterns = patterns('',
 
     url(r'^ab/begin/(?P<key>[^/]+)$', 'tapiriik.web.views.ab_web_experiment_begin', {}, name='ab_web_experiment_begin'),
 
-    url(r'^privacy$', 'tapiriik.web.views.privacy.privacy', name='privacy'),
-
-    url(r'^garmin_connect_users$', TemplateView.as_view(template_name='static/garmin_connect_users.html'), name='garmin_connect_users'),
-
+    url(r'^privacy$', TemplateView.as_view(template_name='static/privacy.html'), name='privacy'),
     url(r'^faq$', TemplateView.as_view(template_name='static/faq.html'), name='faq'),
     url(r'^credits$', TemplateView.as_view(template_name='static/credits.html'), name='credits'),
     url(r'^contact$', TemplateView.as_view(template_name='static/contact.html'), name='contact'),
@@ -87,6 +84,19 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+
+
+
+    #########################
+    # API Related
+    #########################
+    url(r'^api/providers$', 'tapiriik.web.views.providers', {}, name='providers'),
+
+    #########################
+    # Error management
+    #########################
+    url(r'^fail_to_disconnect_svc$', TemplateView.as_view(template_name='service_disconnect_failure.html'), name='fail_to_disconnect_svc')
+
 )
 
 

@@ -1,0 +1,14 @@
+{% extends "site.html" %}
+{% load i18n %}
+{% block title %}Disconnect failed{% endblock %}
+
+
+{% block page_title %}{% trans "An error occured while disconnecting the service" %}{% endblock page_title %}
+
+{% block content %}
+<div class="vtmn-ml-6">
+    <p>{% trans "This issue might be temporary and could be solved by making a second try." %}</p>
+    <p>{% trans "If the issue persists even after a second try, please contact us. We will do our best to resolve it as fast as possible." %}</p>
+    <p>{% trans "Timestamp" %} : <code>{% now "Y-m-d H:i:s" %}</code></p>
+</div>
+{% endblock %}

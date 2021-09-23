@@ -7,163 +7,263 @@
 
 {% block content %}
 {% if user != none %}
-	<div class="block">
-		<div class="titleBlock">{% trans "Retrieve your activities" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_conns %}
-				{% with svc=connection.Service %}
-					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-					<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
-					{% if svc.ID not in config.withdrawn_services and svc.ID != "strava" and svc.ID != "decathlon" %}
-						{% include "service-button.html" with provider=svc connection=connection %}
-					{% endif %}
-				{% endwith %}
-			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_providers_except %}
-				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-				<!-- hardcoding the decathlon exception to avoid disconnection to the main service -->
-				{% if provider.ID not in config.soft_launch and provider.ID not in config.withdrawn_services and provider.ID != "strava" and provider.ID != "decathlon" %}
-					{% include "service-button.html" with provider=provider inactive=True %}
-				{% endif %}
-			{% endfor %}
+	<p v-if="!isOneSvcConnected">
+		{% trans "Choose the services you want to synchronize to start the synchronization process." %}
+	</p>
+		
+	<ul class="vtmn-mb-2 services-list">
+		<li v-for="service in services" :key="service.id" :id="service.id">
+			<div class="vtmn-flex">
+				<div :class="['vtmn-border vtmn-flex vtmn-flex-col vtmn-items-center vtmn-h-8 vtmn-w-8 vtmn-rounded-lg vtmn-border-grey-light-2', !service.isConnected ? 'vtmn-opacity-50' : '']">
+					<div
+						:class="['round-icon vtmn-text-white vtmn-my-1', isBidirectional(service) ? 'green' : 'blue']">
+						<span
+							:class="isBidirectional(service) ? 'vtmx-arrow-left-right-line' : service.isSupplier ? 'vtmx-arrow-left-line' : 'vtmx-arrow-right-line'"></span>
+					</div>
+					<div class="vtmn-content-center vtmn-mx-1">
+						<img  class="little-logo" :src="'{{STATIC_URL}}img/logos/'+service.id+'.svg'" :alt="service.displayName+' logo'">
+					</div>
+				</div>
+				<div class="vtmn-ml-2">
+					<small><b>{% verbatim %}{{service.displayName}}{% endverbatim %}</b></small>
+					<small class="grey-text my-2px" v-if="service.isConnected">{% trans "Synchronized" %}</small>
+					<small class="grey-text my-2px" v-else>{% trans "Not synchronized" %}</small>
+
+					<div class="tag green" v-if="isBidirectional(service)">
+						{% trans "Sending and receiving" %}
+					</div>
+
+					<div class="tag blue" v-else-if="service.isReceiver">
+						{% trans "Sending only" %}
+					</div>
+
+					<div class="tag blue" v-else>
+						{% trans "Receiving only" %}
+					</div>
+				</div>
+			</div>
+			<button v-if="service.isConnected" class="button-sync vtmn-mt-1"
+				@click="openDisconnectModal(service.id)">{% trans "Desynchronize" %}</button>
+			<a v-if="!service.isConnected" class="button button-sync vtmn-mt-1" :href="service.authURI">{% trans "Synchronize" %}</a>
+		</li>
+	</ul>
+
+	<div id="sync-management" v-if="isOneSvcConnected">
+		<h4>{% trans "Activities" %}</h4>
+		<button id="sync-now-btn" class="vtmn-mb-4 vtmn-btn--icon-right" :disabled="syncNowBtnDisabled" @click="syncNow">
+			{% trans "Sync now" %}
+			<span class="vtmx-refresh-line vtmn-h-4 vtmn-pr-2"></span>
+		</button>
+
+		<ul class="recent-sync vtmn-mb-2">
+			<li v-for="recentActivity in recentActivities">
+				<div class="vtmn-col-span-3">
+					<small class="small vtmn-pb-4"><b>{% trans "Date" %}</b></small>
+					{% verbatim  %}
+					<small class="small">{{recentActivity.Readable_date}}</small>
+					{% endverbatim  %}
+				</div>
+				<div class="vtmn-col-span-5">
+					<small class="vtmn-pb-4"><b>{% trans "Details" %}</b></small>
+					<small><b>{% trans "Duration" %} : </b>{% verbatim  %}{{recentActivity.Period}}{% endverbatim  %}</small>
+					<small><b>{% trans "Activity" %} : </b>{% verbatim  %}{{recentActivity.Type}}{% endverbatim  %}</small>
+					<small><b>{% trans "From" %} : </b>{% verbatim  %}{{recentActivity.Source}}{% endverbatim  %}</small>
+					<small><b>{% trans "To" %} : </b>{% verbatim  %}{{recentActivity.Destinations.join(", ")}}{% endverbatim  %}</small>
+				</div>
+			</li>
+		</ul>
+		<div class="vtmn-flex vtmn-justify-center">
+			<a href="activities" class="button secondary">{% trans "See all" %}</a>
+		</div>
+	</div>
+
+	<ul class="informations" v-if="!isOneSvcConnected">
+		<li>
+			<h4>{% trans "Security" %}</h4>
+			<p>
+				{% trans "Your email and password are secured, please visit the " %}
+				<a href="./privacy">{% trans "Privacy" %}</a>{% trans " page for more information." %}
+			</p>
+		</li>
+		<li>
+			<h4>{% trans "How does it works ?" %}</h4>
+			<p>
+				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}	
+			</p>
+			<a class="button secondary" href="./faq">{% trans "Read the FAQ" %}</a>
+		</li>
+	</ul>
+
+	<div class="modal" role="dialog" aria-modal="true" v-show="disconnectModalValues.isOpen" v-cloak
+		@click="closeDisconnectModal">
+		<div class="modal-body" @click.stop>
+			<div class="modal-body-title">
+				<h4>{% trans "Desynchronize" %}</h4>
+				<div class="round-icon vtmn-text-black" @click="closeDisconnectModal">
+					<span class="vtmx-close-line"></span>
+				</div>
+			</div>
+			<img v-if="disconnectModalValues.svcId != ''" :src="'{{STATIC_URL}}img/logos/'+disconnectModalValues.svcId+'.svg'"
+				:alt="disconnectModalValues.svdDisplayName+' logo'">
+			<p>
+				{% trans "Desynchronizing" %} {{disconnectModalValues.svdDisplayName}} {% trans "will stop all activities being transfered from and/or to this service. The HUB will not delete any data." %}
+			</p>
+			<div class="modal-body-buttons">
+				<button @click="confirmDisconnection(disconnectModalValues.svcId)">{% trans "Confirm" %}
+					{{disconnectModalValues.svdDisplayName}}</button>
+				<button class="secondary" @click="closeDisconnectModal">{% trans "Cancel" %}</button>
 			</div>
 		</div>
 	</div>
-	<div class="block">
-		<div class="titleBlock">{% trans "Share your activities" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap row">
-			{% for connection in user.ConnectedServices|svc_populate_conns %}
-				{% with svc=connection.Service %}
-					<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-					{% if svc.ID == "strava" %}
-						{% include "service-button.html" with provider=svc connection=connection %}
-					{% endif %}
-				{% endwith %}
-			{% endfor %}
-			{% for provider in user.ConnectedServices|svc_providers_except %}
-				<!-- hardcoding the strava exception to avoid using the ProvidesActivity flag -->
-				{% if provider.ID == "strava" %}
-					{% include "service-button.html" with provider=provider inactive=True %}
-				{% endif %}
-			{% endfor %}
-			</div>
+
+	<div class="modal" v-show="isLoading" v-cloak>
+		<div class="vtmn-m-auto">
+			<h3 class="vtmn-text-white vtmn-w-2/3 vtmn-m-auto vtmn-text-center">{% trans "Desynchronization in progress, please wait" %}</h3>
+			<div class="loader" v-show="!loadingSuccess"></div>
+
+			<svg class="checkmark" v-show="loadingSuccess" xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 52 52">
+				<circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" />
+				<path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+			</svg>
 		</div>
 	</div>
-	{% if user.ConnectedServices|length > 1 %}
 
-		<div class="block manageSyncBlock">
-			{% include "manage-sync.html" %}
-		</div>
-		<div class="block">
-			{% if user.NonblockingSyncErrorCount > 0 %}
-				<a href="{% url 'activities_dashboard' %}" style="color:#aaa; font-size:80%;">{% trans "Some activities could not be synchronized." %}</a><br/>
-			{% endif %}
-		</div> 
-	{% endif %}
 
-	<div class="block">
-		{% for connection in user.ConnectedServices|svc_populate_conns %}
-			{% with svc=connection.Service %}
-				{% for error in connection.SyncErrors %}
-					{% if error.UserException.InterventionRequired and error.Block %}
-						{% include "service-blockingexception.html" with provider=svc connection=connection exception=error %}
-					{% endif %}
-				{% endfor %}
-			{% endwith %}
-		{% endfor %}
-	</div>
-
-	<!-- tooltip blocks -->
-	{% if user.ConnectedServices|length > 1 %}
-		<!--{% infotip connectedWillSync %}-->
-			<div class="block">
-				<div class="tooltip">{% trans "Connected services will be synchronized automatically" %}</div>
-			</div>
-		<!--{% endinfotip %}-->
-	{% else %}
-		<!--{% infotip connectOneMore %}-->
-			<div class="block">
-				<div class="tooltip">{% trans "Connect a second service to synchronize your activities to &amp; from" %}</div>
-			</div>
-		<!--{% endinfotip %}-->
-	{% endif %}	
+	
 		
 	{% if user.Substitute %}
 		<h1>{% trans "Substituting user" %}</h1>
 		<a href="{% url 'diagnostics_unsu' %}">{% trans "Return" %}</a>
-		<hr/>
+		<br>
 	{% endif %}
 
 {% else %}
 	{% ifequal device_support 'web' %}
-	<div class="block">
-		<p class="info">{% trans "Decathlon HUB synchronizes your recent activities between Garmin Connect, Polar Flow and Strava<br/>	(your heart rate, cadence, power, and temperature data syncs too)" %}</p>
-	</div>
-	<dib class="block">
-		<div class="row">
-			<div class="col-md-3"></div>
-			<div class="col-md-2 col-xs-4">
-		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachconnect.png">
-		    	<p class="text decathlonapp"><strong>DECATHLON Connect</strong></p>
+	<p>
+		{% trans "Get your sports activities in your favorite apps." %}
+	</p>
+
+	<ul class="steps-list mobile:vtmn-grid vtmn-flex">
+		<li class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<img class="step-img" src="{{STATIC_URL}}img/step1.svg" alt="Step 1">
+			<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+				<p class="vtmn-text-center mobile:vtmn-text-left">{% trans "I login to my DECATHLON account." %}</p>
+				{% with decathlon=service_providers|svc_by_id:'decathlon' %}
+					<a class="button vtmn-mt-2" href="{{decathlon.UserAuthorizationURL}}">{% trans "Login" %}</a>
+				{% endwith %}
 			</div>
-			<div class="col-md-2 col-xs-4">
-		    	<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoach-rounded.png">
-		    	<p class="text decathlonapp"><strong>DECATHLON Coach</strong></p>
+		</li>
+		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
+				<img class="step-img" src="{{STATIC_URL}}img/step2.svg" alt="Step 2">
+				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+					<p class="vtmn-text-center mobile:vtmn-text-left">{% trans "I chose the services I want to connect with the HUB." %}</p>
+				</div>
 			</div>
-			<div class="col-md-2 col-xs-4">
-	    		<img class="logo decathlonapp" src="{{ STATIC_URL}}img/decathlon/logos/decathloncoachdomyoseconnected.png">
-		    	<p class="text decathlonapp"><strong>E-Connected</strong></p>
+			
+			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
+				<div class="custom-little-title vtmn-my-2">{% trans "Compatible services" %}</div>
+				<div class="vtmn-grid vtmn-grid-cols-2 vtmn-gap-6">
+					{% with localservices="decathlon decathlondev" %}
+						{% for provider in service_providers %}
+							{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+								<img src="{{STATIC_URL}}img/logos/{{provider.ID}}.svg" alt="{{provider.DisplayName}} logo">
+							{% endif %}
+						{% endfor %}
+					{% endwith %}
+				</div>
 			</div>
-		</div>
-	</dib>
-	<div class="block">
-		<div class="titleBlock">{% trans "Connect to your Decathlon services" %}</div>
-		<div class="serviceButtonOuter">
-			<div class="serviceButtonWrap serviceButtonLogin row">
+		</li>
+		<li class="mobile:vtmn-w-full tablet:vtmn-w-1/3 vtmn-w-1/4">
+			<div class="vtmn-flex mobile:vtmn-space-x-2 vtmn-items-center vtmn-flex-col mobile:vtmn-flex-row mobile:vtmn-flex-1 vtmn-w-full">
+				<img class="step-img" src="{{STATIC_URL}}img/step3.svg" alt="Step 3">
+				<div class="mobile:vtmn-block vtmn-flex vtmn-flex-col vtmn-items-center mobile:vtmn-h-auto vtmn-h-full vtmn-place-content-center">
+					<p class="vtmn-text-center mobile:vtmn-text-left">{% trans "I can find my activities in my favorites apps." %}</p>
+				</div>
+			</div>
+			
+
+			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
+				<div class="custom-little-title vtmn-my-2">{% trans "DECATHLON Apps" %}</div>
+				<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-3">
+					<div>
+						<img src="{{STATIC_URL}}img/logos/dkt-connect.png" alt="DECATHLON connect logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">DECATHLON Connect</small>
+					</div>
+					<div>
+						<img src="{{STATIC_URL}}img/logos/dkt-coach.png" alt="DECATHLON coach logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">DECATHLON Coach</small>
+					</div>
+					<div>
+						<img src="{{STATIC_URL}}img/logos/e-connected.png" alt="Domyos e-connected logo">
+						<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
+					</div>
+				</div>
+			</div>
+		</li>
+	</ul>
+
+	<div class="vtmn-flex vtmn-flex-col mobile:vtmn-hidden vtmn-mt-5 vtmn-items-center">
+		<div class="custom-little-title vtmn-my-2">{% trans "Compatible services" %}</div>
+		<div class="vtmn-grid vtmn-grid-cols-4 tablet:vtmn-grid-cols-3 tablet:vtmn-gap-6 small-desktop:vtmn-grid-cols-3 vtmn-gap-10 tablet:vtmn-w-full vtmn-w-2/3 vtmn-items-center vtmn-justify-items-center">
+			
+			{% with localservices="decathlon decathlondev" %}
 				{% for provider in service_providers %}
-					{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-						{% include "service-button.html" with login=True provider=provider inactive=True hideicon=True size=4 centered=True %}
+					{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
+						<img class="service-logo" src="{{STATIC_URL}}img/logos/{{provider.ID}}.svg" alt="{{provider.DisplayName}} logo">
 					{% endif %}
 				{% endfor %}
-			</div>
-		</div>
-	</div>
-	<div class="block logoPartners">
-		<div class="titleBlock">{% trans "Available services" %}</div>
-		<div class="partnerOuter row">
-			{% with localservices="decathlon decathlondev" %}
-  			{% for provider in service_providers %}
-				{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
-					{% include "service-logos.html" with provider=provider %}
-				{% endif %}
-			{% endfor %}
 			{% endwith %}
 		</div>
 	</div>
-	<div class="block">
-		<!--<p class="info">{% trans "Did not find your service?" %} - {% trans "Try here" %}: <a id="tapiriikLink" href="https://tapiriik.com">tapiriik.com</a></p>-->
-		<p class="info">{% trans "Your email, password, and fitness data are kept safe - full details on the" %} <a href="{% url "privacy" %}">{% trans "privacy page" %}</a>.</p>
-	</div>
-	{% else %}
 
-		<div class="block">
-			<p class="info">{% trans "Welcome !" %}</p>
-			<p class="info">{% trans "Decathlon HUB synchronizes your recent activities between Garmin Connect, Polar Flow and Strava" %}</p>
-		</div>
-
-		<div class="block">
-			<div class="serviceButtonOuter">
-				<div class="serviceButtonWrap serviceButtonLogin row">
-					{% for provider in service_providers %}
-						{% if provider.ID in config.connection_services and provider.ID not in config.withdrawn_services %}
-							{% include "service-button.html" with provider=provider inactive=True hideicon=True size=12 %}
-						{% endif %}
-					{% endfor %}
-				</div>
+	<div class="vtmn-flex vtmn-flex-col mobile:vtmn-hidden vtmn-mt-5 vtmn-items-center">
+		<div class="custom-little-title vtmn-my-2">{% trans "DECATHLON Apps" %}</div>
+		<div class="vtmn-grid vtmn-grid-cols-3 vtmn-gap-1">
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/logos/dkt-connect.png" alt="DECATHLON connect logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">DECATHLON Connect</small>
+			</div>
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/logos/dkt-coach.png" alt="DECATHLON coach logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">DECATHLON Coach</small>
+			</div>
+			<div class="vtmn-flex vtmn-flex-col vtmn-items-center">
+				<img class="vtmn-w-3/4" src="{{STATIC_URL}}img/logos/e-connected.png" alt="Domyos e-connected logo">
+				<small class="vtmn-text-center grey-text vtmn-mt-2">Domyos E-connected</small>
 			</div>
 		</div>
+	</div>
+
+	<ul class="informations">
+		<li>
+			<h4>{% trans "Security" %}</h4>
+			<p>
+				{% trans "Your email and password are secured, please visit the " %}
+				<a href="./privacy">{% trans "Privacy" %}</a>{% trans " page for more information." %}
+			</p>
+		</li>
+		<li>
+			<h4>{% trans "How does it works ?" %}</h4>
+			<p>
+				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}	
+			</p>
+			<a class="button secondary" href="./faq">{% trans "Read the FAQ" %}</a>
+		</li>
+	</ul>
 	{% endifequal%}
 {% endif %}
+{% endblock %}
+
+
+
+
+
+{% block specific-js %}
+	{% if user != none %}
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script src="{{VUE_URL}}"></script>
+		<script src="{{STATIC_URL}}js/dashboard_handler.js"></script>
+	{% endif %}
 {% endblock %}
