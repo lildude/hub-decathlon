@@ -374,20 +374,31 @@ class DecathlonService(ServiceBase):
 
 
     def convertStdDeviceToHubDevice(stdDevice) -> Device:
+        FIELD_TYPES["manufacturer"].values[310] = "decathlon"
+        
         deviceManufacturerCode = stdDevice.get("fitManufacturer")
-        deviceManufacturerName = FIELD_TYPES["manufacturer"].values.get(deviceManufacturerCode, "decathlon")
+        deviceCode = stdDevice.get("fitDevice")
+        deviceManufacturerName = FIELD_TYPES["manufacturer"].values.get(deviceManufacturerCode)
+        deviceModelLocation = stdDevice["model"]
 
-        return Device(
-            manufacturer=(
-                "decathlon" if deviceManufacturerCode == None 
-                else deviceManufacturerName
-            ),
-            product=(
-                None if deviceManufacturerCode == None
-                else stdDevice.get("fitDevice")
+        match = re.search(r'\d+$', deviceModelLocation)
+        deviceModel=int(match.group(0)) if match else None
+
+        if deviceManufacturerCode == None:
+            return Device(
+                manufacturer="decathlon",
+                product=deviceModel
             )
-        )
-
+        elif deviceManufacturerName == None:
+            return Device(
+                manufacturer=None,
+                product=None
+            )
+        else:
+            return Device(
+                manufacturer=deviceManufacturerName,
+                product=deviceCode
+            )
 
 
     def DownloadActivity(self, svcRecord, activity):
