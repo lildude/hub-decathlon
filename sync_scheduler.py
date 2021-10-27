@@ -27,7 +27,7 @@ while True:
                     "_id": True,
                     "SynchronizationHostRestriction": True
                 }
-            )).limit(10)
+            ).limit(10))
 
     scheduled_ids = [x["_id"] for x in users]
     #print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
