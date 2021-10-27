@@ -71,7 +71,7 @@ class FitbitService(ServiceBase):
         #ActivityType.Rowing: "Rowing",
         ActivityType.Elliptical: 20047,
         #ActivityType.RollerSkiing: "RollerSki",
-        #ActivityType.StrengthTraining: "WeightTraining",
+        ActivityType.StrengthTraining: 2131,
         ActivityType.Climbing: 15535,
         ActivityType.Other: 20,
         ActivityType.Swimming: 90024,
@@ -256,7 +256,8 @@ class FitbitService(ServiceBase):
         17230: ActivityType.Walking, #	90013	27	4.5 mph, very, very brisk	Walk	Walking
         17231: ActivityType.Walking, #	90013	27	5.0 mph, speed walking	Walk	Walking
         17165: ActivityType.Walking, #	90013	27	Walking the dog	Walk	Walking
-        1071: ActivityType.Cycling
+        1071: ActivityType.Cycling,
+        2131: ActivityType.StrengthTraining
     }
 
     SupportedActivities = list(_activityTypeMappings.keys())
