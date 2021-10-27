@@ -102,5 +102,5 @@ class StdDeviceTest(TestCase):
 
         self.assertIsNotNone(hubDevice)
         self.assertIsInstance(hubDevice, Device)
-        self.assertEqual(hubDevice.Manufacturer, "developper")
-        self.assertEqual(hubDevice.Product, 5)
+        self.assertIsNone(hubDevice.Manufacturer)
+        self.assertIsNone(hubDevice.Product)

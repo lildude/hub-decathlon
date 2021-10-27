@@ -374,18 +374,26 @@ class DecathlonService(ServiceBase):
 
 
     def convertStdDeviceToHubDevice(stdDevice) -> Device:
+        FIELD_TYPES["manufacturer"].values[310] = "decathlon"
+        
         deviceManufacturerCode = stdDevice.get("fitManufacturer")
         deviceCode = stdDevice.get("fitDevice")
-        deviceManufacturerName = FIELD_TYPES["manufacturer"].values.get(deviceManufacturerCode, "decathlon")
+        deviceManufacturerName = FIELD_TYPES["manufacturer"].values.get(deviceManufacturerCode)
         deviceModelLocation = stdDevice["model"]
 
         match = re.search(r'\d+$', deviceModelLocation)
         deviceModel=int(match.group(0)) if match else None
 
+
         if deviceManufacturerCode == None:
             return Device(
                 manufacturer="decathlon",
                 product=deviceModel
+            )
+        elif deviceManufacturerName == None:
+            return Device(
+                manufacturer=None,
+                product=None
             )
         else:
             return Device(
