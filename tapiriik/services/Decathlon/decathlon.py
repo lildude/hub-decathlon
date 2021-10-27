@@ -6,8 +6,10 @@ from tapiriik.services.service_base import ServiceAuthenticationType, ServiceBas
 from tapiriik.services.service_record import ServiceRecord
 from tapiriik.database import cachedb
 from tapiriik.services.interchange import UploadedActivity, ActivityType, ActivityStatistic, ActivityStatisticUnit, Waypoint, WaypointType, Location, Lap
+from tapiriik.services.devices import Device
 from tapiriik.services.api import APIException, UserException, UserExceptionType, APIExcludeActivity, ServiceException
 from tapiriik.database import db, redis
+from fitparse.profile import FIELD_TYPES
 
 from django.core.urlresolvers import reverse
 from datetime import datetime, timedelta
@@ -371,6 +373,21 @@ class DecathlonService(ServiceBase):
             return []
 
 
+    def convertStdDeviceToHubDevice(stdDevice) -> Device:
+        deviceManufacturerCode = stdDevice.get("fitManufacturer")
+        deviceManufacturerName = FIELD_TYPES["manufacturer"].values.get(deviceManufacturerCode, "decathlon")
+
+        return Device(
+            manufacturer=(
+                "decathlon" if deviceManufacturerCode == None 
+                else deviceManufacturerName
+            ),
+            product=(
+                None if deviceManufacturerCode == None
+                else stdDevice.get("fitDevice")
+            )
+        )
+
 
 
     def DownloadActivity(self, svcRecord, activity):
@@ -388,6 +405,24 @@ class DecathlonService(ServiceBase):
             root = json.loads(resp.content.decode('utf-8'))
         except:
             raise APIException("Stream data returned from Decathlon is not JSON")
+        
+        deviceLocation = root.get('userDevice')
+        if deviceLocation is not None:
+            # fetch device
+            deviceResponse = requests.get(DECATHLON_API_BASE_URL + deviceLocation , headers=headers)
+
+            #   resp OK
+            if deviceResponse.status_code == 200:
+                try: 
+                    currentActivityDevice = json.loads(deviceResponse.content.decode('utf-8'))
+                    activity.Device = DecathlonService.convertStdDeviceToHubDevice(currentActivityDevice)
+
+                except Exception as e:
+                    logging.warning("Device convert failed for activity " + str(activityID) + " at " + str(deviceLocation))
+
+            # error when fetching device from std
+            else:
+                logging.warning("Device fetch failed for activity " + str(activityID) + " at " + str(deviceLocation))
 
         activity.GPS = False
         activity.Stationary = True
