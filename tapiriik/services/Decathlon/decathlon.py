@@ -382,17 +382,16 @@ class DecathlonService(ServiceBase):
         match = re.search(r'\d+$', deviceModelLocation)
         deviceModel=int(match.group(0)) if match else None
 
-        return Device(
-            manufacturer=(
-                "decathlon" if deviceManufacturerCode == None 
-                else deviceManufacturerName
-            ),
-            product=(
-                deviceModel if deviceManufacturerCode == None
-                else deviceCode
+        if deviceManufacturerCode == None:
+            return Device(
+                manufacturer="decathlon",
+                product=deviceModel
             )
-        )
-
+        else:
+            return Device(
+                manufacturer=deviceManufacturerName,
+                product=deviceCode
+            )
 
 
     def DownloadActivity(self, svcRecord, activity):

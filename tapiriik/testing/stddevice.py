@@ -36,9 +36,9 @@ class StdDeviceTest(TestCase):
             "@type": "UserDevice",
             "id": "eu23218ff9b8010d294e",
             "serial": "30:67:71:B8:DB:02",
-            "fitManufacturer": 310,
-            "fitDevice": 7,
-            "model": "/v2/device_models/7",
+            "fitManufacturer": 23,
+            "fitDevice": 15,
+            "model": "/v2/device_models/18",
             "firmware": "/v2/firmware/9928",
             "user": "/v2/users/eu200a4d76c4eab29015",
         }
@@ -50,8 +50,8 @@ class StdDeviceTest(TestCase):
 
         self.assertIsNotNone(hubDevice)
         self.assertIsInstance(hubDevice, Device)
-        self.assertEqual(hubDevice.Manufacturer, "decathlon")
-        self.assertEqual(hubDevice.Product, 7)
+        self.assertEqual(hubDevice.Manufacturer, "suunto")
+        self.assertEqual(hubDevice.Product, 15)
 
 
 
