@@ -384,7 +384,6 @@ class DecathlonService(ServiceBase):
         match = re.search(r'\d+$', deviceModelLocation)
         deviceModel=int(match.group(0)) if match else None
 
-
         if deviceManufacturerCode == None:
             return Device(
                 manufacturer="decathlon",
