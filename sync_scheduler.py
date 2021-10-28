@@ -27,7 +27,7 @@ while True:
                     "_id": True,
                     "SynchronizationHostRestriction": True
                 }
-            ))
+            ).limit(10))
 
     scheduled_ids = [x["_id"] for x in users]
     #print("[Sync_scheduler]--- Found %d users at %s" % (len(scheduled_ids), datetime.utcnow()))
@@ -75,4 +75,4 @@ while True:
     #if len(scheduled_ids) > 0 :
     #    logger.info("Scheduled %d users" % (len(scheduled_ids)))
 
-    time.sleep(5)
+    time.sleep(2)
