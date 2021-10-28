@@ -66,7 +66,7 @@ class DecathlonService(ServiceBase):
         ActivityType.InlineSkating: "367",
         ActivityType.StrengthTraining: "98",
         ActivityType.Climbing: "161",
-        ActivityType.Other: "121",
+        ActivityType.Other: "1",
         ActivityType.Surfing: "296",
         ActivityType.KiteSurfing: "273",
         ActivityType.WindSurfing: "280",
