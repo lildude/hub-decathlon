@@ -1,7 +1,7 @@
 from tapiriik.services import Service
 from tapiriik.auth import User
 from tapiriik.sync import Sync
-from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES, VUE_URL
+from tapiriik.settings import SITE_VER, PP_WEBSCR, PP_BUTTON_ID, SOFT_LAUNCH_SERVICES, DISABLED_SERVICES, CONNECTION_SERVICES, WITHDRAWN_SERVICES, CELEBRATION_MODES, VUE_URL, DECAT_CLUB_ENV_LINK
 from tapiriik.database import db
 from datetime import datetime
 from random import randint
@@ -103,9 +103,26 @@ def device_support(req):
                 device_support = 'mobile'
     return {"device_support": device_support}
 
+
+def is_user_from_dkt_club(req):
+    COOKIE_NAME = "is_user_from_dkt_club"
+
+    is_user_from_dkt_club = False
+    if COOKIE_NAME in req.COOKIES:
+        is_user_from_dkt_club = req.COOKIES.get(COOKIE_NAME)
+    else:
+        if 'utm_source' in req.GET:
+            if req.GET['utm_source'] == "decatclub":
+                is_user_from_dkt_club = True
+    return {COOKIE_NAME: is_user_from_dkt_club}
+
+
 def background_use(req):
     return {'background_use': randint(1, 5)}
 
 
 def vue_link(req):
     return {"VUE_URL": VUE_URL}
+
+def decat_club_env_link(req):
+    return {"DECAT_CLUB_ENV_LINK": DECAT_CLUB_ENV_LINK}
