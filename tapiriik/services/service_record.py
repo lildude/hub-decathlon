@@ -40,6 +40,13 @@ class ServiceRecord:
             return False
         return cachedb.extendedAuthDetails.find({"ID": self._id}).limit(1).count()
 
+    def HasAuthSyncError(self):
+        if hasattr(self, "SyncErrors"):
+            sync_errors_with_user_exception = [se for se in self.SyncErrors if "UserException" in se]
+            return next((se for se in sync_errors_with_user_exception if se["UserException"].get("InterventionRequired") and se.get("Block") and se["UserException"].get("Type") == "auth"), False) is not False
+        else:
+            return False
+
     def SetPartialSyncTriggerSubscriptionState(self, subscribed):
         db.connections.update_one({"_id": self._id}, {"$set": {"PartialSyncTriggerSubscribed": subscribed}})
 
