@@ -26,27 +26,33 @@ def diag_requireAuth(view):
 
 @diag_requireAuth
 def diag_stats(req):
+    import time
+    time_begin = time.perf_counter_ns()
+
     context = {}
 
-    context["userCt"] = db.users.count()
-    context["connCt"] = db.connections.count()
+    context["userCount"] = db.users.count()
+    context["connCount"] = db.connections.count()
+    context["userConnectedOnlySTDCount"] = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices.Service":"decathlon"}]})
 
     active_services_list = [svc for svc in Service.List() if svc.ID not in WITHDRAWN_SERVICES]
-    mongo_count_webhook_subscribed_users = db.connections.count({"Service":"fitbit","PartialSyncTriggerSubscribed":True})
 
-    usr_only_connected_to_coach = db.users.count({ "$and": [{"ConnectedServices":{"$size" : 1}}, {"ConnectedServices":{"$elemMatch": {"Service":"decathlon"}}}]})
+    partners_count_aggregation = db.connections.aggregate([
+        {"$group": {"_id":"$Service", "count":{"$sum": 1}}}
+    ])
+    partner_connections_counts = {counts.get("_id"): counts.get("count") for counts in partners_count_aggregation}
 
 
     context["services_stats"] = []
     for active_service in active_services_list:
         context["services_stats"].append({
             "Name": active_service.DisplayName,
-            "NbUsers" : len(list(db.connections.find({
-                "Service": active_service.ID
-            }))),
-            "MongoNbWebhookSubedUsers" : mongo_count_webhook_subscribed_users if active_service.ID == "fitbit" else None,
-            "OneSvcSubedUsers" : usr_only_connected_to_coach if active_service.ID == "decathlon" else None
+            "NbUsers" : partner_connections_counts.get(active_service.ID) if partner_connections_counts.get(active_service.ID) is not None else 0
         })
+    
+    time_end = time.perf_counter_ns()
+    time_delta_ms = (time_end - time_begin) // 1000000
+    context["queriesExecutionTime"] = time_delta_ms
 
     return render(req, "diag/services_diag.html", context)
 
