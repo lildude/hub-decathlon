@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, JsonResponse
 from django.views.decorators.http import require_POST
 from tapiriik.settings import DIAG_AUTH_LOGIN_SECRET, DIAG_AUTH_PASSWORD, SITE_VER
 from tapiriik.database import *
@@ -314,6 +314,56 @@ def diag_user(req, user):
     if delta:
         return redirect("diagnostics_user", user=user)
     return render(req, "diag/user.html", {"diag_user": userRec})
+
+
+@diag_requireAuth
+def diag_connection(req):
+    return render(req, "diag/connection.html")
+
+
+@require_POST
+@diag_requireAuth
+def diag_api_search_connection(req):
+    body = json.loads(req.body.decode("utf-8"))
+    result = []
+    response = None
+
+    if "partnerId" in body:
+        partner_id_param_str = str(body.get("partnerId"))
+        if partner_id_param_str.isdigit():
+            partner_id_param_int = int(body.get("partnerId"))
+            result = list(db.connections.find({"ExternalID": partner_id_param_int}))
+            if len(result) == 0:
+                result = list(db.connections.find({"ExternalID": partner_id_param_str}))
+
+        else:
+            result = list(db.connections.find({"ExternalID": partner_id_param_str}))
+
+        connections = {
+            "connections": result
+        }
+
+    else:
+        return HttpResponseBadRequest("You must provide a 'partnerId'")
+
+    response = json.loads(json.dumps(connections, default=str))
+
+    return JsonResponse(response)
+
+@diag_requireAuth
+def diag_api_connection_by_id(req, connection_id):
+
+    if not ObjectId.is_valid(connection_id):
+        return HttpResponseBadRequest("The provided connectionId doesn't respect the format specification (24-character hex string)")
+        
+    connection = db.connections.find_one({"_id": ObjectId(connection_id)})
+
+    if connection is None:
+        return HttpResponseNotFound("Connection with id %s not found" % connection_id)
+    
+    response = json.loads(json.dumps(connection, default=str))
+
+    return JsonResponse(response)
 
 @diag_requireAuth
 def diag_user_activities(req, user):
