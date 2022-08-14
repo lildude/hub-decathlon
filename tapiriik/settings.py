@@ -1,7 +1,7 @@
 import os
 import sys
 from datetime import datetime
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 import logging
 import logging.handlers
 import io
@@ -67,7 +67,8 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
-USE_L10N = True
+# Commented out as this will be the default in Django 5.0 so is effectively deprecated
+#USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
@@ -100,7 +101,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    #os.path.join(BASE_DIR, 'assets'), 
+    #os.path.join(BASE_DIR, 'assets'),
 )
 
 # List of finder classes that know how to find static files in
@@ -112,7 +113,7 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
+STATICFILES_STORAGE = 'pipeline.storage.ManifestStaticFilesStorage'
 
 # PIPELINE_JS = {
 #     'tapiriik-js': {

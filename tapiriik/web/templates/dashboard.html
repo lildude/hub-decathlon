@@ -10,7 +10,7 @@
 	<p v-if="!isOneSvcConnected">
 		{% trans "Choose the services you want to synchronize to start the synchronization process." %}
 	</p>
-		
+
 	<ul class="vtmn-mb-2 services-list">
 		<li v-for="service in services" :key="service.id" :id="service.id">
 			<div class="service-line">
@@ -30,15 +30,15 @@
 						<small class="red-text my-2px" v-if="service.isConnected && service.mustReconnect">{% trans "Need to be re-synchronized" %}</small>
 						<small class="grey-text my-2px" v-else-if="service.isConnected">{% trans "Synchronized" %}</small>
 						<small class="grey-text my-2px" v-else>{% trans "Not synchronized" %}</small>
-	
+
 						<div class="tag green" v-if="isBidirectional(service)">
 							{% trans "Sending and receiving" %}
 						</div>
-	
+
 						<div class="tag blue" v-else-if="service.isReceiver">
 							{% trans "Sending only" %}
 						</div>
-	
+
 						<div class="tag blue" v-else>
 							{% trans "Receiving only" %}
 						</div>
@@ -54,7 +54,7 @@
 			<div class="dkt-club-tooltip" v-if="service.id == 'strava'">
 				<div class="tooltip-icon grey-text"><span class="vtmx-error-warning-line"></span></div>
 				<small class="grey-text">
-					Ce service ne permet pas de gagner des points de fidélité 
+					Ce service ne permet pas de gagner des points de fidélité
 					<a href="{{DECAT_CLUB_ENV_LINK}}" class="vtmn-link vtmn-link--standalone small vtmn-link--icon-along" target="_blank">Decat'Club</a>
 				</small>
 			</div>
@@ -102,7 +102,7 @@
 		<li>
 			<h4>{% trans "How does it works ?" %}</h4>
 			<p>
-				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}	
+				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}
 			</p>
 			<a class="button secondary" href="./faq">{% trans "Read the FAQ" %}</a>
 		</li>
@@ -144,8 +144,8 @@
 	</div>
 
 
-	
-		
+
+
 	{% if user.Substitute %}
 		<h1>{% trans "Substituting user" %}</h1>
 		<a href="{% url 'diagnostics_unsu' %}">{% trans "Return" %}</a>
@@ -153,7 +153,7 @@
 	{% endif %}
 
 {% else %}
-	{% ifequal device_support 'web' %}
+	{% if device_support == 'web' %}
 	<p>
 		{% trans "Get your sports activities in your favorite apps." %}
 	</p>
@@ -175,7 +175,7 @@
 					<p class="vtmn-text-center mobile:vtmn-text-left">{% trans "I chose the services I want to connect with the HUB." %}</p>
 				</div>
 			</div>
-			
+
 			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
 				<div class="custom-little-title vtmn-my-2">{% trans "Compatible services" %}</div>
 				<div class="vtmn-grid vtmn-grid-cols-2 vtmn-gap-6">
@@ -196,7 +196,7 @@
 					<p class="vtmn-text-center mobile:vtmn-text-left">{% trans "I can find my activities in my favorites apps." %}</p>
 				</div>
 			</div>
-			
+
 
 			<div class="vtmn-hidden mobile:vtmn-block vtmn-mt-4">
 				<div class="custom-little-title vtmn-my-2">{% trans "DECATHLON Apps" %}</div>
@@ -221,7 +221,7 @@
 	<div class="vtmn-flex vtmn-flex-col mobile:vtmn-hidden vtmn-mt-5 vtmn-items-center">
 		<div class="custom-little-title vtmn-my-2">{% trans "Compatible services" %}</div>
 		<div class="vtmn-grid vtmn-grid-cols-4 tablet:vtmn-grid-cols-3 tablet:vtmn-gap-6 small-desktop:vtmn-grid-cols-3 vtmn-gap-10 tablet:vtmn-w-full vtmn-w-2/3 vtmn-items-center vtmn-justify-items-center">
-			
+
 			{% with localservices="decathlon decathlondev" %}
 				{% for provider in service_providers %}
 					{% if provider.ID not in config.withdrawn_services and provider.ID not in localservices.split %}
@@ -261,12 +261,12 @@
 		<li>
 			<h4>{% trans "How does it works ?" %}</h4>
 			<p>
-				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}	
+				{% trans "After you got the HUB connected with DECATHLON, you just have to connect the services you want to synchronize and click on &quot;Sync now&quot;." %}
 			</p>
 			<a class="button secondary" href="./faq">{% trans "Read the FAQ" %}</a>
 		</li>
 	</ul>
-	{% endifequal%}
+	{% endif%}
 {% endif %}
 {% endblock %}
 
