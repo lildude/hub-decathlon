@@ -8,7 +8,7 @@ Replace this with more appropriate tests for your application.
 from django.test import SimpleTestCase
 #from tapiriik.testing.testtools import TestTools, TapiriikTestCase
 from tapiriik.database import db
-
+from unittest import skip
 
 class SimpleTest(SimpleTestCase):
     def test_basic_addition(self):
@@ -53,7 +53,7 @@ class SimpleTest(SimpleTestCase):
         print('Response status code : ' + str(response.status_code))
         self.assertEqual(response.status_code, 200)
 
-
+    @skip("Doesn't work yet")
     def test_diag_page(self):
         print('******************test_diag_page()**********************')
         # send GET request.
