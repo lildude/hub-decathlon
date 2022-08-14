@@ -1,4 +1,4 @@
-from pymongo import MongoClient, MongoReplicaSetClient
+from pymongo import MongoClient
 from tapiriik.settings import MONGO_HOST_API, MONGO_REPLICA_SET, MONGO_CLIENT_OPTIONS, REDIS_HOST, REDIS_CLIENT_OPTIONS, MONGO_DB_PREFIX
 
 # MongoDB

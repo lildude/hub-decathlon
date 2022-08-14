@@ -1,12 +1,12 @@
 requests
-pymongo==3.7.2
+pymongo==4.2.0
 pytz
 lxml
 dropbox==10.10.0
 python-dateutil
-Django==2.2.27
+Django==3.1.14
 pycryptodome
-django-pipeline==1.7.0
+django-pipeline==2.0.8
 requests_oauthlib==0.4.0
 redis==2.10.6
 django-ipware
